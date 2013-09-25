@@ -1,7 +1,10 @@
 function [rt,resp,z] = sam_sim_trial_cli_ibi_nomodbd(u,A,~,C,~,SI, ...
                                                          Z0,ZC,ZLB,dt, ...
                                                          tau,T, ...
-                                                         terminate,blockInput,~)
+                                                         terminate,blockInput,~, ...
+                                                         n,~,p,t, ...
+                                                         rt,resp, ...
+                                                         z)
 % Simulate trials: C as lateral inhibition, I as blocked input, no extr. and intr. modulation
 % 
 % DESCRIPTION 
@@ -30,46 +33,39 @@ function [rt,resp,z] = sam_sim_trial_cli_ibi_nomodbd(u,A,~,C,~,SI, ...
 % latInhib    - matrix indicating which elements in A remain 0 as long as
 %               unit n (indexed by the columns of A) has not reached 
 %               threshold (indexed by resp)
-%
+% n           - number of units (1x1 double)
+% m           - number of inputs (1x1 double)
+% p           - number of time points (1x1 double)
+% t           - first time point (1x1 double)
+% rt          - array for logging response time (Nx1 double)
+% resp        - array for logging responses (Nx1 logical)
+% z           - array for logging dynamics (NxP double)
+% rt          - response times (Nx1 double)
+% resp        - responses, inid (Nx1 logical)
+% z           - dynamics (NxP double)
+
 % rt          - response times (Nx1 double)
 % resp        - responses, inid (Nx1 logical)
 % z           - activation (NxP double)
 %
 % [rt,resp,z] = SAM_SIM_TRIAL_CLI_IBI_NOMODBD(u,A,~,C,~,SI,Z0,ZC, ...
 %                                                 ZLB,dt,tau,T, ...
-%                                                 terminate,~,~);
+%                                                 terminate,~,~, ...
+%                                                 n,~,p,t,rt,resp,z);
 %
 % EXAMPLES 
 %
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Wed 24 Jul 2013 12:14:48 CDT by bram 
-% $Modified: Wed 18 Sep 2013 09:44:53 CDT by bram
+% $Modified: Wed 25 Sep 2013 11:00:40 CDT by bram
+
+% Set starting values of z(t)
+z(:,1)  = Z0;     
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 1. PROCESS INPUTS & SPECIFY VARIABLES
+% 1. STOCHASTIC ACCUMULATION PROCESS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% 1.1. Dynamic variables
-% =========================================================================
-n       = size(A,1);  % Number of units
-% m       = size(C,1);  % Number of inputs to units
-p       = size(u,2);  % Number of time points
-t       = 1;          % Time index
-
-% 1.2. Pre-allocate arrays for logging data
-% =========================================================================
-rt      = inf(n,1);       % Response time
-resp    = false(n,1);     % Response (i.e. whether a unit has reached zc)
-z       = nan(n,p);       % Activation
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. STOCHASTIC ACCUMULATION PROCESS
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% Sample starting point from uniform distribution on interval [0,Z0]
-z(:,1)  = 0 + (Z0-0).*rand(n,1);
-% z(:,1)  = Z0;    
 
 while t < p - 1
   
@@ -77,7 +73,7 @@ while t < p - 1
 %   % because lateral inhibition kicks in once a unit has reached its
 %   % threshold)
 %   % -----------------------------------------------------------------------
-%   At = A;
+  At = A;
   
 %   % Extrinsic modulation at time t
 %   % -----------------------------------------------------------------------
@@ -107,7 +103,8 @@ while t < p - 1
 %                 C               * u(:,t)      * dt/tau + ...  % Inputs
 %                 SI             * randn(n,1)  * sqrt(dt/tau); % Noise (in)
               
-  dzdt        = C   * u(:,t)      * dt/tau + ...   % Inputs
+  dzdt        = At  * z(:,t)      * dt/tau + ...   % Endogenous connectivity
+                C   * u(:,t)      * dt/tau + ...   % Inputs
                 SI  * randn(n,1)  * sqrt(dt/tau);  % Noise (in)
               
   % Log new activation level

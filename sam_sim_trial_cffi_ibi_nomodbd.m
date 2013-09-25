@@ -1,7 +1,10 @@
-function [rt,resp,z] = sam_sim_trial_cffi_ibi_nomodbd(u,A,~,C,~,SI, ...
+function [rt,resp,z] = sam_sim_trial_cffi_ibi_nomodbd(u,~,~,C,~,SI, ...
                                                          Z0,ZC,ZLB,dt, ...
                                                          tau,T, ...
-                                                         terminate,blockInput,~)
+                                                         terminate,blockInput,~, ...
+                                                         n,~,p,t, ...
+                                                         rt,resp, ...
+                                                         z)
 % Simulate trials: C as feed-forward inhibition, I as blocked input, no extr. and intr. modulation
 % 
 % DESCRIPTION 
@@ -30,46 +33,39 @@ function [rt,resp,z] = sam_sim_trial_cffi_ibi_nomodbd(u,A,~,C,~,SI, ...
 % latInhib    - matrix indicating which elements in A remain 0 as long as
 %               unit n (indexed by the columns of A) has not reached 
 %               threshold (indexed by resp)
-%
+% n           - number of units (1x1 double)
+% m           - number of inputs (1x1 double)
+% p           - number of time points (1x1 double)
+% t           - first time point (1x1 double)
+% rt          - array for logging response time (Nx1 double)
+% resp        - array for logging responses (Nx1 logical)
+% z           - array for logging dynamics (NxP double)
+% rt          - response times (Nx1 double)
+% resp        - responses, inid (Nx1 logical)
+% z           - dynamics (NxP double)
+
 % rt          - response times (Nx1 double)
 % resp        - responses, inid (Nx1 logical)
 % z           - activation (NxP double)
 %
 % [rt,resp,z] = SAM_SIM_TRIAL_CFFI_IBI_NOMODBD(u,A,~,C,~,SI,Z0,ZC, ...
 %                                                 ZLB,dt,tau,T, ...
-%                                                 terminate,~,~);
+%                                                 terminate,~,~, ...
+%                                                 n,~,p,t,rt,resp,z);
 %
 % EXAMPLES 
 %
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Wed 24 Jul 2013 12:14:48 CDT by bram 
-% $Modified: Wed 18 Sep 2013 09:20:56 CDT by bram
+% $Modified: Wed 25 Sep 2013 11:00:33 CDT by bram
+
+% Set starting values of z(t)
+z(:,1)  = Z0;     
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 1. PROCESS INPUTS & SPECIFY VARIABLES
+% 1. STOCHASTIC ACCUMULATION PROCESS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% 1.1. Dynamic variables
-% =========================================================================
-n       = size(A,1);  % Number of units
-% m       = size(C,1);  % Number of inputs to units
-p       = size(u,2);  % Number of time points
-t       = 1;          % Time index
-
-% 1.2. Pre-allocate arrays for logging data
-% =========================================================================
-rt      = inf(n,1);       % Response time
-resp    = false(n,1);     % Response (i.e. whether a unit has reached zc)
-z       = nan(n,p);       % Activation
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. STOCHASTIC ACCUMULATION PROCESS
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% Sample starting point from uniform distribution on interval [0,Z0]
-z(:,1)  = 0 + (Z0-0).*rand(n,1);
-% z(:,1)  = Z0;  
 
 while t < p - 1
   

@@ -1,7 +1,10 @@
 function [rt,resp,z] = sam_sim_trial_crace_ili_nomodbd(u,A,~,C,~,SI, ...
                                                          Z0,ZC,ZLB,dt, ...
                                                          tau,T, ...
-                                                         terminate,~,latInhib)
+                                                         terminate,~,latInhib, ...
+                                                         n,~,p,t, ...
+                                                         rt,resp, ...
+                                                         z)
 % Simulate trials: C as a race, I as lateral inhibition, no extr. and intr. modulation
 % 
 % DESCRIPTION 
@@ -37,39 +40,22 @@ function [rt,resp,z] = sam_sim_trial_crace_ili_nomodbd(u,A,~,C,~,SI, ...
 %
 % [rt,resp,z] = SAM_SIM_TRIAL_CRACE_ILI_NOMODBD(u,A,~,C,~,SI,Z0,ZC, ...
 %                                                 ZLB,dt,tau,T, ...
-%                                                 terminate,~,~);
+%                                                 terminate,~,~ ...
+%                                                 n,~,p,t,rt,resp,z);
 %
 % EXAMPLES 
 %
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Wed 24 Jul 2013 12:14:48 CDT by bram 
-% $Modified: Wed 18 Sep 2013 08:56:53 CDT by bram
+% $Modified: Wed 25 Sep 2013 11:00:31 CDT by bram
+
+% Set starting values of z(t)
+z(:,1)  = Z0;     
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 1. PROCESS INPUTS & SPECIFY VARIABLES
+% 1. STOCHASTIC ACCUMULATION PROCESS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% 1.1. Dynamic variables
-% =========================================================================
-n       = size(A,1);  % Number of units
-% m       = size(C,1);  % Number of inputs to units
-p       = size(u,2);  % Number of time points
-t       = 1;          % Time index
-
-% 1.2. Pre-allocate arrays for logging data
-% =========================================================================
-rt      = inf(n,1);       % Response time
-resp    = false(n,1);     % Response (i.e. whether a unit has reached zc)
-z       = nan(n,p);       % Activation
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 2. STOCHASTIC ACCUMULATION PROCESS
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% Sample starting point from uniform distribution on interval [0,Z0]
-z(:,1)  = 0 + (Z0-0).*rand(n,1);
-% z(:,1)  = Z0;     
 
 while t < p - 1
   

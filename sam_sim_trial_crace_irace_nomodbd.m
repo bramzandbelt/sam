@@ -40,10 +40,21 @@ function [rt,resp,z] = sam_sim_trial_crace_irace_nomodbd(u,~,~,C,~,SI, ...
 % rt          - array for logging response time (Nx1 double)
 % resp        - array for logging responses (Nx1 logical)
 % z           - array for logging dynamics (NxP double)
-%
+% n           - number of units (1x1 double)
+% m           - number of inputs (1x1 double)
+% p           - number of time points (1x1 double)
+% t           - first time point (1x1 double)
+% rt          - array for logging response time (Nx1 double)
+% resp        - array for logging responses (Nx1 logical)
+% z           - array for logging dynamics (NxP double)
 % rt          - response times (Nx1 double)
 % resp        - responses, inid (Nx1 logical)
 % z           - dynamics (NxP double)
+%
+% rt          - response times (Nx1 double)
+% resp        - responses, inid (Nx1 logical)
+% z           - activation (NxP double)
+%
 %
 % [rt,resp,z] = SAM_SIM_TRIAL_CRACE_IRACE_NOMODBD(u,A,~,C,~,SI,Z0,ZC, ...
 %                                                 ZLB,dt,tau,T, ...
@@ -55,9 +66,14 @@ function [rt,resp,z] = sam_sim_trial_crace_irace_nomodbd(u,~,~,C,~,SI, ...
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Wed 24 Jul 2013 12:14:48 CDT by bram 
-% $Modified: Wed 18 Sep 2013 08:48:25 CDT by bram
+% $Modified: Wed 25 Sep 2013 11:00:25 CDT by bram
 
+% Set starting values of z(t)
 z(:,1)  = Z0;     
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% 1. STOCHASTIC ACCUMULATION PROCESS
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 while t < p - 1
   
