@@ -48,7 +48,7 @@ SAM.des.choiceMech.type            = 'li';
 % 'bi'        - Blocked input
 % 'li'        - Lateral inhibition
 
-SAM.des.inhibMech.type             = 'li';
+SAM.des.inhibMech.type             = 'race';
 
 % #.3. Accumulation mechanism
 % ========================================================================= 
@@ -146,13 +146,25 @@ SAM.sim.scope                         = 'all';
 % =========================================================================
 % The same number of trials is used for each trial type
 
-SAM.sim.nSim                          = 10;
+SAM.sim.nSim                          = 100;
 
 % #.#. Random number generator seed
 % =========================================================================
 
 SAM.sim.rngID                         = rng('shuffle'); % MATLAB's default
 
+% #.#. Moment in the simulation when to seed the random number generator
+% =========================================================================
+% 'sam_sim_expt'        - The RNG is seeded in sam_sim_expt.m (i.e. every
+%                       simulation of an experiment). This will give 
+%                       model predictions given identical parameters.
+% 'sam_run_job'         - The RNG is seeded in sam_run_job.m (i.e. only 
+%                       once). This will usually give different predictions
+%                       with identical parameters, because the the 
+%                       optimization routine starts from different points
+%                       usually.
+
+SAM.sim.rngSeedStage                  = 'sam_run_job';
 
 % #.#. Experiment simulation function
 % =========================================================================

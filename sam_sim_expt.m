@@ -26,13 +26,14 @@ function varargout = sam_sim_expt(simGoal,X,SAM,VCor,VIncor,S,terminate,blockInp
 %       1.4.4.Inhibition function
 %       1.4.5.Structure of model matrices
 % 2.DECODE PARAMETER VECTOR
-% 3.SIMULATE EXPERIMENT
-%   3.1.Specify timing diagram of stimuli
-%   3.2.Specify timing diagram of model inputs
-%   3.3.Simulate trials
-%   3.4.Classify trials
-%   3.5.Log model predictions
-% 4.OUTPUT
+% 3.SEED THE RANDOM NUMBER GENERATOR
+% 4.SIMULATE EXPERIMENT
+%   4.1.Specify timing diagram of stimuli
+%   4.2.Specify timing diagram of model inputs
+%   4.3.Simulate trials
+%   4.4.Classify trials
+%   4.5.Log model predictions
+% 5.OUTPUT
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. PROCESS INPUTS AND SPECIFY VARIABLES
@@ -218,7 +219,22 @@ switch simGoal
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 2. DECODE PARAMETER VECTOR
+% 2. SEED THE RANDOM NUMBER GENERATOR (OPTIONAL)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+switch lower(SAM.sim.rngSeedStage)
+  case 'sam_sim_expt'
+    
+    % Note: MEX functions stay in memory until they are cleared.
+    % Seeding of the random number generator should be accompanied by 
+    % clearing MEX functions.
+
+    clear(char(trialSimFun));
+    rng(rngID);
+end
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% 3. DECODE PARAMETER VECTOR
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
                               % OUTPUTS
@@ -252,7 +268,7 @@ end
 ZLB = zLB*ones(sum(N),1);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 3. SIMULATE EXPERIMEMT
+% 4. SIMULATE EXPERIMEMT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Loop over task conditions                 
@@ -267,12 +283,12 @@ for iCnd = 1:nCnd
   % Loop over trial types
   for iTrType = 1:nTrType
     
-    % 3.1. Specify timing diagram of stimuli
+    % 4.1. Specify timing diagram of stimuli
     % =====================================================================
     switch simGoal
       case 'explore'
         
-        % 3.1.1. Compute timing diagram
+        % 4.1.1. Compute timing diagram
         % -----------------------------------------------------------------
                                           % OUTPUT
         [tStm, ...                        % - Time
@@ -286,7 +302,7 @@ for iCnd = 1:nCnd
          dt, ...                          % - Time step
          timeWindow);                     % - Time window
         
-       % 3.1.2. Log timing diagram
+       % 4.1.2. Log timing diagram
        % ------------------------------------------------------------------
        
         if iTrType == 1
@@ -298,10 +314,10 @@ for iCnd = 1:nCnd
         end
     end
     
-    % 3.2. Timing diagram of model inputs
+    % 4.2. Timing diagram of model inputs
     % =====================================================================
       
-    % 3.2.1. Compute timing diagram
+    % 4.2.1. Compute timing diagram
     % ---------------------------------------------------------------------
                                           % OUTPUT
     [t, ...                               % - Time
@@ -315,7 +331,7 @@ for iCnd = 1:nCnd
      dt, ...                              % - Time step
      timeWindow);                         % - Time window
     
-    % 3.2.2. Log timing diagram
+    % 4.2.2. Log timing diagram
     % ---------------------------------------------------------------------
     switch simGoal
       case 'explore'
@@ -328,7 +344,7 @@ for iCnd = 1:nCnd
         end
     end
     
-    % 3.3. Simulate trials
+    % 4.3. Simulate trials
     % =====================================================================
     
     % Pre-allocate response time and response arrays
@@ -409,25 +425,25 @@ for iCnd = 1:nCnd
         end
     end
     
-    % 3.4. Classify trials
+    % 4.4. Classify trials
     % =====================================================================
     
     if iTrType == 1
       
-      % 3.4.1. Go correct trial: only one RT, produced by target GO unit
+      % 4.4.1. Go correct trial: only one RT, produced by target GO unit
       % -------------------------------------------------------------------
       % Criteria (all should be met):
       % - Target GO unit produced an RT
       % - Target GO unit is the only unit having produced an RT
       iGoCorr = rt(iGOT,:) < Inf & sum(rt < Inf) == 1;
       
-      % 3.4.2. Go commission error trial: any RT produced by a non-target GO unit
+      % 4.4.2. Go commission error trial: any RT produced by a non-target GO unit
       % -------------------------------------------------------------------
       % Criteria (all should be met):
       % - At least one non-target GO unit has produced an RT
       iGoComm = any(rt(iGONT,:) < Inf,1);
       
-      % 3.4.3. Go omission error trial: no RT
+      % 4.4.3. Go omission error trial: no RT
       % -------------------------------------------------------------------
       % Criteria (all should be met):
       % - No unit has produced an RT
@@ -487,10 +503,10 @@ for iCnd = 1:nCnd
       end
     end
     
-    % 3.5. Log model predictions
+    % 4.5. Log model predictions
     % =====================================================================
     
-    % 3.5.1. Trial numbers
+    % 4.5.1. Trial numbers
     % ---------------------------------------------------------------------
     if iTrType == 1
       nGoCorr(iCnd) = numel(find(iGoCorr));
@@ -501,7 +517,7 @@ for iCnd = 1:nCnd
       nStopSuccess(iCnd,iTrType-1) = numel(find(iStopSuccess));
     end
     
-    % 3.5.2. Trial probabilities
+    % 4.5.2. Trial probabilities
     % ---------------------------------------------------------------------
     if iTrType == 1
       pGoCorr(iCnd)   = nGoCorr(iCnd)./nSim;
@@ -513,7 +529,7 @@ for iCnd = 1:nCnd
       pStopSuccess(iCnd,iTrType-1) = nStopSuccess(iCnd,iTrType-1)./nSim;
     end
     
-    % 3.5.3. Trial response times
+    % 4.5.3. Trial response times
     % ---------------------------------------------------------------------
     if iTrType == 1
       
@@ -542,7 +558,7 @@ for iCnd = 1:nCnd
       end
     end
     
-    % 3.5.4. Model dynamics
+    % 4.5.4. Model dynamics
     % ---------------------------------------------------------------------
     
     switch simGoal
@@ -718,7 +734,7 @@ for iCnd = 1:nCnd
     end
   end
   
-  % 3.5.5. Log inhibition function
+  % 4.5.5. Log inhibition function
   % -----------------------------------------------------------------------
   switch simGoal
     case 'explore'
@@ -730,7 +746,7 @@ for iCnd = 1:nCnd
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 4. OUTPUT
+% 5. OUTPUT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 switch simGoal
