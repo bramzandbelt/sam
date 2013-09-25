@@ -140,7 +140,8 @@ switch lower(simScope)
     M = nGo;
     
     % Number of trial types: Go trials only
-        
+    nTrType = 1;
+    
   case 'all'
     % Number of units
     N = [nGo nStop];
@@ -347,17 +348,30 @@ for iCnd = 1:nCnd
     % 4.3. Simulate trials
     % =====================================================================
     
+    % Pre-defining the following variables reduces the overhead in the trial
+    % simulation MEX functions called below
+    n   = size(A,1);  % Number of units
+    m   = size(C,1);  % Number of inputs to units
+    p   = size(u,2);  % Number of time points
+    t1  = 1;          % First time point
+
     % Pre-allocate response time and response arrays
-    rt = inf(sum(N),nSim);
+    rt  = inf(sum(N),nSim);
     
     switch simGoal
       case 'optimize'
         
-        % Getting rid of indexing (and using feval) reduces overhead of
-        % parfor loops
+        % Reduce overhea in parfor loops by getting rid of indexing (and
+        % using feval)
         thisSI = diag(SI{iCnd,iTrType});
         thisZC = ZC{iCnd};
         thisT  = t(:)';
+        
+        % Reduce overhead in MEX functions by preallocating trial-dependent
+        % variables
+        thisRt    = inf(n,1);       % Response time
+        thisResp  = false(n,1);     % Response (i.e. whether a unit has reached zc)
+        thisZ     = nan(n,p);       % Activation
         
         % Loop over trials
         parfor iTr = 1:nSim
@@ -380,7 +394,14 @@ for iCnd = 1:nCnd
            thisT, ...                     % - Time points
            terminate, ...                 % - Termination matrix
            blockInput, ...                % - Blocked input matrix
-           latInhib);                     % - Lateral inhibition matrix
+           latInhib, ...                  % - Lateral inhibition matrix
+           n, ...                         % - Number of units
+           m, ...                         % - Number of inputs
+           p, ...                         % - Number of time points
+           t1, ...                        % - First time index
+           thisRt, ...                    % - Array for current trial's RT
+           thisResp, ...                  % - Array for current trial's response
+           thisZ);                        % - Array for current trial's dynamics);
         end
         
       case 'explore'
@@ -392,11 +413,17 @@ for iCnd = 1:nCnd
         % Pre-allocate response and dynamics array
         z = nan(sum(N),nSim,numel(t));
         
-        % Getting rid of indexing (and using feval) reduces overhead of
-        % parfor loops
+        % Reduce overhea in parfor loops by getting rid of indexing (and
+        % using feval)
         thisSI = diag(SI{iCnd,iTrType});
         thisZC = ZC{iCnd};
         thisT  = t(:)';
+        
+        % Reduce overhead in MEX functions by preallocating trial-dependent
+        % variables
+        thisRt    = inf(n,1);       % Response time
+        thisResp  = false(n,1);     % Response (i.e. whether a unit has reached zc)
+        thisZ     = nan(n,p);       % Activation
         
         % Loop over trials
         parfor iTr = 1:nSim
@@ -413,7 +440,7 @@ for iCnd = 1:nCnd
            C, ...                         % - Exogenous connectivity matrix
            D, ...                         % - Intrinsic modulation matrix
            thisSI, ...                    % - Intrinsic noise matrix
-           Z0, ...                        % - Starting point matrix
+           0 + (Z0-0).*rand(n,1), ...     % - Starting point matrix (uniformly distributed)
            thisZC, ...                    % - Threshold matrix
            ZLB, ...                       % - Activation lower bound matrix
            dt, ...                        % - Time step
@@ -421,7 +448,14 @@ for iCnd = 1:nCnd
            thisT, ...                     % - Time points
            terminate, ...                 % - Termination matrix
            blockInput, ...                % - Blocked input matrix
-           latInhib);                     % - Lateral inhibition matrix
+           latInhib, ...                  % - Lateral inhibition matrix
+           n, ...                         % - Number of units
+           m, ...                         % - Number of inputs
+           p, ...                         % - Number of time points
+           t1, ...                        % - First time index
+           thisRt, ...                    % - Array for current trial's RT
+           thisResp, ...                  % - Array for current trial's response
+           thisZ);                        % - Array for current trial's dynamics
         end
     end
     

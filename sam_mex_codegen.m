@@ -49,16 +49,23 @@ T           = coder.typeof(0,[1,1e6],[0,1]);
 terminate   = coder.typeof(true,[5e1,1],[1,0]);
 blockInput  = coder.typeof(true,[5e1,5e1],[1,1]);
 latInhib    = coder.typeof(true,[5e1,5e1],[1,1]);
+n           = coder.typeof(0,[1,1],[0,0]);
+m           = coder.typeof(0,[1,1],[0,0]);
+p           = coder.typeof(0,[1,1],[0,0]);
+t           = coder.typeof(0,[1,1],[0,0]);
+rt          = coder.typeof(true,[5e1,1],[1,0]);
+resp        = coder.typeof(true,[5e1,1],[1,0]);
+z           = coder.typeof(true,[5e1,1],[1,0]);
 
-codegen sam_sim_trial_crace_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_crace_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_crace_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_cffi_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_cffi_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_cffi_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_cli_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_cli_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
-codegen sam_sim_trial_cli_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib}
+codegen sam_sim_trial_crace_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_crace_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_crace_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cffi_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cffi_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cffi_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cli_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cli_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cli_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
 
 end
 
