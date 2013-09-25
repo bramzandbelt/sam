@@ -6,7 +6,9 @@
 *.exe
 *.o
 *.so
-*.mexmaci64
+*.c
+*.h
+*.sh
 
 # Packages #
 ############
@@ -40,3 +42,15 @@ Thumbs.db
 # Temporary files #
 ######################
 *.m~
+
+# Data #
+######################
+*.mat
+
+# MATLAB mex-related #
+######################
+*_mex.sh
+*_mex.mexmaci64
+*_mex.mk
+*_mex.mki
+*_mex.map
