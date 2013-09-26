@@ -67,6 +67,16 @@ codegen sam_sim_trial_cli_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,Z
 codegen sam_sim_trial_cli_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
 codegen sam_sim_trial_cli_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
 
+codegen sam_sim_trial_crace_irace_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_crace_ibi_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_crace_ili_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cffi_irace_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cffi_ili_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cli_irace_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cli_ibi_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+codegen sam_sim_trial_cli_ili_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
+
 end
 
 end

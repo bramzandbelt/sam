@@ -48,7 +48,7 @@ SAM.des.choiceMech.type            = 'li';
 % 'bi'        - Blocked input
 % 'li'        - Lateral inhibition
 
-SAM.des.inhibMech.type             = 'race';
+SAM.des.inhibMech.type             = 'li';
 
 % #.3. Accumulation mechanism
 % ========================================================================= 
@@ -69,6 +69,10 @@ SAM.des.time.dt                    = 1;
 % Time constant
 % -------------------------------------------------------------------------
 SAM.des.time.tau                   = 1;
+
+% Dependency of intrinsic noise on model input
+% -------------------------------------------------------------------------
+SAM.des.inpDepNoise                = true;
 
 % #.4. Experiment parameters
 % ========================================================================= 
@@ -94,7 +98,7 @@ SAM.des.expt.stimDur               = obs.duration;
 
 % Parameter that varies across task conditions
 % -------------------------------------------------------------------------
-SAM.des.condParam                  = 't0';
+SAM.des.condParam                  = 'v';
 
 % Number of units
 % -------------------------------------------------------------------------
@@ -146,7 +150,7 @@ SAM.sim.scope                         = 'all';
 % =========================================================================
 % The same number of trials is used for each trial type
 
-SAM.sim.nSim                          = 100;
+SAM.sim.nSim                          = 500;
 
 % #.#. Random number generator seed
 % =========================================================================
@@ -174,34 +178,66 @@ SAM.sim.exptSimFun                    = @sam_sim_expt;
 % #.#. Trial simulation function
 % =========================================================================
 
-switch lower([SAM.des.choiceMech.type,'-',SAM.des.inhibMech.type])
-  case 'race-race'
-    SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd;
-  case 'race-bi'
-    SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd;
-  case 'race-li'
-    SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd;
-  case 'ffi-race'
-    SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd;
-  case 'ffi-bi'
-    SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd;
-  case 'ffi-li'
-    SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd;
-  case 'li-race'
-    SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd;
-  case 'li-bi'
-    SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd;
-  case 'li-li'
-    SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_mex;
-%     SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd;
+if SAM.des.inpDepNoise
+  switch lower([SAM.des.choiceMech.type,'-',SAM.des.inhibMech.type])
+    case 'race-race'
+      SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_inpdepnoise;
+    case 'race-bi'
+      SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_inpdepnoise;
+    case 'race-li'
+      SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_inpdepnoise;
+    case 'ffi-race'
+      SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_inpdepnoise;
+    case 'ffi-bi'
+      SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise;
+    case 'ffi-li'
+      SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_inpdepnoise;
+    case 'li-race'
+      SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_inpdepnoise;
+    case 'li-bi'
+      SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_inpdepnoise;
+    case 'li-li'
+      SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_inpdepnoise_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_inpdepnoise;
+  end
+else
+  switch lower([SAM.des.choiceMech.type,'-',SAM.des.inhibMech.type])
+    case 'race-race'
+      SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd;
+    case 'race-bi'
+      SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd;
+    case 'race-li'
+      SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd;
+    case 'ffi-race'
+      SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd;
+    case 'ffi-bi'
+      SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd;
+    case 'ffi-li'
+      SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd;
+    case 'li-race'
+      SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd;
+    case 'li-bi'
+      SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd;
+    case 'li-li'
+      SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_mex;
+  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd;
+  end
 end
 
 % Specify parameter bounds, starting values, and names
