@@ -75,64 +75,64 @@ trueM = arrayfun(@(x) true(x,1),M,'Uni',0);
 % -------------------------------------------------------------------------
 % R-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-% R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-% R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+% R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+% R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 
 % R-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-% R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-% R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+% R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+% R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 
 % R-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-% R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-% R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+% R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+% R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
 % R-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % R-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
 
 % F-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-% F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-% F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+% F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+% F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 
 % F-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-% F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-% F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+% F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+% F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 
 % F-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-% F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-% F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+% F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+% F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
 % F-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
 % F-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
 
 % L-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
 % L-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+% L-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
+% L-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 % L-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
 % L-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 
 % L-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
 % L-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+% L-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
+% L-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 % L-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
 % L-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 
 % L-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
 % L-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+% L-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
+% L-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 % L-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
 % L-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
 
@@ -235,86 +235,86 @@ switch condParam
         switch choiceMechType
           case 'li'
             % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
+            % L-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
+            % L-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
+            % L-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
             
             z0      = X(1);     % z0G
             zc      = X(2);     % zcG
             vcor    = X(3:5);   % vCG_c1,vCG_c2,vCG_c3
-            vincor  = X(6);     % vIG
-            t0      = X(7);     % t0G
-            se      = X(8);     % se
-            si      = X(9);     % si
-            k       = X(10);    % kG
-            w       = X(11);    % wG
+            vincor  = X(6:8);   % vIG_c1,vIG_c2,vIG_c3
+            t0      = X(9);     % t0G
+            se      = X(10);    % se
+            si      = X(11);    % si
+            k       = X(12);    % kG
+            w       = X(13);    % wG
             
           otherwise
             % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
             
             z0      = X(1);     % z0G
             zc      = X(2);     % zcG
             vcor    = X(3:5);   % vCG_c1,vCG_c2,vCG_c3
-            vincor  = X(6);     % vIG
-            t0      = X(7);     % t0G
-            se      = X(8);     % se
-            si      = X(9);     % si
+            vincor  = X(6:8);   % vIG_c1,vIG_c2,vIG_c3
+            t0      = X(9);     % t0G
+            se      = X(10);    % se
+            si      = X(11);    % si
             
         end        
       case 'all'
         switch choiceMechType
           case 'li'
             % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+            % L-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+            % L-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+            % L-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
             
             z0      = X(1:2);   % z0G,z0S
             zc      = X(3:4);   % zcG,zcS
             vcor    = X(5:8);   % vCG_c1,vCG_c2,vCG_c3,vCS
-            vincor  = X(9);     % vIG
-            t0      = X(10:11); % t0G,t0S
-            se      = X(12);    % se
-            si      = X(13);    % si
-            k       = X(14:15); % kG,kS
-            w       = X(16:17); % wG,wS
+            vincor  = X(9:11);  % vIG_c1,vIG_c2,vIG_c3
+            t0      = X(12:13); % t0G,t0S
+            se      = X(14);    % se
+            si      = X(15);    % si
+            k       = X(16:17); % kG,kS
+            w       = X(18:19); % wG,wS
             
           otherwise
             switch inhibMechType
               case 'li'
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-                % F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+                % R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+                % F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
                 
                 z0      = X(1:2);   % z0G,z0S
                 zc      = X(3:4);   % zcG,zcS
                 vcor    = X(5:8);   % vCG_c1,vCG_c2,vCG_c3,vCS
-                vincor  = X(9);     % vIG
-                t0      = X(10:11); % t0G,t0S
-                se      = X(12);    % se
-                si      = X(13);    % si
-                w       = X(14:15); % wG,wS
+                vincor  = X(9:11);  % vIG_c1,vIG_c2,vIG_c3
+                t0      = X(12:13); % t0G,t0S
+                se      = X(14);    % se
+                si      = X(15);    % si
+                w       = X(16:17); % wG,wS
                 
               otherwise
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
                 
                 z0      = X(1:2);   % z0G,z0S
                 zc      = X(3:4);   % zcG,zcS
                 vcor    = X(5:8);   % vCG_c1,vCG_c2,vCG_c3,vCS
-                vincor  = X(9);     % vIG
-                t0      = X(10:11); % t0G,t0S
-                se      = X(12);    % se
-                si      = X(13);    % si
+                vincor  = X(9:11);  % vIG_c1,vIG_c2,vIG_c3
+                t0      = X(12:13); % t0G,t0S
+                se      = X(14);    % se
+                si      = X(15);    % si
                 
             end
         end
@@ -527,10 +527,15 @@ switch condParam
       % #.#.#. Optimize go trials only
       % -------------------------------------------------------------------
       case 'go'
-        vc1 = vcor(1); % rate go-signal in condition 1
-        vc2 = vcor(2); % rate go-signal in condition 2
-        vc3 = vcor(3); % rate go-signal in condition 3
+        vc1 = vcor(1); % rate target go-signal in condition 1
+        vc2 = vcor(2); % rate target go-signal in condition 2
+        vc3 = vcor(3); % rate target go-signal in condition 3
       
+        vi1 = vincor(1); % rate non-target go-signal in condition 1
+        vi2 = vincor(2); % rate non-target go-signal in condition 2
+        vi3 = vincor(3); % rate non-target go-signal in condition 3
+        
+        
       % #.#.#. Optimize all trials
       % -------------------------------------------------------------------
       case 'all'
@@ -538,17 +543,20 @@ switch condParam
         vc2 = vcor([2,4]); % rate go-signal and stop-signal in condition 2
         vc3 = vcor([3,4]); % rate go-signal and stop-signal in condition 3
         
-        vincor = [vincor;0];    % Add an error rate for Stop units (no choice => no error rate)
+        vi1 = [vincor(1),0]; % rate non-target go-signal and stop-signal in condition 1
+        vi2 = [vincor(2),0]; % rate non-target go-signal and stop-signal in condition 2
+        vi3 = [vincor(3),0]; % rate non-target go-signal and stop-signal in condition 3
+        
     end
     
     % Rates in condition 1
-    V(1,:) = cellfun(@(a,b) a*vc1(:) + b*vincor,VCor,VIncor,'Uni',0);
+    V(1,:) = cellfun(@(a,b) a*vc1(:) + b*vi1(:),VCor(1,:),VIncor(1,:),'Uni',0);
     
     % Rates in condition 2
-    V(2,:) = cellfun(@(a,b) a*vc2(:) + b*vincor,VCor,VIncor,'Uni',0);
+    V(2,:) = cellfun(@(a,b) a*vc2(:) + b*vi2(:),VCor(2,:),VIncor(2,:),'Uni',0);
     
     % Rates in condition 3
-    V(3,:) = cellfun(@(a,b) a*vc3(:) + b*vincor,VCor,VIncor,'Uni',0);
+    V(3,:) = cellfun(@(a,b) a*vc3(:) + b*vi3(:),VCor(3,:),VIncor(3,:),'Uni',0);
   
   % #.#. Rate does not vary between conditions
   % =======================================================================
@@ -557,10 +565,10 @@ switch condParam
     switch lower(simScope)
       case 'go'
       case 'all'
-        vincor = [vincor;0];
+        vincor = [vincor,0];
     end
     
-    V = cellfun(@(a,b) a*vcor(:) + b*vincor,VCor,VIncor,'Uni',0);
+    V = cellfun(@(a,b) a*vcor(:) + b*vincor(:),VCor,VIncor,'Uni',0);
     
 end
 
