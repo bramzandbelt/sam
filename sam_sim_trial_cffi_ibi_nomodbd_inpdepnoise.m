@@ -1,4 +1,4 @@
-function [rt,resp,z] = sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise(u,~,~,C,~,SI, ...
+function [rt,resp,z] = sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise(u,A,~,C,~,SI, ...
                                                          Z0,ZC,ZLB,dt, ...
                                                          tau,T, ...
                                                          terminate,blockInput,~, ...
@@ -102,8 +102,9 @@ while t < p - 1
 %   dzdt        = (At + Bt + Dt)  * z(:,t)      * dt/tau + ...  % 
 %                 C               * u(:,t)      * dt/tau + ...  % Inputs
 %                 SI             * randn(n,1)  * sqrt(dt/tau); % Noise (in)
-              
-  dzdt        = C   * u(:,t)      * dt/tau + ...   % Inputs
+  
+  dzdt        = A  * z(:,t)      * dt/tau + ...   % Endogenous connectivity
+                C   * u(:,t)      * dt/tau + ...   % Inputs
                 SI  * diag((u(:,t) ~= 0)) * randn(n,1)  * sqrt(dt/tau);  % Noise (in)
               
   % Log new activation level

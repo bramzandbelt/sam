@@ -115,7 +115,7 @@ zcStg     = 'zcS';
 % -------------------------------------------------------------------------
 vCGLB     = 0;
 vCGUB     = 5;
-vCGX0     = 0.1325;
+vCGX0     = 0.1325*2;
 vCGtg     = 'vCG';
 
 vCGX0_c1  = 0.2044;
@@ -143,9 +143,9 @@ vIGUB     = 5;
 vIGX0     = 0.0144;
 vIGtg     = 'vIG';
 
-vIGX0_c1  = 0.0584;
-vIGX0_c2  = 0.0144;
-vIGX0_c3  = 5.55e-19;
+vIGX0_c1  = 0.18;
+vIGX0_c2  = 0.11;
+vIGX0_c3  = 0.08;
 
 vIGtg_c1  = 'vIG_c1';
 vIGtg_c2  = 'vIG_c2';
@@ -215,7 +215,7 @@ kStg      = 'kS';
 % -------------------------------------------------------------------------
 wGLB      = -1;
 wGUB      = 0;
-wGX0      = -0.02;
+wGX0      = -0.05;
 wGtg      = 'wG';
 
 % 1.9.2. STOP unit
@@ -247,17 +247,17 @@ switch lower(condParam)
             
           case {'race','ffi'}
             % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % R-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % R-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % R-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
             
-            LB = [z0GLB,zcGLB,vCGLB,vIGLB,t0GLB,t0GLB,t0GLB,seLB,siLB];
-            UB = [z0GUB,zcGUB,vCGUB,vIGUB,t0GUB,t0GUB,t0GUB,seUB,siUB];
-            X0 = [z0GX0,zcGX0,vCGX0,vIGX0,t0GX0_c1,t0GX0_c2,t0GX0_c3,seX0,siX0];
-            tg = {z0Gtg,zcGtg,vCGtg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,setg,sitg};
+            LB = [z0GLB,zcGLB,vCGLB,vIGLB,t0GLB,t0GLB,t0GLB,seLB,siLB,kGLB];
+            UB = [z0GUB,zcGUB,vCGUB,vIGUB,t0GUB,t0GUB,t0GUB,seUB,siUB,kGUB];
+            X0 = [z0GX0,zcGX0,vCGX0,vIGX0,t0GX0_c1,t0GX0_c2,t0GX0_c3,seX0,siX0,kGX0];
+            tg = {z0Gtg,zcGtg,vCGtg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,setg,sitg,kGtg};
             
         end        
       case 'all'
@@ -277,25 +277,25 @@ switch lower(condParam)
             switch lower(inhibMechType)
               case 'li'
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-                % F-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+                % R-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+                % F-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
                 
-                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0GLB,t0GLB,t0SLB,seLB,siLB,wGLB,wSLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0GUB,t0GUB,t0SUB,seUB,siUB,wGUB,wSUB];
-                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0_c1,t0GX0_c2,t0GX0_c3,t0SX0,seX0,siX0,wGX0,wSX0];
-                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg,wGtg,wStg};
+                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0GLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB,wGLB,wSLB];
+                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0GUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
+                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0_c1,t0GX0_c2,t0GX0_c3,t0SX0,seX0,siX0,kGX0,kSX0,wGX0,wSX0];
+                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
                 
               case {'race','bi'}
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % R-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % R-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % R-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % F-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % F-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
                 
-                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0GLB,t0GLB,t0SLB,seLB,siLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0GUB,t0GUB,t0SUB,seUB,siUB];
-                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0_c1,t0GX0_c2,t0GX0_c3,t0SX0,seX0,siX0];
-                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg};
+                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0GLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB];
+                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0GUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB];
+                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0_c1,t0GX0_c2,t0GX0_c3,t0SX0,seX0,siX0,kGX0,kSX0];
+                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg,kGtg,kStg};
                 
             end
         end 
@@ -317,17 +317,17 @@ switch lower(condParam)
                         
           case {'race','ffi'}
             % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
             
-            LB = [z0GLB,zcGLB,vCGLB,vCGLB,vCGLB,vIGLB,vIGLB,vIGLB,t0GLB,seLB,siLB];
-            UB = [z0GUB,zcGUB,vCGUB,vCGUB,vCGUB,vIGUB,vIGUB,vIGUB,t0GUB,seUB,siUB];
-            X0 = [z0GX0,zcGX0,vCGX0_c1,vCGX0_c2,vCGX0_c3,vIGX0_c1,vIGX0_c2,vIGX0_c3,t0GX0,seX0,siX0];
-            tg = {z0Gtg,zcGtg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,setg,sitg};
+            LB = [z0GLB,zcGLB,vCGLB,vCGLB,vCGLB,vIGLB,vIGLB,vIGLB,t0GLB,seLB,siLB,kGLB];
+            UB = [z0GUB,zcGUB,vCGUB,vCGUB,vCGUB,vIGUB,vIGUB,vIGUB,t0GUB,seUB,siUB,kGUB];
+            X0 = [z0GX0,zcGX0,vCGX0_c1,vCGX0_c2,vCGX0_c3,vIGX0_c1,vIGX0_c2,vIGX0_c3,t0GX0,seX0,siX0,kGX0];
+            tg = {z0Gtg,zcGtg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,setg,sitg,kGtg};
                         
         end        
       case 'all'
@@ -347,25 +347,25 @@ switch lower(condParam)
             switch lower(inhibMechType)
               case 'li'
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-                % F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+                % R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+                % F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
                 
-                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB,wGLB,wSLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB,wGUB,wSUB];
-                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0_c1,vCGX0_c2,vCGX0_c3,vCSX0,vIGX0_c1,vIGX0_c2,vIGX0_c3,t0GX0,t0SX0,seX0,siX0,wGX0,wSX0];
-                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg,wGtg,wStg};
+                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB,wGLB,wSLB];
+                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
+                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0_c1,vCGX0_c2,vCGX0_c3,vCSX0,vIGX0_c1,vIGX0_c2,vIGX0_c3,t0GX0,t0SX0,seX0,siX0,kGX0,kSX0,wGX0,wSX0];
+                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
                                 
               case {'race','bi'}
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
                 
-                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB];
-                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0_c1,vCGX0_c2,vCGX0_c3,vCSX0,vIGX0_c1,vIGX0_c2,vIGX0_c3,t0GX0,t0SX0,seX0,siX0];
-                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg};
+                LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB];
+                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB,kGUB,kSUB];
+                X0 = [z0GX0,z0SX0,zcGX0,zcSX0,vCGX0_c1,vCGX0_c2,vCGX0_c3,vCSX0,vIGX0_c1,vIGX0_c2,vIGX0_c3,t0GX0,t0SX0,seX0,siX0,kGX0,kSX0];
+                tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg,kGtg,kStg};
                 
             end
         end
@@ -387,17 +387,17 @@ switch lower(condParam)
             
           case {'race','ffi'}
             % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % R-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
-            % F-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0 | 0 | 0 | 0 |
+            % R-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % R-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % R-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
+            % F-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
             
-            LB = [z0GLB,zcGLB,zcGLB,zcGLB,vCGLB,vIGLB,t0GLB,seLB,siLB];
-            UB = [z0GUB,zcGUB,zcGUB,zcGUB,vCGUB,vIGUB,t0GUB,seUB,siUB];
-            X0 = [z0GX0,zcGX0_c1,zcGX0_c2,zcGX0_c3,vCGX0,vIGX0,t0GX0,seX0,siX0];
-            tg = {z0Gtg,zcGtg_c1,zcGtg_c2,zcGtg_c3,vCGtg,vIGtg,t0Gtg,setg,sitg};
+            LB = [z0GLB,zcGLB,zcGLB,zcGLB,vCGLB,vIGLB,t0GLB,seLB,siLB,kGLB];
+            UB = [z0GUB,zcGUB,zcGUB,zcGUB,vCGUB,vIGUB,t0GUB,seUB,siUB,kGUB];
+            X0 = [z0GX0,zcGX0_c1,zcGX0_c2,zcGX0_c3,vCGX0,vIGX0,t0GX0,seX0,siX0,kGX0];
+            tg = {z0Gtg,zcGtg_c1,zcGtg_c2,zcGtg_c3,vCGtg,vIGtg,t0Gtg,setg,sitg,kGtg};
             
         end        
       case 'all'
@@ -417,25 +417,25 @@ switch lower(condParam)
             switch lower(inhibMechType)
               case 'li'
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
-                % F-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 | 1 |
+                % R-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+                % F-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
                 
-                LB = [z0GLB,z0SLB,zcGLB,zcGLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0SLB,seLB,siLB,wGLB,wSLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcGUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0SUB,seUB,siUB,wGUB,wSUB];
-                X0 = [z0GX0,z0SX0,zcGX0_c1,zcGX0_c2,zcGX0_c3,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0,t0SX0,seX0,siX0,wGX0,wSX0];
-                tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg,wGtg,wStg};
+                LB = [z0GLB,z0SLB,zcGLB,zcGLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB,wGLB,wSLB];
+                UB = [z0GUB,z0SUB,zcGUB,zcGUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
+                X0 = [z0GX0,z0SX0,zcGX0_c1,zcGX0_c2,zcGX0_c3,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0,t0SX0,seX0,siX0,kGX0,kSX0,wGX0,wSX0];
+                tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
                 
               case {'race','bi'}
                 % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % R-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
-                % F-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+                % R-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % R-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % F-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
+                % F-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
                 
-                LB = [z0GLB,z0SLB,zcGLB,zcGLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0SLB,seLB,siLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcGUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0SUB,seUB,siUB];
-                X0 = [z0GX0,z0SX0,zcGX0_c1,zcGX0_c2,zcGX0_c3,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0,t0SX0,seX0,siX0];
-                tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg};
+                LB = [z0GLB,z0SLB,zcGLB,zcGLB,zcGLB,zcSLB,vCGLB,vCSLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB];
+                UB = [z0GUB,z0SUB,zcGUB,zcGUB,zcGUB,zcSUB,vCGUB,vCSUB,vIGUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB];
+                X0 = [z0GX0,z0SX0,zcGX0_c1,zcGX0_c2,zcGX0_c3,zcSX0,vCGX0,vCSX0,vIGX0,t0GX0,t0SX0,seX0,siX0,kGX0,kSX0];
+                tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg,kGtg,kStg};
                                 
             end
         end

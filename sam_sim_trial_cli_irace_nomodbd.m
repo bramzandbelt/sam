@@ -70,7 +70,7 @@ while t < p - 1
   % because lateral inhibition kicks in once a unit has reached its
   % threshold)
   % -----------------------------------------------------------------------
-  At = A;
+%   At = A;
   
 %   % Extrinsic modulation at time t
 %   % -----------------------------------------------------------------------
@@ -100,7 +100,7 @@ while t < p - 1
 %                 C               * u(:,t)      * dt/tau + ...  % Inputs
 %                 SI             * randn(n,1)  * sqrt(dt/tau); % Noise (in)
               
-  dzdt        = At  * z(:,t)      * dt/tau + ...   % Endogenous connectivity
+  dzdt        = A   * z(:,t)      * dt/tau + ...   % Endogenous connectivity
                 C   * u(:,t)      * dt/tau + ...   % Inputs
                 SI  * randn(n,1)  * sqrt(dt/tau);  % Noise (in)
               
