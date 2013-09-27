@@ -61,56 +61,58 @@ inhibMechType   = SAM.des.inhibMech.type;
 % -------------------------------------------------------------------------
 
 % Lower bound on activation
-zLB         = SAM.des.accumMech.zLB;
+zLB           = SAM.des.accumMech.zLB;
 
 % Time window during which accumulation is 'recorded'
-timeWindow  = SAM.des.accumMech.timeWindow;
+timeWindow    = SAM.des.accumMech.timeWindow;
 
 % Time step
-dt          = SAM.des.time.dt;
+dt            = SAM.des.time.dt;
 
 % Time constant
-tau         = SAM.des.time.tau;
+tau           = SAM.des.time.tau;
 
 % Model parameters
 % -------------------------------------------------------------------------
 
 % Parameter that varies across conditions
-condParam   = SAM.des.condParam;
+condParam     = SAM.des.condParam;
 
 % Number of GO and STOP units
-nGo         = SAM.des.nGO;
-nStop       = SAM.des.nSTOP;
+nGo           = SAM.des.nGO;
+nStop         = SAM.des.nSTOP;
+
+durationSTOP  = SAM.des.durationSTOP;
 
 % Simulator parameters
 % -------------------------------------------------------------------------
-simScope    = SAM.sim.scope;
+simScope      = SAM.sim.scope;
 
-nSim        = SAM.sim.nSim;
+nSim          = SAM.sim.nSim;
 
-trialSimFun = SAM.sim.trialSimFun;
+trialSimFun   = SAM.sim.trialSimFun;
 
 % Experimental parameters
 % -------------------------------------------------------------------------
 
 % Number of conditions
-nCnd        = SAM.des.expt.nCnd;
+nCnd          = SAM.des.expt.nCnd;
 
 % Number of stop-signal delays
-nSsd        = SAM.des.expt.nSsd;
+nSsd          = SAM.des.expt.nSsd;
 
 % Stimulus onsets
-stimOns     = SAM.des.expt.stimOns;
+stimOns       = SAM.des.expt.stimOns;
 
 % Stimulus durations
-stimDur     = SAM.des.expt.stimDur;
+stimDur       = SAM.des.expt.stimDur;
 
 
 switch simGoal
   case 'explore'
     
     % Time windows for alignment on go-signal
-    tWinGo  = SAM.explore.tWinGo;
+    tWinGo    = SAM.explore.tWinGo;
     
     % Time windows for alignment on stop-signal
     tWinStop  = SAM.explore.tWinStop;
@@ -281,6 +283,26 @@ for iCnd = 1:nCnd
   iGONT = SAM.des.iGONT{iCnd};
   iSTOP = SAM.des.iSTOP{iCnd};
   
+  % TEMPORARY CODE!
+  switch lower(choiceMechType)
+    case 'ffi'
+      
+      bla = {3:4,2:5,1:6};
+      bli = [2,4,6];
+      
+      C = eye(7);
+      for i = bla{iCnd}
+        for j = bla{iCnd}
+          if ~isequal(i,j)
+            C(i,j) = -1/(bli(iCnd)-1);
+          end
+        end
+      end
+      
+      
+  end
+  
+  
   % Loop over trial types
   for iTrType = 1:nTrType
     
@@ -317,22 +339,36 @@ for iCnd = 1:nCnd
     
     % 4.2. Timing diagram of model inputs
     % =====================================================================
-      
-    % 4.2.1. Compute timing diagram
+    
+    % Onset and duration of the accumulation process
+    thisAccumOns = accumOns{iCnd,iTrType}(:)';
+    thisAccumDur = stimDur{iCnd,iTrType}(:)';
+    
+    % 4.2.1. Adjust duration of the STOP process, if needed
     % ---------------------------------------------------------------------
+    if iTrType > 1
+      switch durationSTOP
+        case 'trial'
+          % STOP accumulation process lasts the entire trial
+          thisAccumDur(iSTOP) = timeWindow(2) - thisAccumOns(iSTOP);
+      end
+    end
+    % 4.2.2. Compute timing diagram
+    % ---------------------------------------------------------------------
+    
                                           % OUTPUT
     [t, ...                               % - Time
      u] ...                               % - Strength of model input
      = sam_spec_timing_diagram ...        % FUNCTION
      ...                                  % INPUT
-    (accumOns{iCnd,iTrType}(:)', ...      % - Accumulation onset time
-     stimDur{iCnd,iTrType}(:)', ...       % - Stimulus duration
+    (thisAccumOns, ...                    % - Accumulation onset time
+     thisAccumDur, ...                    % - Stimulus duration
      V{iCnd,iTrType}, ...                 % - Input strength
      SE{iCnd,iTrType}, ...                % - Magnitude of extrinsic noise
      dt, ...                              % - Time step
      timeWindow);                         % - Time window
     
-    % 4.2.2. Log timing diagram
+    % 4.2.3. Log timing diagram
     % ---------------------------------------------------------------------
     switch simGoal
       case 'explore'

@@ -37,7 +37,7 @@ load(SAM.io.obsFile);
 % 'ffi'       - Feed-forward inhibition
 % 'li'        - Lateral inhibition
 
-SAM.des.choiceMech.type            = 'li';
+SAM.des.choiceMech.type            = 'race';
 
 % #.2. Inhibition mechanism
 % ========================================================================= 
@@ -48,7 +48,7 @@ SAM.des.choiceMech.type            = 'li';
 % 'bi'        - Blocked input
 % 'li'        - Lateral inhibition
 
-SAM.des.inhibMech.type             = 'li';
+SAM.des.inhibMech.type             = 'race';
 
 % #.3. Accumulation mechanism
 % ========================================================================= 
@@ -72,7 +72,7 @@ SAM.des.time.tau                   = 1;
 
 % Dependency of intrinsic noise on model input
 % -------------------------------------------------------------------------
-SAM.des.inpDepNoise                = true;
+SAM.des.inpDepNoise                = false;
 
 % #.4. Experiment parameters
 % ========================================================================= 
@@ -121,6 +121,15 @@ SAM.des.iGONT                      = cellfun(@(a,b) setdiff(a,b),SAM.des.iGO,SAM
 % -------------------------------------------------------------------------
 SAM.des.iSTOP                      = {7,7,7};
 
+% Duration of STOP process
+% -------------------------------------------------------------------------
+% 'stop-signal'             - the STOP unit is active for the period that
+%                             the stop-signal is presented
+% 'trial'                   - the STOP process is active for the entire
+%                             duration of the trial
+
+SAM.des.durationSTOP               = 'trial';
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. SPECIFY MODEL SIMULATION SETTINGS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -150,7 +159,7 @@ SAM.sim.scope                         = 'all';
 % =========================================================================
 % The same number of trials is used for each trial type
 
-SAM.sim.nSim                          = 500;
+SAM.sim.nSim                          = 100;
 
 % #.#. Random number generator seed
 % =========================================================================
