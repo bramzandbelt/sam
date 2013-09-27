@@ -1,5 +1,5 @@
 function [A,B,C,D,V,SE,SI,Z0,ZC,accumOns] = ...
-          sam_decode_x(SAM,X,choiceMechType,inhibMechType,condParam,simScope,stimOns,stimDur,N,M,VCor,VIncor,S)
+          sam_decode_x(SAM,X,stimOns,stimDur,N,M,VCor,VIncor,S)
 % SAM_DECODE_X <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -28,12 +28,24 @@ function [A,B,C,D,V,SE,SI,Z0,ZC,accumOns] = ...
 % 1.1. Process inputs
 % ========================================================================= 
 
+% Choice mechanism type
+choiceMechType = SAM.des.choiceMech.type;
+
+% Inhibition mechanism type
+inhibMechType = SAM.des.inhibMech.type;
+
+% Parameter that varies across task conditions
+condParam = SAM.des.condParam;
+
+% Scope of the simulation
+simScope = SAM.sim.scope;
+
 % Number of conditions
 nCnd  = SAM.des.expt.nCnd;
 
 % Indices of GO inputs, per condition
 iGO   = SAM.des.iGO;
- 
+
 % 1.2. Specify dynamic variables
 % ========================================================================= 
 
@@ -466,18 +478,25 @@ switch choiceMechType
     
 end
 
-switch inhibMechType
-  case 'li'
-    
-    % Lateral inhibition to other units of other class
-    boolAOo = ~blkdiag(trueN{:})*blkdiag(trueN{:})';
-    AOo = boolAOo*diag(blkdiag(trueN{:})*w(:));
-    
+switch lower(simScope)
+  case 'all'
+    switch lower(inhibMechType)
+      case 'li'
+
+        % Lateral inhibition to other units of other class
+        boolAOo = ~blkdiag(trueN{:})*blkdiag(trueN{:})';
+        AOo = boolAOo*diag(blkdiag(trueN{:})*w(:));
+
+      otherwise
+
+        % No lateral inhibition between GO and STOP
+        AOo = zeros(sum(N),sum(N));
+
+    end
   otherwise
     
-    % No lateral inhibition
+    % No lateral inhibition between GO and STOP
     AOo = zeros(sum(N),sum(N));
-    
 end
 
 % Ednogenous connectivity matrix
@@ -520,13 +539,28 @@ Z0 = blkdiag(trueN{:})*z0(:);
 ZC = cell(nCnd,1);
 switch lower(condParam)
   case 'zc'
-
-    zcc1 = zc([1,4]);
-    ZC{1,1} = blkdiag(trueN{:})*zcc1(:);
-    zcc2 = zc([2,4]);
-    ZC{2,1} = blkdiag(trueN{:})*zcc2(:);
-    zcc3 = zc([3,4]);
-    ZC{3,1} = blkdiag(trueN{:})*zcc3(:);
+    
+    switch lower(simScope)
+      % #.#.#. Optimize go trials only
+      % -------------------------------------------------------------------
+      case 'go'
+        zcc1 = zc(1);
+        ZC{1,1} = blkdiag(trueN{:})*zcc1(:);
+        zcc2 = zc(2);
+        ZC{2,1} = blkdiag(trueN{:})*zcc2(:);
+        zcc3 = zc(3);
+        ZC{3,1} = blkdiag(trueN{:})*zcc3(:);
+        
+      % #.#.#. Optimize all trials
+      % -------------------------------------------------------------------
+      case 'all'
+        zcc1 = zc([1,4]);
+        ZC{1,1} = blkdiag(trueN{:})*zcc1(:);
+        zcc2 = zc([2,4]);
+        ZC{2,1} = blkdiag(trueN{:})*zcc2(:);
+        zcc3 = zc([3,4]);
+        ZC{3,1} = blkdiag(trueN{:})*zcc3(:);
+    end
     
   otherwise
     ZC = cellfun(@(a) blkdiag(trueN{:})*zc(:),ZC,'Uni',0);

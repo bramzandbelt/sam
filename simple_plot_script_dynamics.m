@@ -1,7 +1,7 @@
-iCnd = 1;
+iCnd = 2;
 iGOT = 3;
 iSTOP = 7;
-N = [6 1];
+
 
 % Figure
 hFig = set_figure({1000,750,'pixels'},{'USLetter','landscape'},{'Helvetica',12});
@@ -34,6 +34,16 @@ colSTOP = [1 0 0];
 xStimLim = [250 2250];
 xDataLim = [0 2000];
 
+
+simScope = SAM.sim.scope;
+
+switch lower(simScope)
+  case 'go'
+    N = 6;
+  case 'all'
+    N = [6 1];
+end
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GO TRIALS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,12 +63,18 @@ p(1,1,1).pack('v',2);
 
 % Get data
 X = repmat(prd.tDiagram{iCnd,iGoTrType}.stim.go.X,1,2);
-Y = prd.tDiagram{iCnd,iGoTrType}.stim.go.Y([iGOT,iSTOP],:)';
 
-label = {'go','stop'};
+switch lower(simScope)
+  case 'go'
+    Y = prd.tDiagram{iCnd,iGoTrType}.stim.go.Y([iGOT],:)';
+    label = {'go'};
+  case 'all'
+    Y = prd.tDiagram{iCnd,iGoTrType}.stim.go.Y([iGOT,iSTOP],:)';
+    label = {'go','stop'};
+end
 
 % Plot data
-for i = 1:2
+for i = 1:size(Y,2)
   p(1,1,1,i).select();
   stairs(X(:,i),Y(:,i),'k-');
   
@@ -112,16 +128,20 @@ rtGoComm = sort(prd.rtGoComm{iCnd});
 FGoCorr = mtb_edf(rtGoCorr(:),rtGoCorr(:));
 FGoComm = mtb_edf(rtGoComm(:),rtGoComm(:));
 
-% Plot data
+% Plot predicted data
 plot(rtGoCorr,FGoCorr,'Color',colGOT,'LineWidth',3);
 plot(rtGoComm,FGoComm,'Color',colGONTE,'LineWidth',3);
+
+% Plot observed quantiles
+% scatter(quantile(obs.rtGoCorr{iCnd},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGOT,'LineWidth',2);
+% scatter(quantile(obs.rtGoComm{iCnd},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGONTE,'LineWidth',2);
 
 % Adjust axes
 set(gca,'XLim',xDataLim, ...
          'YTick',[0 1]);
 ylabel('Cumulative probability');
 title('RTs and probabilities on no-signal trials');
-axes('Position',[0.08 0.6 0.1 0.1])
+axes('Position',[0.4 0.6 0.1 0.1])
 
 if ~any([prd.pGoCorr(iCnd),prd.pGoComm(iCnd),prd.pGoOmit(iCnd)] == 0)
   hPie = pie(gca,[prd.pGoCorr(iCnd),prd.pGoComm(iCnd),prd.pGoOmit(iCnd)],{'Corr','Comm','Omit'});
@@ -217,199 +237,215 @@ if prd.pGoComm(iCnd) > 0
   
 end
 
-% =========================================================================
-% STOP TRIALS
-% =========================================================================
 
-iStopTrType = 5;
+switch lower(simScope)
+  case 'all'
+    
+    % =========================================================================
+    % STOP TRIALS
+    % =========================================================================
 
-% Timing diagrams
-% =========================================================================
-p(1,2).margin = [15 0 5 2];
-p(1,2).pack('v',[1/4,3/4]);
+    iStopTrType = 4;
 
-% Stimuli
-% -------------------------------------------------------------------------
+    % Timing diagrams
+    % =========================================================================
+    p(1,2).margin = [15 0 5 2];
+    p(1,2).pack('v',[1/4,3/4]);
 
-% Split into two vertical panels
-p(1,2,1).pack('v',2);
+    % Stimuli
+    % -------------------------------------------------------------------------
 
-% Get data
-X = repmat(prd.tDiagram{iCnd,iStopTrType}.stim.stop.X,1,2);
-Y = prd.tDiagram{iCnd,iStopTrType}.stim.stop.Y([iGOT,iSTOP],:)';
+    % Split into two vertical panels
+    p(1,2,1).pack('v',2);
 
-label = {'go','stop'};
+    % Get data
+    X = repmat(prd.tDiagram{iCnd,iStopTrType}.stim.stop.X,1,2);
+    Y = prd.tDiagram{iCnd,iStopTrType}.stim.stop.Y([iGOT,iSTOP],:)';
 
-% Plot data
-for i = 1:2
-  p(1,2,1,i).select();
-  stairs(X(:,i),Y(:,i),'k-');
-  
-  % Adjust axes
-  set(gca,'XLim',xStimLim, ...
-          'YLim',[-0.1,1]);
-  text(diff(xStimLim)*-0.02 + xStimLim(1),0,label{i}, ...
-       'HorizontalAlignment','right', ...
-       'VerticalAlignment','middle')
-     axis off
-end
+    label = {'go','stop'};
 
-% Model inputs
-% -------------------------------------------------------------------------
+    % Plot data
+    for i = 1:2
+      p(1,2,1,i).select();
+      stairs(X(:,i),Y(:,i),'k-');
 
-% Split into four vertical panels
-p(1,2,2).pack('v',sum(N));
+      % Adjust axes
+      set(gca,'XLim',xStimLim, ...
+              'YLim',[-0.1,1]);
+      text(diff(xStimLim)*-0.02 + xStimLim(1),0,label{i}, ...
+           'HorizontalAlignment','right', ...
+           'VerticalAlignment','middle')
+         axis off
+    end
 
-% Get data
-X = repmat(prd.tDiagram{iCnd,iStopTrType}.modelinput.stop.X,1,sum(N));
-Y = prd.tDiagram{iCnd,iStopTrType}.modelinput.stop.Y';
+    % Model inputs
+    % -------------------------------------------------------------------------
 
-label = {'GO1','GO2','GO3','GO4','GO5','GO6','STOP'};
+    % Split into four vertical panels
+    p(1,2,2).pack('v',sum(N));
 
-% Plot data
-for i = 1:sum(N)
-  p(1,2,2,i).select();
-  stairs(X(:,i),Y(:,i),'k-');
-  
-  % Adjust axes
-  set(gca,'XLim',xStimLim, ...
-          'YLim',[-0.1*max(Y(:)),max(Y(:))]);
-  text(diff(xStimLim)*-0.02 + xStimLim(1),0,label{i}, ...
-       'HorizontalAlignment','right', ...
-       'VerticalAlignment','middle')
-     axis off
-end
+    % Get data
+    X = repmat(prd.tDiagram{iCnd,iStopTrType}.modelinput.stop.X,1,sum(N));
+    Y = prd.tDiagram{iCnd,iStopTrType}.modelinput.stop.Y';
 
-% Response times
-% =========================================================================
+    label = {'GO1','GO2','GO3','GO4','GO5','GO6','STOP'};
 
-% Split into two vertical panels
-p(2,2).pack('v',2);
+    % Plot data
+    for i = 1:sum(N)
+      p(1,2,2,i).select();
+      stairs(X(:,i),Y(:,i),'k-');
 
-p(2,2,1).select();
-p(2,2,1).hold('on');
+      % Adjust axes
+      set(gca,'XLim',xStimLim, ...
+              'YLim',[-0.1*max(Y(:)),max(Y(:))]);
+      text(diff(xStimLim)*-0.02 + xStimLim(1),0,label{i}, ...
+           'HorizontalAlignment','right', ...
+           'VerticalAlignment','middle')
+         axis off
+    end
 
-% Get data
-rtGo = sort([prd.rtGoCorr{iCnd},prd.rtGoComm{iCnd}]);
-rtStopFailure = sort(prd.rtStopFailure{iCnd,iStopTrType-1});
-rtStopSuccess = sort(prd.rtStopSuccess{iCnd,iStopTrType-1});
+    % Response times
+    % =========================================================================
 
-% Cumulative probabilities
-FGo = mtb_edf(rtGo(:),rtGo(:));
-FStopFailure = mtb_edf(rtStopFailure(:),rtStopFailure(:));
-FStopSuccess = mtb_edf(rtStopSuccess(:),rtStopSuccess(:));
+    % Split into two vertical panels
+    p(2,2).pack('v',2);
 
-% Plot data
-plot(rtGo,FGo,'Color',colGOT,'LineWidth',3,'LineStyle','-');
-plot(rtStopFailure,FStopFailure,'Color',colGOT,'LineWidth',3,'LineStyle','--');
-plot(rtStopSuccess,FStopSuccess,'Color',colSTOP,'LineWidth',3,'LineStyle','--');
+    p(2,2,1).select();
+    p(2,2,1).hold('on');
 
-% Adjust axes
-set(gca,'XLim',xDataLim, ...
-        'YLim',[0 1], ...
-        'YTick',[0 1]);
-ylabel('Cum. prob.')
-title('RTs on no-signal and signal-respond trials');
+    % Get data
+    rtGo = sort([prd.rtGoCorr{iCnd},prd.rtGoComm{iCnd}]);
+    rtStopFailure = sort(prd.rtStopFailure{iCnd,iStopTrType-1});
+    rtStopSuccess = sort(prd.rtStopSuccess{iCnd,iStopTrType-1});
 
-p(2,2,2).select();
-p(2,2,2).hold('on');
+    % Cumulative probabilities
+    FGo = mtb_edf(rtGo(:),rtGo(:));
+    FStopFailure = mtb_edf(rtStopFailure(:),rtStopFailure(:));
+    FStopSuccess = mtb_edf(rtStopSuccess(:),rtStopSuccess(:));
 
-% Get data
-inhibFunc = prd.inhibFunc{iCnd};
-ssd = cell2mat(cellfun(@(a) a(7), SAM.des.expt.stimOns(iCnd,2:end),'Uni',0));
+    % Plot predicted data
+    plot(rtGo,FGo,'Color',colGOT,'LineWidth',3,'LineStyle','-');
+    plot(rtStopFailure,FStopFailure,'Color',colGOT,'LineWidth',3,'LineStyle','--');
+    plot(rtStopSuccess,FStopSuccess,'Color',colSTOP,'LineWidth',3,'LineStyle','--');
 
-% Plot data
-plot(ssd,inhibFunc,'k.','LineWidth',3);
-plot(ssd(iStopTrType-1),inhibFunc(iStopTrType-1),'r.');
+    % Plot observed quantiles
+    % scatter(quantile(obs.rtStopFailure{iCnd,iStopTrType-1},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGOT,'LineWidth',2);
 
-% Adjust axes
-set(gca,'XLim',xDataLim, ...
-        'YLim',[0 1], ...
-        'YTick',[0 1]);
-ylabel('Cum. prob.')
-title('Inhibition function');
+    % Adjust axes
+    set(gca,'XLim',xDataLim, ...
+            'YLim',[0 1], ...
+            'YTick',[0 1]);
+    ylabel('Cum. prob.')
+    title('RTs on no-signal and signal-respond trials');
 
-clear rtGo rtStopFailure FGo FStopFailure
+    p(2,2,2).select();
+    p(2,2,2).hold('on');
 
-% Dynamics StopSuccess trial
-% =========================================================================
+    % Get data
+    inhibFunc = prd.inhibFunc{iCnd};
+    ssd = cell2mat(cellfun(@(a) a(iSTOP)-a(iGOT), SAM.des.expt.stimOns(iCnd,2:end),'Uni',0));
 
-if prd.pStopSuccess(iCnd,iStopTrType-1) > 0
+    % Plot data
+    plot(ssd,inhibFunc,'k.','LineWidth',3);
+    plot(ssd(iStopTrType-1),inhibFunc(iStopTrType-1),'r.');
 
-  % Select panel
-  p(3,2).select();
-  p(3,2).hold('on');
+    % Adjust axes
+    set(gca,'XLim',xDataLim, ...
+            'YLim',[0 1], ...
+            'YTick',[0 1]);
+    ylabel('Cum. prob.')
+    title('Inhibition function');
 
-  % Get individual trial dynamics
-  sXSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.sX;
-  sYSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.sY;
-  sXGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.sX;
-  sYGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.sY;
+    clear rtGo rtStopFailure FGo FStopFailure
 
-  % Get quantile averaged dynamics
-  qXSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.qX;
-  qYSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.qY;
-  qXGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.qX;
-  qYGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.qY;
+    % Dynamics StopSuccess trial
+    % =========================================================================
 
-  % Plot data
-  cellfun(@(a,b) patchline(a,b,'EdgeColor',colGOT,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXGOT,sYGOT,'Uni',0);
-  cellfun(@(a,b) patchline(a,b,'EdgeColor',colSTOP,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXSTOP,sYSTOP,'Uni',0);
+    if prd.pStopSuccess(iCnd,iStopTrType-1) > 0
 
-  plot(qXGOT,qYGOT,'Color',colGOT,'LineWidth',3);
-  plot(qXSTOP,qYSTOP,'Color',colSTOP,'LineWidth',3);
+      % Select panel
+      p(3,2).select();
+      p(3,2).hold('on');
 
-  line([xDataLim(1),xDataLim(2)], ...
-       [modelMat.ZC{iCnd}(iSTOP),modelMat.ZC{iCnd}(iSTOP)], 'Color','k','LineWidth',3);
+      % Get individual trial dynamics
+      sXSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.sX;
+      sYSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.sY;
+      sXGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.sX;
+      sYGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.sY;
 
-  % Adjust axes
-  set(gca,'XLim',xDataLim);
-  ylabel('Activation (a.u.)');
-  title('Dynamics on signal-inhibit trials');
+      % Get quantile averaged dynamics
+      qXSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.qX;
+      qYSTOP = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.STOP.qY;
+      qXGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.qX;
+      qYGOT  = prd.dyn{iCnd,iStopTrType}.StopSuccess.goStim.GOT.qY;
 
-  clear sXSTOP sYSTOP sXGOT sYGOT qXSTOP qYSTOP qXGOT qYGOT
-  
-end
+      % Plot data
+      cellfun(@(a,b) patchline(a,b,'EdgeColor',colGOT,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXGOT,sYGOT,'Uni',0);
+      cellfun(@(a,b) patchline(a,b,'EdgeColor',colSTOP,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXSTOP,sYSTOP,'Uni',0);
 
-% Dynamics StopFailure trial
-% =========================================================================
+      plot(qXGOT,qYGOT,'Color',colGOT,'LineWidth',3);
+      plot(qXSTOP,qYSTOP,'Color',colSTOP,'LineWidth',3);
 
-if prd.pStopFailure(iCnd,iStopTrType-1)
-  
-  % Select panel
-  p(4,2).select();
-  p(4,2).hold('on');
+      line([xDataLim(1),xDataLim(2)], ...
+           [modelMat.ZC{iCnd}(iGOT),modelMat.ZC{iCnd}(iGOT)], 'Color','k','LineWidth',3);
 
-  % Get individual trial dynamics
-  sXSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.sX;
-  sYSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.sY;
-  sXGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.sX;
-  sYGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.sY;
 
-  % Get quantile averaged dynamics
-  qXSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.qX;
-  qYSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.qY;
-  qXGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.qX;
-  qYGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.qY;
+      line([xDataLim(1),xDataLim(2)], ...
+           [modelMat.ZC{iCnd}(iSTOP),modelMat.ZC{iCnd}(iSTOP)], 'Color','k','LineWidth',3);
 
-  % Plot data
-  cellfun(@(a,b) patchline(a,b,'EdgeColor',colSTOP,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXSTOP,sYSTOP,'Uni',0);
-  cellfun(@(a,b) patchline(a,b,'EdgeColor',colGOT,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXGORESP,sYGORESP,'Uni',0);
+      % Adjust axes
+      set(gca,'XLim',xDataLim);
+      ylabel('Activation (a.u.)');
+      title('Dynamics on signal-inhibit trials');
 
-  plot(qXSTOP,qYSTOP,'Color',colSTOP,'LineWidth',3);
-  plot(qXGORESP,qYGORESP,'Color',colGOT,'LineWidth',3);
+      clear sXSTOP sYSTOP sXGOT sYGOT qXSTOP qYSTOP qXGOT qYGOT
 
-  line([xDataLim(1),xDataLim(2)], ...
-       [modelMat.ZC{iCnd}(iGOT),modelMat.ZC{iCnd}(iGOT)], 'Color','k','LineWidth',3);
+    end
 
-  % Adjust axes
-  set(gca,'XLim',xDataLim);
-  xlabel('Time from go-signal (ms');
-  ylabel('Activation (a.u.)');
-  title('Dynamics on signal-respond trials');
+    % Dynamics StopFailure trial
+    % =========================================================================
 
-  clear sXSTOP sYSTOP sXGOT sYGOT qXSTOP qYSTOP qXGOT qYGOT
-  
+    if prd.pStopFailure(iCnd,iStopTrType-1)
+
+      % Select panel
+      p(4,2).select();
+      p(4,2).hold('on');
+
+      % Get individual trial dynamics
+      sXSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.sX;
+      sYSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.sY;
+      sXGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.sX;
+      sYGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.sY;
+
+      % Get quantile averaged dynamics
+      qXSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.qX;
+      qYSTOP = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.STOP.qY;
+      qXGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.qX;
+      qYGORESP  = prd.dyn{iCnd,iStopTrType}.StopFailure.goStim.GORESP.qY;
+
+      % Plot data
+      cellfun(@(a,b) patchline(a,b,'EdgeColor',colSTOP,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXSTOP,sYSTOP,'Uni',0);
+      cellfun(@(a,b) patchline(a,b,'EdgeColor',colGOT,'LineWidth',1,'EdgeAlpha',edgeAlpha),sXGORESP,sYGORESP,'Uni',0);
+
+      plot(qXSTOP,qYSTOP,'Color',colSTOP,'LineWidth',3);
+      plot(qXGORESP,qYGORESP,'Color',colGOT,'LineWidth',3);
+
+      line([xDataLim(1),xDataLim(2)], ...
+           [modelMat.ZC{iCnd}(iGOT),modelMat.ZC{iCnd}(iGOT)], 'Color','k','LineWidth',3);
+
+      line([xDataLim(1),xDataLim(2)], ...
+           [modelMat.ZC{iCnd}(iSTOP),modelMat.ZC{iCnd}(iSTOP)], 'Color','k','LineWidth',3);
+
+
+      % Adjust axes
+      set(gca,'XLim',xDataLim);
+      xlabel('Time from go-signal (ms');
+      ylabel('Activation (a.u.)');
+      title('Dynamics on signal-respond trials');
+
+      clear sXSTOP sYSTOP sXGOT sYGOT qXSTOP qYSTOP qXGOT qYGOT
+
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -441,7 +477,7 @@ title('Endogenous connectivity');
 
 % Matrix C:
 p(1,2).select();
-sam_grid_image(double(modelMat.C));
+sam_grid_image(double(modelMat.C{iCnd}));
 pos = get(gca,'Position');
 pos(4) = 0.8;
 set(gca,'Position',pos)
@@ -461,9 +497,12 @@ p(1,4,1).select();
 sam_grid_image(double(modelMat.V{iCnd,iGoTrType}));
 title('Rates on Go trials');
 
-p(1,4,2).select();
-sam_grid_image(double(modelMat.V{iCnd,iStopTrType}));
-title('Rates on Stop trials');
+switch lower(simScope)
+  case 'all'
+    p(1,4,2).select();
+    sam_grid_image(double(modelMat.V{iCnd,iStopTrType}));
+    title('Rates on Stop trials');
+end
 
 % Matrices SI
 p(1,5).pack('h',2);
@@ -471,9 +510,12 @@ p(1,5,1).select();
 sam_grid_image(double(modelMat.SI{iCnd,iGoTrType}));
 title('Intrinsic noise on Go trials');
 
-p(1,5,2).select();
-sam_grid_image(double(modelMat.SI{iCnd,iStopTrType}));
-title('Intrinsic noise  on Stop trials');
+switch lower(simScope)
+  case 'all'
+    p(1,5,2).select();
+    sam_grid_image(double(modelMat.SI{iCnd,iStopTrType}));
+    title('Intrinsic noise  on Stop trials');
+end
 
 % Matrix ZC
 p(1,6).select();

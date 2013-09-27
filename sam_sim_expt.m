@@ -144,6 +144,12 @@ switch lower(simScope)
     % Number of trial types: Go trials only
     nTrType = 1;
     
+    % Adjust stimulus onsets to include data from Go trials only
+    stimOns   = cellfun(@(a) a(1:M),stimOns,'Uni',0);
+    
+    % Adjust stimulus durations to include data from Go trials only
+    stimDur   = cellfun(@(a) a(1:M),stimDur,'Uni',0);
+    
   case 'all'
     % Number of units
     N = [nGo nStop];
@@ -256,10 +262,6 @@ end
  ...                          % INPUTS
  SAM, ...                     % SAM structure
  X, ...                       % Parameter vector
- choiceMechType, ...          % Choice mechanism
- inhibMechType, ...           % Inhibition mechanism
- condParam, ...               % Parameter varying across task conditions
- simScope, ...                % Scope of simulation
  stimOns, ...                 % Stimulus onsets
  stimDur, ...                 % Stimulus durations
  N, ...                       % Number of model units (per accumulator class)
