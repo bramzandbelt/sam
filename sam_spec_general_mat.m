@@ -272,13 +272,15 @@ switch lower(simScope)
                    (blkdiag(trueN{:})*[false false]') *  ...   % From Go units
                    (blkdiag(trueN{:})*[false false]')';     % To Stop units
       case 'li'
-        % STOP=>GO and GO=>STOP connections become active once GO and STOP
-        % units reach threshold, respecitively
+        % Lateral inhibition from STOP=>GO is contingent on STOP reaching 
+        % threshold
+        % Lateral inhibition from GO=>STOP is present at all times
+        
         latInhib = (blkdiag(trueN{:})*[true false]') *  ...   % To Go units
                    (blkdiag(trueN{:})*[false true]')' ...     % From Stop units
                    + ...                                      % AND
-                   (blkdiag(trueN{:})*[false true]') *  ...   % From Go units
-                   (blkdiag(trueN{:})*[true false]')';        % To Stop units
+                   (blkdiag(trueN{:})*[false false]') *  ...   % From Go units
+                   (blkdiag(trueN{:})*[false false]')';        % To Stop units
     end
 end
 
