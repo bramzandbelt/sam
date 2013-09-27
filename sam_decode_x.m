@@ -1,5 +1,5 @@
 function [A,B,C,D,V,SE,SI,Z0,ZC,accumOns] = ...
-          sam_decode_x(X,choiceMechType,inhibMechType,condParam,simScope,stimOns,stimDur,N,M,VCor,VIncor,S)
+          sam_decode_x(SAM,X,choiceMechType,inhibMechType,condParam,simScope,stimOns,stimDur,N,M,VCor,VIncor,S)
 % SAM_DECODE_X <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -22,24 +22,28 @@ function [A,B,C,D,V,SE,SI,Z0,ZC,accumOns] = ...
 % CONTENTS 
  
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 
+% 1. PROCESS INPUTS AND SPECIFY VARIABLES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
+% 1.1. Process inputs
+% ========================================================================= 
 
+% Number of conditions
+nCnd  = SAM.des.expt.nCnd;
+
+% Indices of GO inputs, per condition
+iGO   = SAM.des.iGO;
  
-% #.#. Specify dynamic variables
+% 1.2. Specify dynamic variables
 % ========================================================================= 
 
 trueN = arrayfun(@(x) true(x,1),N,'Uni',0);
 trueM = arrayfun(@(x) true(x,1),M,'Uni',0);
  
-% 
-% ------------------------------------------------------------------------- 
-
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. CONVERT X TO INDIVIDUAL PARAMETERS
+% 2. CONVERT X TO INDIVIDUAL PARAMETERS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % PARAMETERS
@@ -421,7 +425,7 @@ switch condParam
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. ENCODE CONNECTIVITY MATRICES
+% 3. ENCODE CONNECTIVITY MATRICES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 switch choiceMechType
@@ -434,7 +438,7 @@ switch choiceMechType
     AOs = zeros(sum(N),sum(N));
     
     % No feed-forward inhibition
-    wFFI = 0;
+    wFFI = repmat({0},nCnd,1);
     
   case 'ffi'
     
@@ -445,8 +449,8 @@ switch choiceMechType
     AOs = zeros(sum(N),sum(N));
         
     % Feed-forward inhibition: normalized ffi of go-signals to all non-target GO units
-    wFFI = -1/(N(1)-1);
-    
+    wFFI = cellfun(@(a) -1./(numel(a)-1),SAM.des.iGO(:),'Uni',0);
+        
   case 'li'
     
     % Connectivity to self (leakage)
@@ -458,7 +462,7 @@ switch choiceMechType
     AOs = boolAOs*diag(blkdiag(trueN{:})*w(:));
     
     % No feed-forward inhibition
-    wFFI = 0;
+    wFFI = repmat({0},nCnd,1);
     
 end
 
@@ -480,19 +484,23 @@ end
 A = AS + AOs + AOo;
 
 % Exogneous connectivity matrix
-CGo = zeros(N(1));
-CGo = CGo + diag(ones(N(1),1),0);
-for i = 1:N(1)-1;
-  CGo = CGo + diag(wFFI*ones(N(1)-i,1),i);
-  CGo = CGo + diag(wFFI*ones(N(1)-i,1),-i);
-end
+% =========================================================================
+% The number of units differs across conditions. When the choice mechanism
+% is feed-forward inhibition, so does the feed-forward inhibition weight.
 
-switch lower(simScope)
+C = cell(nCnd,1);
+for iCnd = 1:nCnd
+  trueIGO = zeros(1,N(1));
+  trueIGO(iGO{iCnd}) = true;
+  CGo = wFFI{iCnd}*(trueIGO(:)*trueIGO(:)'-diag(trueIGO)) + diag(trueIGO);
+  
+  switch lower(simScope)
   case 'go'
-    C = blkdiag(CGo);
+    C{iCnd} = blkdiag(CGo);
   case 'all'
     CStop = 1;
-    C = blkdiag(CGo,CStop);
+    C{iCnd} = blkdiag(CGo,CStop);
+  end
 end
 
 % Extrinsic and intrinsic modulation
@@ -500,16 +508,16 @@ B = zeros(sum(N),sum(N),sum(M));
 D = zeros(sum(N),sum(N),sum(N));
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. ENCODE STARTING POINT MATRIX
+% 4. ENCODE STARTING POINT MATRIX
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 Z0 = blkdiag(trueN{:})*z0(:);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. ENCODE THRESHOLD MATRIX
+% 5. ENCODE THRESHOLD MATRIX
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-ZC = cell(3,1);
+ZC = cell(nCnd,1);
 switch lower(condParam)
   case 'zc'
 
@@ -525,7 +533,7 @@ switch lower(condParam)
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. ACCUMULATION RATES
+% 6. ACCUMULATION RATES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 switch condParam
@@ -586,7 +594,7 @@ switch condParam
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. EXTRINSIC AND INTRINSIC NOISE
+% 7. EXTRINSIC AND INTRINSIC NOISE
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 switch lower(simScope)
@@ -599,7 +607,7 @@ switch lower(simScope)
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. SPECIFY ONSETS AND DURATIONS
+% 8. SPECIFY ONSETS AND DURATIONS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Accumulation

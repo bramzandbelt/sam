@@ -254,6 +254,7 @@ end
  ...
  = sam_decode_x( ...          % FUNCTION
  ...                          % INPUTS
+ SAM, ...                     % SAM structure
  X, ...                       % Parameter vector
  choiceMechType, ...          % Choice mechanism
  inhibMechType, ...           % Inhibition mechanism
@@ -282,26 +283,6 @@ for iCnd = 1:nCnd
   iGOT  = SAM.des.iGOT{iCnd};
   iGONT = SAM.des.iGONT{iCnd};
   iSTOP = SAM.des.iSTOP{iCnd};
-  
-  % TEMPORARY CODE!
-  switch lower(choiceMechType)
-    case 'ffi'
-      
-      bla = {3:4,2:5,1:6};
-      bli = [2,4,6];
-      
-      C = eye(7);
-      for i = bla{iCnd}
-        for j = bla{iCnd}
-          if ~isequal(i,j)
-            C(i,j) = -1/(bli(iCnd)-1);
-          end
-        end
-      end
-      
-      
-  end
-  
   
   % Loop over trial types
   for iTrType = 1:nTrType
@@ -399,6 +380,7 @@ for iCnd = 1:nCnd
         
         % Reduce overhea in parfor loops by getting rid of indexing (and
         % using feval)
+        thisC  = C{iCnd};
         thisSI = diag(SI{iCnd,iTrType});
         thisZC = ZC{iCnd};
         thisT  = t(:)';
@@ -419,7 +401,7 @@ for iCnd = 1:nCnd
            u, ...                         % - Timing diagram of model inputs
            A, ...                         % - Endogenous connectivity matrix
            B, ...                         % - Extrinsic modulation matrix
-           C, ...                         % - Exogenous connectivity matrix
+           thisC, ...                     % - Exogenous connectivity matrix
            D, ...                         % - Intrinsic modulation matrix
            thisSI, ...                    % - Intrinsic noise matrix
            Z0, ...                        % - Starting point matrix
@@ -451,6 +433,7 @@ for iCnd = 1:nCnd
         
         % Reduce overhea in parfor loops by getting rid of indexing (and
         % using feval)
+        thisC  = C{iCnd};
         thisSI = diag(SI{iCnd,iTrType});
         thisZC = ZC{iCnd};
         thisT  = t(:)';
@@ -473,7 +456,7 @@ for iCnd = 1:nCnd
            u, ...                         % - Timing diagram of model inputs
            A, ...                         % - Endogenous connectivity matrix
            B, ...                         % - Extrinsic modulation matrix
-           C, ...                         % - Exogenous connectivity matrix
+           thisC, ...                     % - Exogenous connectivity matrix
            D, ...                         % - Intrinsic modulation matrix
            thisSI, ...                    % - Intrinsic noise matrix
            0 + (Z0-0).*rand(n,1), ...     % - Starting point matrix (uniformly distributed)
