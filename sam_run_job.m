@@ -56,8 +56,11 @@ rngID       = SAM.sim.rngID;
 % Trial simulation function
 trialSimFun = SAM.sim.trialSimFun;
 
-% Parameter values 
-X           = SAM.explore.X;
+switch lower(simGoal)
+  case 'explore'
+    % Parameter values 
+    X           = SAM.explore.X;
+end
 
 % 1.2. Pre-allocate empty arrays
 % =========================================================================
@@ -129,20 +132,19 @@ switch lower(simGoal)
         rng(rngID);
     end
     
+    [X,fVal,exitFlag,solverOutput,history] = sam_optim(SAM);
     
-    % NOTE: TO BE COMPLETED
-                                  % OUTPUTS
-    [prd, ...                     % Model predictions
-     modelMat] ...                % Model matrices  
-     = sam_optim ...              % FUNCTION
-    ...                           % INPUTS
-    (SAM);                        % SAM structure
+    varargout{1} = X;
+    varargout{2} = fVal;
+    varargout{3} = exitFlag;
+    varargout{4} = solverOutput;
+    varargout{5} = history;
     
-    % Model predictions
-    varargout{1} = prd;
-    
-    % Model matrices
-    varargout{2} = modelMat;
+%     % Model predictions
+%     varargout{1} = prd;
+%     
+%     % Model matrices
+%     varargout{2} = modelMat;
   
   
   % 2.2. Model exploration
