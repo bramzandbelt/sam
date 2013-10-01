@@ -233,14 +233,15 @@ end
 
 switch lower(SAM.sim.rngSeedStage)
   case 'sam_sim_expt'
-    
+
     % Note: MEX functions stay in memory until they are cleared.
     % Seeding of the random number generator should be accompanied by 
     % clearing MEX functions.
 
     clear(char(trialSimFun));
-    rng(rngID);
+    rng(SAM.sim.rngID);
 end
+
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 3. DECODE PARAMETER VECTOR
