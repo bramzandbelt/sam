@@ -395,9 +395,9 @@ switch lower(condParam)
                 % Linear constraints
                 % ---------------------------------------------------------
                 
-                linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG <= 0
+                linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
                            0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                linconB = [0, ...
+                linconB = [0; ...
                            0];
                 
                 % Nonlinear constraints
@@ -405,11 +405,11 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(3) - x(5)./-x(14), ...  % zcG - vCG./-kG <= 0
+                    nonlincon = @(x) [x(3) - x(5)./-x(14); ...  % zcG - vCG./-kG <= 0
                                       x(4) - x(6)./-x(15)];     % zcS - vCS./-kS <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c(1)      = @(x) [x(3) - x(5)./-x(14), ...  % zcG - vCG./-kG <= 0
+                    c(1)      = @(x) [x(3) - x(5)./-x(14); ...  % zcG - vCG./-kG <= 0
                                       x(4) - x(6)./-x(15)];     % zcS - vCS./-kS <= 0
                     ceq       = @(x) [];
 
@@ -436,7 +436,7 @@ switch lower(condParam)
 
                     % Linear constraints
                     % -----------------------------------------------------
-                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG <= 0
+                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
                                0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
                     linconB = [0, ...
                                0];
@@ -446,11 +446,11 @@ switch lower(condParam)
                     switch lower(solverType)
                       case 'fminsearchcon'
                         % Inequality constraints
-                        nonlincon = @(x) [x(3) - x(5)./-x(14), ...  % zcG - vCG./-kG <= 0
+                        nonlincon = @(x) [x(3) - x(5)./-x(14); ...  % zcG - vCG./-kG <= 0
                                           x(4) - x(6)./-x(15)];     % zcS - vCS./-kS <= 0
                       case {'fmincon','ga'}
                         % Inequality and equality constraints
-                        c(1)      = @(x) [x(3) - x(5)./-x(14), ...  % zcG - vCG./-kG <= 0
+                        c(1)      = @(x) [x(3) - x(5)./-x(14); ...  % zcG - vCG./-kG <= 0
                                           x(4) - x(6)./-x(15)];     % zcS - vCS./-kS <= 0
                         ceq       = @(x) [];
 
@@ -477,9 +477,9 @@ switch lower(condParam)
 
                     % Linear constraints
                     % -----------------------------------------------------
-                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG <= 0
+                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
                                0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                    linconB = [0, ...
+                    linconB = [0; ...
                                0];
 
                     % Nonlinear constraints
@@ -487,11 +487,11 @@ switch lower(condParam)
                     switch lower(solverType)
                       case 'fminsearchcon'
                         % Inequality constraints
-                        nonlincon = @(x) [x(3) - x(5)./-x(14), ...  % zcG - vCG./-kG <= 0
+                        nonlincon = @(x) [x(3) - x(5)./-x(14); ...  % zcG - vCG./-kG <= 0
                                           x(4) - x(6)./-x(15)];     % zcS - vCS./-kS <= 0
                       case {'fmincon','ga'}
                         % Inequality and equality constraints
-                        c(1)      = @(x) [x(3) - x(5)./-x(14), ...  % zcG - vCG./-kG <= 0
+                        c(1)      = @(x) [x(3) - x(5)./-x(14); ...  % zcG - vCG./-kG <= 0
                                           x(4) - x(6)./-x(15)];     % zcS - vCS./-kS <= 0
                         ceq       = @(x) [];
 
@@ -533,13 +533,13 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(2) - x(3)./-x(12), ...  % zcG - vCG_c1./-kG <= 0
-                                      x(2) - x(4)./-x(12), ...  % zcG - vCG_c2./-kG <= 0
+                    nonlincon = @(x) [x(2) - x(3)./-x(12); ...  % zcG - vCG_c1./-kG <= 0
+                                      x(2) - x(4)./-x(12); ...  % zcG - vCG_c2./-kG <= 0
                                       x(2) - x(5)./-x(12)]; ... % zcG - vCG_c3./-kG <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c         = @(x) [x(2) - x(3)./-x(12), ...  % zcG - vCG_c1./-kG <= 0
-                                      x(2) - x(4)./-x(12), ...  % zcG - vCG_c2./-kG <= 0
+                    c         = @(x) [x(2) - x(3)./-x(12); ...  % zcG - vCG_c1./-kG <= 0
+                                      x(2) - x(4)./-x(12); ...  % zcG - vCG_c2./-kG <= 0
                                       x(2) - x(5)./-x(12)]; ... % zcG - vCG_c3./-kG <= 0
 
                     ceq       = @(x) [];
@@ -577,13 +577,13 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(2) - x(3)./-x(12), ...  % zcG - vCG_c1./-kG <= 0
-                                      x(2) - x(4)./-x(12), ...  % zcG - vCG_c2./-kG <= 0
+                    nonlincon = @(x) [x(2) - x(3)./-x(12); ...  % zcG - vCG_c1./-kG <= 0
+                                      x(2) - x(4)./-x(12); ...  % zcG - vCG_c2./-kG <= 0
                                       x(2) - x(5)./-x(12)]; ... % zcG - vCG_c3./-kG <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c         = @(x) [x(2) - x(3)./-x(12), ...  % zcG - vCG_c1./-kG <= 0
-                                      x(2) - x(4)./-x(12), ...  % zcG - vCG_c2./-kG <= 0
+                    c         = @(x) [x(2) - x(3)./-x(12); ...  % zcG - vCG_c1./-kG <= 0
+                                      x(2) - x(4)./-x(12); ...  % zcG - vCG_c2./-kG <= 0
                                       x(2) - x(5)./-x(12)]; ... % zcG - vCG_c3./-kG <= 0
 
                     ceq       = @(x) [];
@@ -613,9 +613,9 @@ switch lower(condParam)
                 
                 % Linear constraints
                 % ---------------------------------------------------------
-                linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG <= 0
+                linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
                            0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                linconB = [0, ...
+                linconB = [0; ...
                            0];
                          
                 % Nonlinear constraints
@@ -623,15 +623,15 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(3) - x(5)./-x(16), ...  % zcG - vCG_c1./-kG <= 0
-                                      x(3) - x(6)./-x(16), ...  % zcG - vCG_c2./-kG <= 0
-                                      x(3) - x(7)./-x(16), ...  % zcG - vCG_c3./-kG <= 0
+                    nonlincon = @(x) [x(3) - x(5)./-x(16); ...  % zcG - vCG_c1./-kG <= 0
+                                      x(3) - x(6)./-x(16); ...  % zcG - vCG_c2./-kG <= 0
+                                      x(3) - x(7)./-x(16); ...  % zcG - vCG_c3./-kG <= 0
                                       x(4) - x(8)./-x(17)]; ... % zcS - vCS./-kS <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c         = @(x) [x(3) - x(5)./-x(16), ...  % zcG - vCG_c1./-kG <= 0
-                                      x(3) - x(6)./-x(16), ...  % zcG - vCG_c2./-kG <= 0
-                                      x(3) - x(7)./-x(16), ...  % zcG - vCG_c3./-kG <= 0
+                    c         = @(x) [x(3) - x(5)./-x(16); ...  % zcG - vCG_c1./-kG <= 0
+                                      x(3) - x(6)./-x(16); ...  % zcG - vCG_c2./-kG <= 0
+                                      x(3) - x(7)./-x(16); ...  % zcG - vCG_c3./-kG <= 0
                                       x(4) - x(8)./-x(17)]; ... % zcS - vCS./-kS <= 0
                     ceq       = @(x) [];
 
@@ -658,9 +658,9 @@ switch lower(condParam)
 
                     % Linear constraints
                     % -----------------------------------------------------
-                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG <= 0
+                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
                                0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                    linconB = [0, ...
+                    linconB = [0; ...
                                0];
 
                     % Nonlinear constraints
@@ -668,15 +668,15 @@ switch lower(condParam)
                     switch lower(solverType)
                       case 'fminsearchcon'
                         % Inequality constraints
-                        nonlincon = @(x) [x(3) - x(5)./-x(16), ...  % zcG - vCG_c1./-kG <= 0
-                                          x(3) - x(6)./-x(16), ...  % zcG - vCG_c2./-kG <= 0
-                                          x(3) - x(7)./-x(16), ...  % zcG - vCG_c3./-kG <= 0
+                        nonlincon = @(x) [x(3) - x(5)./-x(16); ...  % zcG - vCG_c1./-kG <= 0
+                                          x(3) - x(6)./-x(16); ...  % zcG - vCG_c2./-kG <= 0
+                                          x(3) - x(7)./-x(16); ...  % zcG - vCG_c3./-kG <= 0
                                           x(4) - x(8)./-x(17)]; ... % zcS - vCS./-kS <= 0
                       case {'fmincon','ga'}
                         % Inequality and equality constraints
-                        c         = @(x) [x(3) - x(5)./-x(16), ...  % zcG - vCG_c1./-kG <= 0
-                                          x(3) - x(6)./-x(16), ...  % zcG - vCG_c2./-kG <= 0
-                                          x(3) - x(7)./-x(16), ...  % zcG - vCG_c3./-kG <= 0
+                        c         = @(x) [x(3) - x(5)./-x(16); ...  % zcG - vCG_c1./-kG <= 0
+                                          x(3) - x(6)./-x(16); ...  % zcG - vCG_c2./-kG <= 0
+                                          x(3) - x(7)./-x(16); ...  % zcG - vCG_c3./-kG <= 0
                                           x(4) - x(8)./-x(17)]; ... % zcS - vCS./-kS <= 0            
                         ceq       = @(x) [];
 
@@ -703,9 +703,9 @@ switch lower(condParam)
 
                     % Linear constraints
                     % -----------------------------------------------------
-                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG <= 0
+                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
                                0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                    linconB = [0, ...
+                    linconB = [0; ...
                                0];
                              
                     % Nonlinear constraints
@@ -713,15 +713,15 @@ switch lower(condParam)
                     switch lower(solverType)
                       case 'fminsearchcon'
                         % Inequality constraints
-                        nonlincon = @(x) [x(3) - x(5)./-x(16), ...  % zcG - vCG_c1./-kG <= 0
-                                          x(3) - x(6)./-x(16), ...  % zcG - vCG_c2./-kG <= 0
-                                          x(3) - x(7)./-x(16), ...  % zcG - vCG_c3./-kG <= 0
+                        nonlincon = @(x) [x(3) - x(5)./-x(16); ...  % zcG - vCG_c1./-kG <= 0
+                                          x(3) - x(6)./-x(16); ...  % zcG - vCG_c2./-kG <= 0
+                                          x(3) - x(7)./-x(16); ...  % zcG - vCG_c3./-kG <= 0
                                           x(4) - x(8)./-x(17)]; ... % zcS - vCS./-kS <= 0
                       case {'fmincon','ga'}
                         % Inequality and equality constraints
-                        c         = @(x) [x(3) - x(5)./-x(16), ...  % zcG - vCG_c1./-kG <= 0
-                                          x(3) - x(6)./-x(16), ...  % zcG - vCG_c2./-kG <= 0
-                                          x(3) - x(7)./-x(16), ...  % zcG - vCG_c3./-kG <= 0
+                        c         = @(x) [x(3) - x(5)./-x(16); ...  % zcG - vCG_c1./-kG <= 0
+                                          x(3) - x(6)./-x(16); ...  % zcG - vCG_c2./-kG <= 0
+                                          x(3) - x(7)./-x(16); ...  % zcG - vCG_c3./-kG <= 0
                                           x(4) - x(8)./-x(17)]; ... % zcS - vCS./-kS <= 0            
                         ceq       = @(x) [];
 
@@ -754,11 +754,11 @@ switch lower(condParam)
                 
                 % Linear constraints
                 % ---------------------------------------------------------
-                linconA = [1 -1 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c1 <= 0
-                           1 0 -1 0 0 0 0 0 0 0 0, ... % z0G - zcG_c2 <= 0
+                linconA = [1 -1 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c1 <= 0
+                           1 0 -1 0 0 0 0 0 0 0 0; ... % z0G - zcG_c2 <= 0
                            1 0 0 -1 0 0 0 0 0 0 0];    % z0G - zcG_c3 <= 0
-                linconB = [0, ...
-                           0, ...
+                linconB = [0; ...
+                           0; ...
                            0];
                 
                 % Nonlinear constraints
@@ -766,13 +766,13 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(2) - x(5) ./-x(10), ... % zcG_c1 - vCG./-kG <= 0
-                                      x(3) - x(5) ./-x(10), ... % zcG_c2 - vCG./-kG <= 0
+                    nonlincon = @(x) [x(2) - x(5) ./-x(10); ... % zcG_c1 - vCG./-kG <= 0
+                                      x(3) - x(5) ./-x(10); ... % zcG_c2 - vCG./-kG <= 0
                                       x(4) - x(5) ./-x(10)];    % zcG_c3 - vCG./-kG <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c         = @(x) [x(2) - x(5) ./-x(10), ... % zcG_c1 - vCG./-kG <= 0
-                                      x(3) - x(5) ./-x(10), ... % zcG_c2 - vCG./-kG <= 0
+                    c         = @(x) [x(2) - x(5) ./-x(10); ... % zcG_c1 - vCG./-kG <= 0
+                                      x(3) - x(5) ./-x(10); ... % zcG_c2 - vCG./-kG <= 0
                                       x(4) - x(5) ./-x(10)];    % zcG_c3 - vCG./-kG <= 0
                     
                     ceq       = @(x) [];
@@ -802,11 +802,11 @@ switch lower(condParam)
                 
                 % Linear constraints
                 % ---------------------------------------------------------
-                linconA = [1 -1 0 0 0 0 0 0 0 0, ... % z0G - zcG_c1 <= 0
-                           1 0 -1 0 0 0 0 0 0 0, ... % z0G - zcG_c2 <= 0
+                linconA = [1 -1 0 0 0 0 0 0 0 0; ... % z0G - zcG_c1 <= 0
+                           1 0 -1 0 0 0 0 0 0 0; ... % z0G - zcG_c2 <= 0
                            1 0 0 -1 0 0 0 0 0 0];    % z0G - zcG_c3 <= 0
-                linconB = [0, ...
-                           0, ...
+                linconB = [0; ...
+                           0; ...
                            0];
 
                 % Nonlinear constraints
@@ -814,13 +814,13 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(2) - x(5) ./-x(10), ... % zcG_c1 - vCG./-kG <= 0
-                                      x(3) - x(5) ./-x(10), ... % zcG_c2 - vCG./-kG <= 0
+                    nonlincon = @(x) [x(2) - x(5) ./-x(10); ... % zcG_c1 - vCG./-kG <= 0
+                                      x(3) - x(5) ./-x(10); ... % zcG_c2 - vCG./-kG <= 0
                                       x(4) - x(5) ./-x(10)];    % zcG_c3 - vCG./-kG <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c         = @(x) [x(2) - x(5) ./-x(10), ... % zcG_c1 - vCG./-kG <= 0
-                                      x(3) - x(5) ./-x(10), ... % zcG_c2 - vCG./-kG <= 0
+                    c         = @(x) [x(2) - x(5) ./-x(10); ... % zcG_c1 - vCG./-kG <= 0
+                                      x(3) - x(5) ./-x(10); ... % zcG_c2 - vCG./-kG <= 0
                                       x(4) - x(5) ./-x(10)];    % zcG_c3 - vCG./-kG <= 0
                     
                     ceq       = @(x) [];
@@ -850,13 +850,13 @@ switch lower(condParam)
 
                 % Linear constraints
                 % ---------------------------------------------------------
-                linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c1 <= 0
-                           1 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c2 <= 0
-                           1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c3 <= 0
+                linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c1 <= 0
+                           1 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c2 <= 0
+                           1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c3 <= 0
                            0 1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                linconB = [0, ...
-                           0, ...
-                           0, ...
+                linconB = [0; ...
+                           0; ...
+                           0; ...
                            0];
                          
                 % Nonlinear constraints
@@ -864,15 +864,15 @@ switch lower(condParam)
                 switch lower(solverType)
                   case 'fminsearchcon'
                     % Inequality constraints
-                    nonlincon = @(x) [x(3) - x(7) ./-x(14), ... % zcG_c1 - vCG./-kG <= 0
-                                      x(4) - x(7) ./-x(14), ... % zcG_c2 - vCG./-kG <= 0
-                                      x(5) - x(7) ./-x(14), ... % zcG_c3 - vCG./-kG <= 0
+                    nonlincon = @(x) [x(3) - x(7) ./-x(14); ... % zcG_c1 - vCG./-kG <= 0
+                                      x(4) - x(7) ./-x(14); ... % zcG_c2 - vCG./-kG <= 0
+                                      x(5) - x(7) ./-x(14); ... % zcG_c3 - vCG./-kG <= 0
                                       x(6) - x(8) ./-x(15)];    % zcS - vCS./-kS <= 0
                   case {'fmincon','ga'}
                     % Inequality and equality constraints
-                    c =         @(x) [x(3) - x(7) ./-x(14), ... % zcG_c1 - vCG./-kG <= 0
-                                      x(4) - x(7) ./-x(14), ... % zcG_c2 - vCG./-kG <= 0
-                                      x(5) - x(7) ./-x(14), ... % zcG_c3 - vCG./-kG <= 0
+                    c =         @(x) [x(3) - x(7) ./-x(14); ... % zcG_c1 - vCG./-kG <= 0
+                                      x(4) - x(7) ./-x(14); ... % zcG_c2 - vCG./-kG <= 0
+                                      x(5) - x(7) ./-x(14); ... % zcG_c3 - vCG./-kG <= 0
                                       x(6) - x(8) ./-x(15)];    % zcS - vCS./-kS <= 0
                     
                     ceq = @(x) [];
@@ -900,13 +900,13 @@ switch lower(condParam)
 
                     % Linear constraints
                     % -----------------------------------------------------
-                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c1 <= 0
-                               1 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c2 <= 0
-                               1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c3 <= 0
+                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c1 <= 0
+                               1 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c2 <= 0
+                               1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c3 <= 0
                                0 1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                    linconB = [0, ...
-                               0, ...
-                               0, ...
+                    linconB = [0; ...
+                               0; ...
+                               0; ...
                                0];  
 
                     % Nonlinear constraints
@@ -914,15 +914,15 @@ switch lower(condParam)
                     switch lower(solverType)
                       case 'fminsearchcon'
                         % Inequality constraints
-                        nonlincon = @(x) [x(3) - x(7) ./-x(14), ... % zcG_c1 - vCG./-kG <= 0
-                                          x(4) - x(7) ./-x(14), ... % zcG_c2 - vCG./-kG <= 0
-                                          x(5) - x(7) ./-x(14), ... % zcG_c3 - vCG./-kG <= 0
+                        nonlincon = @(x) [x(3) - x(7) ./-x(14); ... % zcG_c1 - vCG./-kG <= 0
+                                          x(4) - x(7) ./-x(14); ... % zcG_c2 - vCG./-kG <= 0
+                                          x(5) - x(7) ./-x(14); ... % zcG_c3 - vCG./-kG <= 0
                                           x(6) - x(8) ./-x(15)];    % zcS - vCS./-kS <= 0
                       case {'fmincon','ga'}
                         % Inequality and equality constraints
-                        c =         @(x) [x(3) - x(7) ./-x(14), ... % zcG_c1 - vCG./-kG <= 0
-                                          x(4) - x(7) ./-x(14), ... % zcG_c2 - vCG./-kG <= 0
-                                          x(5) - x(7) ./-x(14), ... % zcG_c3 - vCG./-kG <= 0
+                        c =         @(x) [x(3) - x(7) ./-x(14); ... % zcG_c1 - vCG./-kG <= 0
+                                          x(4) - x(7) ./-x(14); ... % zcG_c2 - vCG./-kG <= 0
+                                          x(5) - x(7) ./-x(14); ... % zcG_c3 - vCG./-kG <= 0
                                           x(6) - x(8) ./-x(15)];    % zcS - vCS./-kS <= 0
                     
                         ceq = @(x) [];
@@ -950,13 +950,13 @@ switch lower(condParam)
 
                     % Linear constraints
                     % -----------------------------------------------------
-                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c1 <= 0
-                               1 0 0 -1 0 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c2 <= 0
-                               1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0, ... % z0G - zcG_c3 <= 0
+                    linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c1 <= 0
+                               1 0 0 -1 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c2 <= 0
+                               1 0 0 0 -1 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG_c3 <= 0
                                0 1 0 0 0 -1 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                    linconB = [0, ...
-                               0, ...
-                               0, ...
+                    linconB = [0; ...
+                               0; ...
+                               0; ...
                                0];  
 
                     % Nonlinear constraints
@@ -964,15 +964,15 @@ switch lower(condParam)
                     switch lower(solverType)
                       case 'fminsearchcon'
                         % Inequality constraints
-                        nonlincon = @(x) [x(3) - x(7) ./-x(14), ... % zcG_c1 - vCG./-kG <= 0
-                                          x(4) - x(7) ./-x(14), ... % zcG_c2 - vCG./-kG <= 0
-                                          x(5) - x(7) ./-x(14), ... % zcG_c3 - vCG./-kG <= 0
+                        nonlincon = @(x) [x(3) - x(7) ./-x(14); ... % zcG_c1 - vCG./-kG <= 0
+                                          x(4) - x(7) ./-x(14); ... % zcG_c2 - vCG./-kG <= 0
+                                          x(5) - x(7) ./-x(14); ... % zcG_c3 - vCG./-kG <= 0
                                           x(6) - x(8) ./-x(15)];    % zcS - vCS./-kS <= 0
                       case {'fmincon','ga'}
                         % Inequality and equality constraints
-                        c =         @(x) [x(3) - x(7) ./-x(14), ... % zcG_c1 - vCG./-kG <= 0
-                                          x(4) - x(7) ./-x(14), ... % zcG_c2 - vCG./-kG <= 0
-                                          x(5) - x(7) ./-x(14), ... % zcG_c3 - vCG./-kG <= 0
+                        c =         @(x) [x(3) - x(7) ./-x(14); ... % zcG_c1 - vCG./-kG <= 0
+                                          x(4) - x(7) ./-x(14); ... % zcG_c2 - vCG./-kG <= 0
+                                          x(5) - x(7) ./-x(14); ... % zcG_c3 - vCG./-kG <= 0
                                           x(6) - x(8) ./-x(15)];    % zcS - vCS./-kS <= 0
 
                         ceq = @(x) [];
