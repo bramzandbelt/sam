@@ -1,4 +1,4 @@
-function sam_optim(SAM)
+function varargout = sam_optim(SAM)
 % Optimizes stochastic accumulator model to account for observations
 %  
 % DESCRIPTION 
@@ -37,12 +37,56 @@ function sam_optim(SAM)
 % 1.1. Process inputs
 % ========================================================================= 
 
-% Lower bounds
-LB          = SAM.optim.LB;
+
+% Number of conditions
+nCnd        = SAM.des.expt.nCnd;
+
+% Number of stop-signal delays
+nSsd        = SAM.des.expt.nSsd;
+
+% Scope of the simulation
+simScope    = SAM.sim.scope;
+
+switch lower(simScope)
+  case 'go'
     
-% Upper bounds
-UB          = SAM.optim.UB;
-        
+    % Number of trial types
+    nTrType = 2; % Go correct, Go commission error
+    
+  case 'all'
+    
+    % Number of trial types
+    nTrType = 2 + nSsd; % Go correct, Go commission error, Stop trials
+    
+end
+
+% Solver type
+solverType  = SAM.optim.solverType;
+
+% Solver options
+solverOpts  = SAM.optim.solverOpts;
+
+% Starting values
+% ---------------------------------------------------------------------
+X0          = SAM.optim.X0;
+
+% Lower and upper bounds
+% ---------------------------------------------------------------------
+switch lower(SAM.optim.solverType)
+  case {'fminsearchbnd','fminsearchcon','ga'}
+    LB      = SAM.optim.LB;
+    UB      = SAM.optim.UB;
+end
+
+% Linear and nonlinear (in)equalities
+% ---------------------------------------------------------------------
+switch lower(SAM.optim.solverType)
+  case {'fminsearchcon','ga'}
+    linConA = SAM.optim.linConA;
+    linConB = SAM.optim.linConB;
+    nonLinCon = SAM.optim.nonLinCon;
+end
+
 % Cost function 
 costFun     = SAM.optim.costFun;
 
@@ -51,6 +95,17 @@ cumProb     = SAM.optim.cumProb;
 
 % Minimum bin size (in number of trials per bin)
 minBinSize  = SAM.optim.minBinSize;
+
+
+
+% Iteration log file
+iterLogFile = SAM.optim.iterLogFile;
+
+% Iteration lof frequency
+iterLogFreq = SAM.optim.iterLogFreq;
+
+% Final log file
+finalLogFile = SAM.optim.finalLogFile;
 
 % 1.2. Pre-allocate empty arrays
 % ========================================================================= 
@@ -72,11 +127,24 @@ obsOptimData  = struct('rt',[],...
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Specify precursor and parameter-independent model matrices
-[VCor,VIncor,S,terminate,blockInput,latInhib] = sam_spec_general_mat(SAM);
+                              % OUTPUTS
+[VCor, ...                    % Precursor matrix for correct rates
+ VIncor, ...                  % Precursor matrix for error rates
+ S, ...                       % Precursor matrix for noise
+ terminate, ...               % Termination matrix
+ blockInput, ...              % Blocked input matrix
+ latInhib] ...                % Lateral inhibition matrix
+ = sam_spec_general_mat ...   % FUNCTION
+ ...                          % INPUTS
+ (SAM);                       % SAM structure
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. CHARACTERIZE OBSERVED DATA
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Load observations
+dataIn = load(SAM.io.obsFile);
+obs = dataIn.obs;
 
 % 3.1. Organize observations
 % =========================================================================
@@ -85,86 +153,188 @@ switch lower(simScope)
   case 'go'
     
     % Observed trial numbers
-    fitObs.N   = [obs.nGo,obs.nGo];
+    obsOptimData.N   = [obs.nGo,obs.nGo];
     
     % Observed trial probabilities
-    fitObs.P   = [obs.pGoCorr,obs.pGoComm];
+    obsOptimData.P   = [obs.pGoCorr,obs.pGoComm];
     
     % Observed response times
-    fitObs.rt  = [obs.rtGoCorr,obs.rtGoComm];
+    obsOptimData.rt  = [obs.rtGoCorr,obs.rtGoComm];
     
   case 'all'
     
     % Observed trial numbers
-    fitObs.N   = [obs.nGo,obs.nGo,obs.nStop];
+    obsOptimData.N   = [obs.nGo,obs.nGo,obs.nStop];
     
     % Observed trial probabilities
-    fitObs.P   = [obs.pGoCorr,obs.pGoComm,obs.pStopFailure];
+    obsOptimData.P   = [obs.pGoCorr,obs.pGoComm,obs.pStopFailure];
     
     % Observed response times
-    fitObs.rt  = [obs.rtGoCorr,obs.rtGoComm,obs.rtStopFailure];
+    obsOptimData.rt  = [obs.rtGoCorr,obs.rtGoComm,obs.rtStopFailure];
 end
 
 % 3.2. Compute response time bin statistics
 % =========================================================================
-[fitObs.rtQ, ...         % Quantiles
- fitObs.pDefect, ...     % Defective probabilities
- fitObs.f, ...           % Frequencies
- fitObs.pM] ...          % Probability masses
+[obsOptimData.rtQ, ...         % Quantiles
+ obsOptimData.pDefect, ...     % Defective probabilities
+ obsOptimData.f, ...           % Frequencies
+ obsOptimData.pM] ...          % Probability masses
  = cellfun(@(a,b,c) sam_bin_data(a,b,c,cumProb,minBinSize), ...
- fitObs.rt, ...          % Response times
- num2cell(fitObs.P), ... % Response probabilities
- num2cell(fitObs.N), ... % Response frequencies
+ obsOptimData.rt, ...          % Response times
+ num2cell(obsOptimData.P), ... % Response probabilities
+ num2cell(obsOptimData.N), ... % Response frequencies
  'Uni',0);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 4. OPTIMIZE MODEL
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-% 4.1. Seed the random number generator
-% =========================================================================
-clear(char(simFun));  % Clear MEX function
-rng(rngID);
-
-% 4.2. Switch between solvers
+% 4.1. Switch between solvers
 % =========================================================================
 
-switch lower(solver.type)
-  % 4.2.1. Simplex
+switch lower(solverType)
+  % 4.1.1. Simplex
   % -----------------------------------------------------------------------
   case 'fminsearchbnd'
-
+    
+    history = nan(solverOpts.MaxIter + 1,numel(X0) + 1);
+    
+    solverOpts.OutputFcn        = @myoutput;
+    
     [X, ...
      fVal, ...
      exitFlag, ...
-     solverOutput] = fminsearchbnd(@(X0)  costFun(simGoal, ...
-                                                  X0, ...
-                                                  STATE, ...
-                                                  obs, ...
-                                                  prd, ...
-                                                  SAM, ...
-                                                  nSim, ...
-                                                  simFun, ...
-                                                  simScope, ...
-                                                  VCor, ...
-                                                  VIncor, ...
-                                                  S, ...
-                                                  terminate, ...
-                                                  blockInput, ...
-                                                  latInhib, ...
-                                                  doPlot), ...
-                                                  ...
-                                                  X0, ...
-                                                  LB, ...
-                                                  UB, ...
-                                                  solver.options);
+     solverOutput] ...
+     ...
+     = fminsearchbnd ...
+     (@(X)  ...
+     costFun ...
+     (X, ...
+      SAM, ...
+      obsOptimData, ...
+      prdOptimData, ...
+      VCor, ...
+      VIncor, ...
+      S, ...
+      terminate, ...
+      blockInput, ...
+      latInhib), ...
+      ...
+      X0, ...
+      LB, ...
+      UB, ...
+      solverOpts);
+    
+      % Save the final log file
+      save(finalLogFile,'X','fVal','exitFlag','solverOutput','history');
+      
+      % Remove iteration log file (history is also saved in final log file)
+      delete(iterLogFile);
+      
+      varargout{1} = X;
+      varargout{2} = fVal;
+      varargout{3} = exitFlag;
+      varargout{4} = solverOutput;
+      varargout{5} = history;
+  
+  case 'fminsearchcon'
+    
+    history = nan(solverOpts.MaxIter + 1,numel(X0) + 1);
+    
+    solverOpts.OutputFcn        = @myoutput;
+    
+    [X, ...
+     fVal, ...
+     exitFlag, ...
+     solverOutput] ...
+     ...
+     = fminsearchcon ...
+     (@(X)  ...
+     costFun ...
+     (X, ...
+      SAM, ...
+      obsOptimData, ...
+      prdOptimData, ...
+      VCor, ...
+      VIncor, ...
+      S, ...
+      terminate, ...
+      blockInput, ...
+      latInhib), ...
+      ...
+      X0, ...
+      LB, ...
+      UB, ...
+      linConA, ...
+      linConB, ...
+      nonLinCon, ...
+      solverOpts);
+    
+      % Save the final log file
+      save(finalLogFile,'X','fVal','exitFlag','solverOutput','history');
+      
+      % Remove iteration log file (history is also saved in final log file)
+      delete(iterLogFile);
+      
+      varargout{1} = X;
+      varargout{2} = fVal;
+      varargout{3} = exitFlag;
+      varargout{4} = solverOutput;
+      varargout{5} = history;
+      
+  case 'fmincon'
+    
+    history = nan(solverOpts.MaxIter + 1,numel(X0) + 1);
+    
+    solverOpts.OutputFcn        = @myoutput;
+    
+    [X, ...
+     fVal, ...
+     exitFlag, ...
+     solverOutput] ...
+     ...
+     = fmincon ...
+     (@(X)  ...
+     costFun ...
+     (X, ...
+      SAM, ...
+      obsOptimData, ...
+      prdOptimData, ...
+      VCor, ...
+      VIncor, ...
+      S, ...
+      terminate, ...
+      blockInput, ...
+      latInhib), ...
+      ...
+      X0, ...
+      linConA, ...
+      linConB, ...
+      [], ...
+      [], ...
+      LB, ...
+      UB, ...
+      nonLinCon, ...
+      solverOpts);
+    
+    % Save the final log file
+    save(finalLogFile,'X','fVal','exitFlag','solverOutput','history');
 
+    % Remove iteration log file (history is also saved in final log file)
+    delete(iterLogFile);
 
-  % 4.2.2. Differential evolution
+    varargout{1} = X;
+    varargout{2} = fVal;
+    varargout{3} = exitFlag;
+    varargout{4} = solverOutput;
+    varargout{5} = history;
+
+      
+  % 4.1.2. Differential evolution
   % -----------------------------------------------------------------------
   case 'de'
   
-  % 4.2.3. Genetic algorithm
+  % 4.1.3. Genetic algorithm
   % -----------------------------------------------------------------------
   case 'ga'
 
@@ -203,7 +373,7 @@ switch lower(solver.type)
                               [], ...
                               solver.options);
 
-  % 4.2.4. Simulated annealing
+  % 4.1.4. Simulated annealing
   % -----------------------------------------------------------------------
   case 'sa'
 
@@ -241,3 +411,21 @@ SAM.estim.X             = X;
 SAM.estim.fVal          = fVal;
 SAM.estim.exitFlag      = exitFlag;
 SAM.estim.solverOutput  = solverOutput;
+
+
+function stop = myoutput(x,optimvalues,state);
+  stop = false;
+  if state == 'iter'
+    history(optimvalues.iteration + 1,:) = [optimvalues.fval,x];
+    
+    % Save the iteration log file if
+    if ismultiple(optimvalues.iteration,iterLogFreq)
+      save(iterLogFile,'history');
+    end
+  end
+end
+
+  function out = ismultiple(iter,freq)
+    out = freq*round(double(iter)/freq) == iter;
+  end
+end
