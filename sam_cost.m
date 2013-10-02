@@ -55,11 +55,15 @@ pMObs       = cell2mat(obsOptimData.pM(iNonEmpty));
 % Make a double vector of all predicted probability masses
 pMPrd       = cell2mat(prdOptimData.pM(iNonEmpty));
 
-% Identify non-zero predicted probabilities masses
-iNonZero    = pMPrd ~= 0;
+% Add a small value to bins with a probablity mass of 0 (to prevent
+% division by 0 and hampering optimization)
+pMPrd(pMPrd == 0) = 0.001;
+
+% Identify bins with observations
+iAnyObs     = fObs > 0;
 
 % #.2.#. Compute the cost
 % -------------------------------------------------------------------------
-cost        = sam_chi_square(pMObs(iNonZero),pMPrd(iNonZero),fObs(iNonZero));
+cost        = sam_chi_square(pMObs(iAnyObs),pMPrd(iAnyObs),fObs(iAnyObs));
 
-sam_plot_obs_prd(SAM,obsOptimData,prdOptimData);
+% sam_plot_obs_prd(SAM,obsOptimData,prdOptimData);
