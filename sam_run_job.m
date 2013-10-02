@@ -32,6 +32,19 @@ function varargout = sam_run_job(SAM)
 % 1.1. Process inputs
 % ========================================================================= 
 
+% Output directory
+outDir        = SAM.io.dir;
+
+% Choice mechanism
+choiceMechType  = SAM.des.choiceMech.type;
+
+% Inhibition mechanism
+inhibMechType   = SAM.des.inhibMech.type;
+
+% Parameter that varies across conditions
+condParam     = SAM.des.condParam;
+
+
 % Number of conditions
 nCnd        = SAM.des.expt.nCnd;
 
@@ -60,6 +73,19 @@ switch lower(simGoal)
   case 'explore'
     % Parameter values 
     X           = SAM.explore.X;
+  case 'explorex0'
+    
+    % Bounds
+    LB          = SAM.explorex0.LB;
+    UB          = SAM.explorex0.UB;
+    
+    % Linear constraints
+    linConA     = SAM.explorex0.linConA;
+    linConB     = SAM.explorex0.linConB;
+    
+    % Nonlinear constraints
+    nonLinCon   = SAM.explorex0.nonLinCon;
+    
 end
 
 % 1.2. Pre-allocate empty arrays
@@ -110,13 +136,56 @@ switch lower(simScope)
     end
 end
 
+% Structure for logging predicted trial probabilities and response times
+prdOptimData  = struct('P',[],...
+                       'rt',[]);
+
+% Structure for logging data for optimization
+obsOptimData  = struct('rt',[],...
+                       'N',[],...
+                       'P',[],...
+                       'rtQ',[],...
+                       'f',[],...
+                       'pM',[]);
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. RUN JOB
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 switch lower(simGoal)
   
-  % 2.1. Model optimization
+  % 2.1. Find optimim starting values
+  % =======================================================================
+  case 'startvals'
+    
+    switch lower(SAM.sim.rngSeedStage)
+      case 'sam_run_job'
+        % #.#.#. Seed the random number generator
+        % -----------------------------------------------------------------
+        % Note: MEX functions stay in memory until they are cleared.
+        % Seeding of the random number generator should be accompanied by 
+        % clearing MEX functions.
+        
+        clear(char(trialSimFun));
+        rng(rngID);
+    end
+    
+    
+    % #.#.#. Find optimal starting values
+    % ---------------------------------------------------------------------
+    
+    [cost,X0] = sam_optim_start_vals(SAM);
+    
+    % #.#.#. Save starting values
+    % ---------------------------------------------------------------------
+    
+    % File name
+    fName = sprintf('x0_%strials_c%s_i%s_p%s.mat',simScope, ...
+                    choiceMechType,inhibMechType,condParam);
+       
+    save(fullfile(outDir,fName),'cost','X0');
+    
+  % 2.2. Model optimization
   % =======================================================================
   case 'optimize'
     
@@ -134,19 +203,15 @@ switch lower(simGoal)
     
     [X,fVal,exitFlag,solverOutput,history] = sam_optim(SAM);
     
+    % #.#.#. Save starting values
+    % ---------------------------------------------------------------------
+    
     varargout{1} = X;
     varargout{2} = fVal;
     varargout{3} = exitFlag;
     varargout{4} = solverOutput;
     varargout{5} = history;
     
-%     % Model predictions
-%     varargout{1} = prd;
-%     
-%     % Model matrices
-%     varargout{2} = modelMat;
-  
-  
   % 2.2. Model exploration
   % =======================================================================
   case 'explore'
@@ -199,5 +264,7 @@ switch lower(simGoal)
     
     % Model matrices
     varargout{2} = modelMat;
+    
+  
     
 end
