@@ -8,6 +8,9 @@
 % $Created : Mon 09 Sep 2013 13:07:49 CDT by bram 
 % $Modified: Sat 21 Sep 2013 12:24:04 CDT by bram
 
+
+iStartVal = 1;
+
  
 % CONTENTS 
 
@@ -15,11 +18,21 @@
 % #. INPUT/OUTPUT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-SAM.io.jobDir                     = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/test/';
-SAM.io.jobName                    = 'test';
-SAM.io.outDir                     = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/test/';
+SAM.io.dir                      = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/';
+
+% Files in working directory
+% obs.mat
+% job_startvals_gotrials_crace_irace_pv.mat
+% job_optimize_gotrials_crace_irace_pv.mat
+%
 
 
+
+SAM.io.jobName                  = 'test';
+SAM.io.outDir                   = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/test_Sep302013/';
+
+
+% SAM.io.obsFile                    = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/test_Sep302013/simulated_observations.mat';
 SAM.io.obsFile                    = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/data_preproc_subj08.mat';
 
 load(SAM.io.obsFile);
@@ -60,11 +73,11 @@ SAM.des.accumMech.zLB              = 0;
 % Time window during which accumulation is 'recorded'
 % -------------------------------------------------------------------------
 % Time is relative to trial onset
-SAM.des.accumMech.timeWindow       = [240 2250];
+SAM.des.accumMech.timeWindow       = [250 2250];
 
 % Time step
 % -------------------------------------------------------------------------
-SAM.des.time.dt                    = 1;
+SAM.des.time.dt                    = 5;
 
 % Time constant
 % -------------------------------------------------------------------------
@@ -72,7 +85,7 @@ SAM.des.time.tau                   = 1;
 
 % Dependency of intrinsic noise on model input
 % -------------------------------------------------------------------------
-SAM.des.inpDepNoise                = false;
+SAM.des.inpDepNoise                = true;
 
 % #.4. Experiment parameters
 % ========================================================================= 
@@ -137,6 +150,10 @@ SAM.des.durationSTOP               = 'trial';
 % #.#. Goal of simulation
 % ========================================================================= 
 % Optimization can proceed in two ways:
+% 'startvals'  - Find good starting values by sampling uniformly 
+%                distributed  starting points with bounds, linear, and/or 
+%                nonlinear constraints, and then computing the fit between
+%                observations and model predictions.
 % 'optimize'   - An optimization algorithm automatically tries to find the
 %                 optimal solution to the cost function (specified below).
 % 'explore'    - No actual optimization takes place; the model is run and
@@ -145,7 +162,7 @@ SAM.des.durationSTOP               = 'trial';
 %                 then be adjusted manually, and the model is run again, in
 %                 order to get starting parameters that produce predictions
 
-SAM.sim.goal                          = 'explore';
+SAM.sim.goal                          = 'optimize';
 
 % #.#. Scope of simulation
 % =========================================================================
@@ -153,13 +170,13 @@ SAM.sim.goal                          = 'explore';
 % 'go'        - Simulate Go trials only
 % 'all'       - Simulate Go and Stop trials
 
-SAM.sim.scope                         = 'all';
+SAM.sim.scope                         = 'go';
 
 % #.#. Number of simulated trials
 % =========================================================================
 % The same number of trials is used for each trial type
 
-SAM.sim.nSim                          = 100;
+SAM.sim.nSim                          = 1000;
 
 % #.#. Random number generator seed
 % =========================================================================
@@ -177,7 +194,7 @@ SAM.sim.rngID                         = rng('shuffle'); % MATLAB's default
 %                       optimization routine starts from different points
 %                       usually.
 
-SAM.sim.rngSeedStage                  = 'sam_run_job';
+SAM.sim.rngSeedStage                  = 'sam_sim_expt';
 
 % #.#. Experiment simulation function
 % =========================================================================
@@ -191,125 +208,109 @@ if SAM.des.inpDepNoise
   switch lower([SAM.des.choiceMech.type,'-',SAM.des.inhibMech.type])
     case 'race-race'
       SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_inpdepnoise;
     case 'race-bi'
       SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_inpdepnoise;
     case 'race-li'
       SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_inpdepnoise;
     case 'ffi-race'
       SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_inpdepnoise;
     case 'ffi-bi'
       SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_inpdepnoise;
     case 'ffi-li'
       SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_inpdepnoise;
     case 'li-race'
       SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_inpdepnoise;
     case 'li-bi'
       SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_inpdepnoise;
     case 'li-li'
       SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_inpdepnoise_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_inpdepnoise;
   end
 else
   switch lower([SAM.des.choiceMech.type,'-',SAM.des.inhibMech.type])
     case 'race-race'
       SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_irace_nomodbd;
     case 'race-bi'
       SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ibi_nomodbd;
     case 'race-li'
       SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_crace_ili_nomodbd;
     case 'ffi-race'
       SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_irace_nomodbd;
     case 'ffi-bi'
       SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ibi_nomodbd;
     case 'ffi-li'
       SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cffi_ili_nomodbd;
     case 'li-race'
       SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_irace_nomodbd;
     case 'li-bi'
       SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ibi_nomodbd;
     case 'li-li'
       SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd_mex;
-  %     SAM.sim.trialSimFun = @sam_sim_trial_cli_ili_nomodbd;
   end
 end
-
-% Specify parameter bounds, starting values, and names
-% =========================================================================
-                                    % OUTPUTS
-[LB, ...                            % Lower bounds
- UB, ...                            % Upper bounds 
- X0, ...                            % Starting values
- tg] ...                            % Parameter name
- ...
- = sam_get_bnds(...                 % FUNCTION
- ...                                % INPUTS
- SAM.des.choiceMech.type, ...       % Choice mechanism
- SAM.des.inhibMech.type, ...        % Inhibition mechanism
- SAM.des.condParam, ...             % Parameter varying across conditios
- SAM.sim.scope);  
-
-
 
 switch lower(SAM.sim.goal)
   
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. SPECIFY MODEL OPTIMIZATION SETTINGS
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-  
-  case 'optimize'
+% #. SPECIFY STARTING POINT EXPLORATION SETTINGS
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%         
     
-    % Observations
-    % ===================================================================== 
+  case 'startvals'
     
-    
-    % Parameter bounds
-    % ===================================================================== 
-    
+    % Number of starting points
+    SAM.startvals.nX0     = 100;
+
+    % Specify parameter bounds, starting values, and names
+    % =====================================================================
+    [LB, ...                            % Lower bounds
+     UB, ...                            % Upper bounds 
+     ~, ...                             % Starting values
+     tg, ...                            % Parameter name
+     linConA, ...                       % Term A in linear inequality A*X <= B
+     linConB, ...                       % Term B in linear inequality A*X <= B
+     nonLinCon] ...                     % Function accepting X and returning 
+     ...                                % nonlinear inequalities and equalities
+     ...
+     = sam_get_bnds(...                 % FUNCTION
+     ...                                % INPUTS
+     SAM);  
+
     % Lower bounds
-    % ---------------------------------------------------------------------
-    SAM.optim.LB                      = LB;
+    SAM.startvals.LB          = LB;
     
     % Upper bounds
-    % ---------------------------------------------------------------------
-    SAM.optim.UB                      = UB;
+    SAM.startvals.UB          = UB;
     
-    % Starting values
-    % ---------------------------------------------------------------------
-    SAM.optim.X0                      = X0;
+    % Linear constraints
+    SAM.startvals.linConA     = linConA;
+    SAM.startvals.linConB     = linConB;
+
+    % Nonlinear constraints
+    SAM.startvals.nonLinCon   = nonLinCon;
+    
     
     % Cost function specifics
     % ===================================================================== 
     
     % Cost function 
     % ---------------------------------------------------------------------
-    SAM.optim.costFun                         = @sam_cost_fun;
+    SAM.startvals.costFun                         = @sam_cost;
 
     % Cost function statistic type
     % ---------------------------------------------------------------------
-    SAM.optim.costStat                        = 'chisquare';
+    SAM.startvals.costStat                        = 'chisquare';
 
     % Cumulative probabilities for which to compute quantiles
     % ---------------------------------------------------------------------
-    SAM.optim.cumProb                         = [.1 .3 .5 .7 .9];
+    SAM.startvals.cumProb                         = [.1 .3 .5 .7 .9];
 
     % Minimum bin size (in number of trials per bin)
-    SAM.optim.minBinSize                      = 40;
+    SAM.startvals.minBinSize                      = 40;
+    
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% #. SPECIFY MODEL OPTIMIZATION SETTINGS
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+  
+  case 'optimize'
     
     % Optimization solver
     % ===================================================================== 
@@ -317,11 +318,78 @@ switch lower(SAM.sim.goal)
     % Solver type
     % ---------------------------------------------------------------------
     % de              - differential evolution
-    % fminsearchbnd   - constrained simplex
+    % fminsearchbnd   - bounded simplex
+    % fminsearchcon   - constrained simplex
+    % fmincon         - find constrained minimum with 'interior-point'
+    %                   algorithm
     % ga              - genetic algorithm
     % sa              - simulated annealing
 
-    SAM.optim.solverType              = 'fminsearchbnd';
+    SAM.optim.solverType                      = 'fminsearchcon';
+    
+    
+    
+    
+    % Specify parameter bounds, starting values, and names
+    % =====================================================================
+    
+    switch lower(SAM.optim.solverType)
+      case 'fminsearch'
+      case 'fminsearchbnd'
+                                            % OUTPUTS
+        [LB, ...                            % Lower bounds
+         UB, ...                            % Upper bounds 
+         ~, ...                             % Starting values
+         tg] ...                            % Function accepting X and returning 
+         ...
+         = sam_get_bnds(...                 % FUNCTION
+         ...                                % INPUTS
+         SAM);                              % SAM structure
+      case 'fminsearchcon'
+                                            % OUTPUTS
+        [LB, ...                            % Lower bounds
+         UB, ...                            % Upper bounds 
+         ~, ...                             % Starting values
+         tg, ...                            % Parameter name
+         linConA, ...                       % Term A in linear inequality A*X <= B
+         linConB, ...                       % Term B in linear inequality A*X <= B
+         nonLinCon] ...                     % Function accepting X and returning 
+         ...                                % nonlinear inequalities and equalities
+         ...
+         = sam_get_bnds(...                 % FUNCTION
+         ...                                % INPUTS
+         SAM);                              % SAM structure
+      case 'fmincon'
+        [LB, ...                            % Lower bounds
+         UB, ...                            % Upper bounds 
+         ~, ...                             % Starting values
+         tg, ...                            % Parameter name
+         linConA, ...                       % Term A in linear inequality A*X <= B
+         linConB, ...                       % Term B in linear inequality A*X <= B
+         nonLinCon] ...                     % Function accepting X and returning 
+         ...                                % nonlinear inequalities and equalities
+         ...
+         = sam_get_bnds(...                 % FUNCTION
+         ...                                % INPUTS
+         SAM);                              % SAM structure
+      case 'ga'
+                                            % OUTPUTS
+        [LB, ...                            % Lower bounds
+         UB, ...                            % Upper bounds 
+         ~, ...                             % Starting values
+         tg, ...                            % Parameter name
+         linConA, ...                       % Term A in linear inequality A*X <= B
+         linConB, ...                       % Term B in linear inequality A*X <= B
+         nonLinCon] ...                     % Function accepting X and returning 
+         ...                                % nonlinear inequalities and equalities
+         ...
+         = sam_get_bnds(...                 % FUNCTION
+         ...                                % INPUTS
+         SAM);                              % SAM structure
+    end
+    
+    
+    
 
     % Solver options
     % ---------------------------------------------------------------------
@@ -329,7 +397,7 @@ switch lower(SAM.sim.goal)
     % Solver            Options structure function    Important fields
     % ------            --------------------------    ---------------------
     % 'de'              ?
-    % 'fminsearchbnd'   optimset(@fminsearch)
+    % 'fminsearchcon'   optimset(@fminsearch)
     % 'ga'              gaoptimset(@ga)
     % 'sa'              saoptimset(@simulannealbnd)
     %
@@ -339,6 +407,10 @@ switch lower(SAM.sim.goal)
         error('Don''t know which option structure to use. Implement this.');
       case 'fminsearchbnd'
         SAM.optim.solverOpts            = optimset(@fminsearch);
+      case 'fminsearchcon'
+        SAM.optim.solverOpts            = optimset(@fminsearch);
+      case 'fmincon'
+        SAM.optim.solverOpts            = optimset(@fmincon);
       case 'ga'
         SAM.optim.solverOpts            = gaoptimset(@ga);
       case 'sa'
@@ -372,14 +444,27 @@ switch lower(SAM.sim.goal)
     %   collect_erfvec - if true, erf values will be saved. (false)
 
 
-
       case 'fminsearchbnd'
-
-        SAM.optim.solverOpts.MaxFunEvals      = 100;
-        SAM.optim.solverOpts.MaxIter          = 100;
+        
+        SAM.optim.solverOpts.MaxFunEvals      = 150000;
+        SAM.optim.solverOpts.MaxIter          = 50;
         SAM.optim.solverOpts.TolFun           = 1e-4;
         SAM.optim.solverOpts.TolX             = 1e-4;
+        
+      case 'fminsearchcon'
 
+        SAM.optim.solverOpts.MaxFunEvals      = 150000;
+        SAM.optim.solverOpts.MaxIter          = 50;
+        SAM.optim.solverOpts.TolFun           = 1e-4;
+        SAM.optim.solverOpts.TolX             = 1e-4;
+        
+      case 'fmincon'
+        
+        SAM.optim.solverOpts.MaxFunEvals      = 1000;
+        SAM.optim.solverOpts.MaxIter          = 50;
+        SAM.optim.solverOpts.TolFun           = 1e-4;
+        SAM.optim.solverOpts.TolX             = 1e-4;
+        SAM.optim.solverOpts.Algorithm        = 'interior-point';
       case 'ga'
 
         LB = SAM.optim.solver.LB;
@@ -402,21 +487,113 @@ switch lower(SAM.sim.goal)
       case 'sa'
 
         SAM.optim.solverOpts.PlotFcns         = {@optimplotx, ...
-                                                     @optimplotfval, ...
-                                                     @optimplotfunccount};
+                                                 @optimplotfval, ...
+                                                 @optimplotfunccount};
     end
     
+    % Read starting values from file
+    % ---------------------------------------------------------------------
+    fName = fullfile(SAM.io.dir,sprintf('x0_%strials_c%s_i%s_p%s.mat', ...
+                                            SAM.sim.scope, ...
+                                            SAM.des.choiceMech.type, ...
+                                            SAM.des.inhibMech.type, ...
+                                            SAM.des.condParam));
+    
+    % Load the file with starting values
+    X0Struct = load(fName,'X0');
+
+    % Select X0 corresponding to the starting value index
+    SAM.optim.X0                          = X0Struct.X0(iStartVal,:);
+    
+    
+    
+    % Parameter names
+    % ---------------------------------------------------------------------
+    SAM.optim.XName                       = tg;
+    
+    % Lower and upper bounds
+    % ---------------------------------------------------------------------
+    switch lower(SAM.optim.solverType)
+      case {'fminsearchbnd','fminsearchcon','fmincon','ga'}
+        SAM.optim.LB                      = LB;
+        SAM.optim.UB                      = UB;
+    end
+    
+    % Linear and nonlinear (in)equalities
+    % ---------------------------------------------------------------------
+    switch lower(SAM.optim.solverType)
+      case {'fminsearchcon','fmincon','ga'}
+        SAM.optim.linConA                 = linConA;
+        SAM.optim.linConB                 = linConB;
+        SAM.optim.nonLinCon               = nonLinCon;
+    end
+    
+    % Cost function specifics
+    % ===================================================================== 
+    
+    % Cost function 
+    % ---------------------------------------------------------------------
+    SAM.optim.costFun                         = @sam_cost;
+
+    % Cost function statistic type
+    % ---------------------------------------------------------------------
+    SAM.optim.costStat                        = 'chisquare';
+
+    % Cumulative probabilities for which to compute quantiles
+    % ---------------------------------------------------------------------
+    SAM.optim.cumProb                         = [.1 .3 .5 .7 .9];
+
+    % Minimum bin size (in number of trials per bin)
+    SAM.optim.minBinSize                      = 40;
+        
+    % Logging optimization
+    % ===================================================================== 
+    
+    % File name of observations file
+    [~,fName,fExt] = fileparts(SAM.io.obsFile);
+    
+    % General file name string for iteration and final log file
+    fNameStr = [fName,'_', ...
+                'c',SAM.des.choiceMech.type,'_', ...
+                'i',SAM.des.inhibMech.type,'_', ...
+                SAM.des.condParam,'_', ...
+                SAM.sim.scope,'Trials_', ...
+                datestr(now,'yyyy-mm-dd-THHMMSS'), ...
+                '.mat'];
+    
+    % Iteration log file
+    % ---------------------------------------------------------------------
+    SAM.optim.iterLogFile = fullfile(SAM.io.outDir,['iterLog_',fNameStr]);
+    
+    % Iteration log frequency
+    % ---------------------------------------------------------------------
+    % Set to inf if iterations should not be logged
+    SAM.optim.iterLogFreq = 100; % Iterations
+    
+    % Final log file
+    % ---------------------------------------------------------------------
+    SAM.optim.finalLogFile = fullfile(SAM.io.outDir,['finalLog_',fNameStr]);
+   
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. SPECIFY MODEL EXPLORATION SETTINGS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     
     
   case 'explore'
     
+                                        % OUTPUTS
+    [LB, ...                            % Lower bounds
+     UB, ...                            % Upper bounds 
+     X0, ...                            % Starting values
+     tg] ...                            % Function accepting X and returning 
+     ...
+     = sam_get_bnds(...                 % FUNCTION
+     ...                                % INPUTS
+     SAM);                              % SAM structure
+    
     
     % Starting values
     % ---------------------------------------------------------------------
     SAM.explore.X                                 = X0;
-    
     
     % #.#. Time windows for event alignments
     % =====================================================================
@@ -440,6 +617,13 @@ end
 % #. SAVE JOB
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-fName = fullfile(SAM.io.jobDir,[SAM.io.jobName,'.mat']);
+simGoal         = SAM.sim.goal;
+simScope        = SAM.sim.scope;
+choiceMechType  = SAM.des.choiceMech.type;
+inhibMechType   = SAM.des.inhibMech.type;
+condParam       = SAM.des.condParam;
 
-save(fName,'SAM');
+fName = sprintf('job_%s_%strials_c%s_i%s_p%s.mat',simGoal,simScope, ...
+                choiceMechType,inhibMechType,condParam);
+
+save(fullfile(SAM.io.dir,fName),'SAM');

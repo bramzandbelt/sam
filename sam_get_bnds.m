@@ -98,14 +98,19 @@ simScope            = SAM.sim.scope;
 % 1.2. Specify variables
 % ========================================================================= 
 
+load(SAM.io.obsFile);
+    
+% All observed RTs
+obsRt = cell2mat([obs.rtGoCorr(:);obs.rtGoComm(:);obs.rtStopFailure(:)]);
+
 switch lower(simGoal)
   case 'optimize'
-    load(SAM.io.obsFile);
-    
-    % All observed RTs
-    obsRt = cell2mat([obs.rtGoCorr(:);obs.rtGoComm(:);obs.rtStopFailure(:)]);
     
     solverType = SAM.optim.solverType;
+    
+  case 'startvals'
+    
+    solverType = 'fmincon'; % This is just to get the linear and nonlinear constraints
     
 end
 
@@ -203,7 +208,7 @@ vIGtg_c3  = 'vIG_c3';
 % 1.5.1. GO units
 % -------------------------------------------------------------------------
 switch lower(simGoal)
-  case 'optimize'
+  case {'optimize','startvals'}
     t0GLB     = 0;
     t0GUB     = min(obsRt);
   otherwise
@@ -249,16 +254,16 @@ sitg      = 'si';
 
 % 1.8.1. GO units
 % -------------------------------------------------------------------------
-kGLB      = 0;%-0.005;
-kGUB      = 0;
-kGX0      = 0;%-0.001;
+kGLB      = -realmin;%-0.005;
+kGUB      = -realmin;
+kGX0      = -realmin;
 kGtg      = 'kG';
 
 % 1.8.2. STOP unit
 % -------------------------------------------------------------------------
 kSLB      = -0.005;
-kSUB      = 0;
-kSX0      = -0.001;
+kSUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear constraints
+kSX0      = -realmin;
 kStg      = 'kS';
 
 % 1.9. Lateral inhibition weight (w)
@@ -297,7 +302,7 @@ switch lower(condParam)
             tg = {z0Gtg,zcGtg,vCGtg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,setg,sitg,kGtg,wGtg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
                 
                 % Bounds
                 % ---------------------------------------------------------
@@ -341,7 +346,7 @@ switch lower(condParam)
             tg = {z0Gtg,zcGtg,vCGtg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,setg,sitg,kGtg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
                 
                 % Bounds
                 % ---------------------------------------------------------
@@ -384,7 +389,7 @@ switch lower(condParam)
             tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
                 
                 % Bounds
                 % ---------------------------------------------------------
@@ -427,7 +432,7 @@ switch lower(condParam)
                 tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
                 
                 switch lower(simGoal)
-                  case 'optimize'
+                  case {'optimize','startvals'}
 
                     % Bounds
                     % -----------------------------------------------------
@@ -468,7 +473,7 @@ switch lower(condParam)
                 tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg,vCStg,vIGtg,t0Gtg_c1,t0Gtg_c2,t0Gtg_c3,t0Stg,setg,sitg,kGtg,kStg};
                 
                 switch lower(simGoal)
-                  case 'optimize'
+                  case {'optimize','startvals'}
 
                     % Bounds
                     % -----------------------------------------------------
@@ -516,7 +521,7 @@ switch lower(condParam)
             
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
 
                 % Bounds
                 % ---------------------------------------------------------
@@ -560,7 +565,7 @@ switch lower(condParam)
             tg = {z0Gtg,zcGtg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,setg,sitg,kGtg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
 
                 % Bounds
                 % ---------------------------------------------------------
@@ -604,7 +609,7 @@ switch lower(condParam)
             tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
 
                 % Bounds
                 % ---------------------------------------------------------
@@ -649,7 +654,7 @@ switch lower(condParam)
                 tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
                 
                 switch lower(simGoal)
-                  case 'optimize'
+                  case {'optimize','startvals'}
 
                     % Bounds
                     % -----------------------------------------------------
@@ -694,7 +699,7 @@ switch lower(condParam)
                 tg = {z0Gtg,z0Stg,zcGtg,zcStg,vCGtg_c1,vCGtg_c2,vCGtg_c3,vCStg,vIGtg_c1,vIGtg_c2,vIGtg_c3,t0Gtg,t0Stg,setg,sitg,kGtg,kStg};
                 
                 switch lower(simGoal)
-                  case 'optimize'
+                  case {'optimize','startvals'}
 
                     % Bounds
                     % -----------------------------------------------------
@@ -745,7 +750,7 @@ switch lower(condParam)
             tg = {z0Gtg,zcGtg_c1,zcGtg_c2,zcGtg_c3,vCGtg,vIGtg,t0Gtg,setg,sitg,kGtg,wGtg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
 
                 % Bounds
                 % ---------------------------------------------------------
@@ -793,7 +798,7 @@ switch lower(condParam)
             tg = {z0Gtg,zcGtg_c1,zcGtg_c2,zcGtg_c3,vCGtg,vIGtg,t0Gtg,setg,sitg,kGtg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
 
                 % Bounds
                 % ---------------------------------------------------------
@@ -841,7 +846,7 @@ switch lower(condParam)
             tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
             
             switch lower(simGoal)
-              case 'optimize'
+              case {'optimize','startvals'}
 
                 % Bounds
                 % ---------------------------------------------------------
@@ -891,7 +896,7 @@ switch lower(condParam)
                 tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg,kGtg,kStg,wGtg,wStg};
                 
                 switch lower(simGoal)
-                  case 'optimize'
+                  case {'optimize','startvals'}
 
                     % Bounds
                     % -----------------------------------------------------
@@ -941,7 +946,7 @@ switch lower(condParam)
                 tg = {z0Gtg,z0Stg,zcGtg_c1,zcGtg_c2,zcGtg_c3,zcStg,vCGtg,vCStg,vIGtg,t0Gtg,t0Stg,setg,sitg,kGtg,kStg};
 
                 switch lower(simGoal)
-                  case 'optimize'
+                  case {'optimize','startvals'}
 
                     % Bounds
                     % -----------------------------------------------------
