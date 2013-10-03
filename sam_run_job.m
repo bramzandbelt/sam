@@ -33,7 +33,7 @@ function varargout = sam_run_job(SAM)
 % ========================================================================= 
 
 % Output directory
-outDir        = SAM.io.dir;
+outDir        = SAM.io.outDir;
 
 % Choice mechanism
 choiceMechType  = SAM.des.choiceMech.type;

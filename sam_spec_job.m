@@ -18,22 +18,23 @@ iStartVal = 1;
 % #. INPUT/OUTPUT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-SAM.io.dir                      = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/';
+% Path settings
+switch matlabroot
+   case '/Applications/MATLAB_R2013a.app' % local
+      bzenv('all')
+      
+      SAM.io.outDir                      = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/';
+      SAM.io.obsFile                  = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/obs.mat';
+      
+   otherwise   % ACCRE
 
-% Files in working directory
-% obs.mat
-% job_startvals_gotrials_crace_irace_pv.mat
-% job_optimize_gotrials_crace_irace_pv.mat
-%
+      addpath('/home/zandbeb/m-files/sam/sam_20131002/');
+      addpath(genpath('/home/zandbeb/m-files/general/'));
+      
+      SAM.io.outDir                      = '/scratch/zandbeb/sam/subj08/';
+      SAM.io.obsFile                  = '/scratch/zandbeb/sam/subj08/obs.mat';
 
-
-
-SAM.io.jobName                  = 'test';
-SAM.io.outDir                   = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/test_Sep302013/';
-
-
-% SAM.io.obsFile                    = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/test_Sep302013/simulated_observations.mat';
-SAM.io.obsFile                    = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/data_preproc_subj08.mat';
+end
 
 load(SAM.io.obsFile);
 
@@ -176,7 +177,7 @@ SAM.sim.scope                         = 'go';
 % =========================================================================
 % The same number of trials is used for each trial type
 
-SAM.sim.nSim                          = 1000;
+SAM.sim.nSim                          = 2000;
 
 % #.#. Random number generator seed
 % =========================================================================
@@ -349,7 +350,7 @@ switch lower(SAM.sim.goal)
                                             % OUTPUTS
         [LB, ...                            % Lower bounds
          UB, ...                            % Upper bounds 
-         ~, ...                             % Starting values
+         X0, ...                             % Starting values
          tg, ...                            % Parameter name
          linConA, ...                       % Term A in linear inequality A*X <= B
          linConB, ...                       % Term B in linear inequality A*X <= B
@@ -454,7 +455,7 @@ switch lower(SAM.sim.goal)
       case 'fminsearchcon'
 
         SAM.optim.solverOpts.MaxFunEvals      = 150000;
-        SAM.optim.solverOpts.MaxIter          = 50;
+        SAM.optim.solverOpts.MaxIter          = 1000;
         SAM.optim.solverOpts.TolFun           = 1e-4;
         SAM.optim.solverOpts.TolX             = 1e-4;
         
@@ -466,9 +467,6 @@ switch lower(SAM.sim.goal)
         SAM.optim.solverOpts.TolX             = 1e-4;
         SAM.optim.solverOpts.Algorithm        = 'interior-point';
       case 'ga'
-
-        LB = SAM.optim.solver.LB;
-        UB = SAM.optim.solver.UB;
 
         popSize=30;
         nOfColony=1;
@@ -493,18 +491,20 @@ switch lower(SAM.sim.goal)
     
     % Read starting values from file
     % ---------------------------------------------------------------------
-    fName = fullfile(SAM.io.dir,sprintf('x0_%strials_c%s_i%s_p%s.mat', ...
-                                            SAM.sim.scope, ...
-                                            SAM.des.choiceMech.type, ...
-                                            SAM.des.inhibMech.type, ...
-                                            SAM.des.condParam));
+%     fName = fullfile(SAM.io.outDir,sprintf('x0_%strials_c%s_i%s_p%s.mat', ...
+%                                             SAM.sim.scope, ...
+%                                             SAM.des.choiceMech.type, ...
+%                                             SAM.des.inhibMech.type, ...
+%                                             SAM.des.condParam));
+%     
+%     % Load the file with starting values
+%     X0Struct = load(fName,'X0');
+% 
+%     % Select X0 corresponding to the starting value index
+%     SAM.optim.X0                          = X0Struct.X0(iStartVal,:);
     
-    % Load the file with starting values
-    X0Struct = load(fName,'X0');
-
-    % Select X0 corresponding to the starting value index
-    SAM.optim.X0                          = X0Struct.X0(iStartVal,:);
     
+    SAM.optim.X0                         = X0;
     
     
     % Parameter names
@@ -568,7 +568,7 @@ switch lower(SAM.sim.goal)
     % Iteration log frequency
     % ---------------------------------------------------------------------
     % Set to inf if iterations should not be logged
-    SAM.optim.iterLogFreq = 100; % Iterations
+    SAM.optim.iterLogFreq = 50; % Iterations
     
     % Final log file
     % ---------------------------------------------------------------------
@@ -626,4 +626,4 @@ condParam       = SAM.des.condParam;
 fName = sprintf('job_%s_%strials_c%s_i%s_p%s.mat',simGoal,simScope, ...
                 choiceMechType,inhibMechType,condParam);
 
-save(fullfile(SAM.io.dir,fName),'SAM');
+save(fullfile(SAM.io.outDir,fName),'SAM');
