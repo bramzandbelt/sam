@@ -268,6 +268,10 @@ switch lower(solverType)
       nonLinCon, ...
       solverOpts);
     
+      % Remove unused lines (containing only NaNs)
+      iFirstNanLine = find(all(isnan(history),2),1,'first');
+      history = history(1:iFirstNanLine-1,:);
+    
       % Save the final log file
       save(finalLogFile,'X','fVal','exitFlag','solverOutput','history');
       
