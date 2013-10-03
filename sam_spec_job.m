@@ -14,26 +14,51 @@ iStartVal = 1;
 timeStr = datestr(now,'yyyy-mm-dd-THHMMSS');
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% #. SPECIFY THE ENVIRONMENT
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+switch matlabroot
+  case '/Applications/MATLAB_R2013a.app'
+    env = 'local';
+  otherwise
+    env = 'accre';
+end
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. INPUT/OUTPUT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
+% Determine which subject to fit
+switch env
+  case 'local'
+    iSubj = 8;
+  case 'accre'
+    iSubj = str2double(getenv('subject'));
+end
+
 % Path settings
-switch matlabroot
-   case '/Applications/MATLAB_R2013a.app' % local
+switch env
+   case 'local'
+      
+     % Add directories to search path
       bzenv('all')
       
-      SAM.io.outDir                       = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/';
-      SAM.io.obsFile                      = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/obs.mat';
+      % Specify
+      rootDir                             = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/';
       
-   otherwise   % ACCRE
+  case 'accre'   % ACCRE
 
+      % Add directories to search path
       addpath('/home/zandbeb/m-files/sam/sam_20131002/');
       addpath(genpath('/home/zandbeb/m-files/general/'));
       
-      SAM.io.outDir                       = '/scratch/zandbeb/sam/subj08/';
-      SAM.io.obsFile                      = '/scratch/zandbeb/sam/subj08/obs.mat';
-
+      rootDir                             = '/scratch/zandbeb/sam/';
+      
 end
+
+% Subject directory and observations file
+SAM.io.outDir                       = fullfile(rootDir,sprintf('subj%.2d/',iSubj));
+SAM.io.obsFile                      = fullfile(rootDir,sprintf('subj%.2d/obs.mat',iSubj));
 
 load(SAM.io.obsFile);
 
@@ -50,7 +75,20 @@ load(SAM.io.obsFile);
 % 'ffi'       - Feed-forward inhibition
 % 'li'        - Lateral inhibition
 
-SAM.des.choiceMech.type            = 'race';
+switch env
+  case 'local'
+    SAM.des.choiceMech.type            = 'race';
+  case 'accre'
+    iChoiceMechType = str2double(getenv('choiceMech'));
+    switch iChoiceMechType
+      case 1
+        SAM.des.choiceMech.type            = 'race';
+      case 2
+        SAM.des.choiceMech.type            = 'ffi';
+      case 3
+        SAM.des.choiceMech.type            = 'li';
+    end
+end
 
 % #.2. Inhibition mechanism
 % ========================================================================= 
@@ -61,7 +99,20 @@ SAM.des.choiceMech.type            = 'race';
 % 'bi'        - Blocked input
 % 'li'        - Lateral inhibition
 
-SAM.des.inhibMech.type             = 'race';
+switch env
+  case 'local'
+    SAM.des.inhibMech.type            = 'race';
+  case 'accre'
+    iInhibMechType = str2double(getenv('inhibMech'));
+    switch iInhibMechType
+      case 1
+        SAM.des.inhibMech.type            = 'race';
+      case 2
+        SAM.des.inhibMech.type            = 'bi';
+      case 3
+        SAM.des.inhibMech.type            = 'li';
+    end
+end
 
 % #.3. Accumulation mechanism
 % ========================================================================= 
@@ -111,7 +162,20 @@ SAM.des.expt.stimDur               = obs.duration;
 
 % Parameter that varies across task conditions
 % -------------------------------------------------------------------------
-SAM.des.condParam                  = 'v';
+switch env
+  case 'local'
+    SAM.des.condParam            = 'v';
+  case 'accre'
+    iCondParam = str2double(getenv('condParam'));
+    switch iCondParam
+      case 1
+        SAM.des.condParam            = 't0';
+      case 2
+        SAM.des.condParam            = 'v';
+      case 3
+        SAM.des.condParam            = 'zc';
+    end
+end
 
 % Number of units
 % -------------------------------------------------------------------------
@@ -162,7 +226,18 @@ SAM.des.durationSTOP               = 'trial';
 %                 then be adjusted manually, and the model is run again, in
 %                 order to get starting parameters that produce predictions
 
-SAM.sim.goal                       = 'explore';
+switch env
+  case 'local'
+    SAM.sim.goal                       = 'explore';
+  case 'accre'
+    iSimGoal = str2double(getenv('simGoal'));
+    switch iSimGoal
+      case 1
+        SAM.sim.goal                       = 'startvals';
+      case 2
+        SAM.sim.goal                       = 'optimize';
+    end
+end
 
 % #.#. Scope of simulation
 % =========================================================================
@@ -170,13 +245,30 @@ SAM.sim.goal                       = 'explore';
 % 'go'        - Simulate Go trials only
 % 'all'       - Simulate Go and Stop trials
 
-SAM.sim.scope                         = 'go';
+switch env
+  case 'local'
+    SAM.sim.scope                         = 'go';
+  case 'accre'
+    iSimScope = str2double(getenv('simScope'));
+    switch iSimScope
+      case 1
+        SAM.sim.scope                         = 'go';
+      case 2
+        SAM.sim.scope                         = 'all';
+    end
+end
 
 % #.#. Number of simulated trials
 % =========================================================================
 % The same number of trials is used for each trial type
 
-SAM.sim.nSim                          = 2000;
+switch env
+  case 'local'
+    SAM.sim.nSim                          = 2000;
+  case 'accre'
+    SAM.sim.nSim                          = str2double(getenv('nSim'));
+end
+
 
 % #.#. Random number generator seed
 % =========================================================================
@@ -612,9 +704,24 @@ switch lower(SAM.sim.goal)
     % Starting values
     % ---------------------------------------------------------------------
     
-    X0Struct = load('/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/bla.mat');
+    outDir = SAM.io.outDir;
+    choiceMechType = SAM.des.choiceMech.type;
+    inhibMechType = SAM.des.inhibMech.type;
+    condParam = SAM.des.condParam;
+    simScope = SAM.sim.scope;
+    solverType = SAM.optim.solverType;
     
-    SAM.explore.X                                 = X0Struct.X0;
+    % Specify file with starting values
+    X0fName = sprintf('x0_%strials_c%s_i%s_p%s.mat',simScope, ...
+                choiceMechType,inhibMechType,condParam);
+    X0Path = fullfile(outDir,X0fName);
+
+    % Load the file with starting values
+    X0Struct = load(X0Path);
+    
+    % Set the starting values and parameter names
+    SAM.explore.X                          = X0Struct.X0(iStartVal,:);
+    SAM.explore.XName                      = X0Struct.tg;
     
     % #.#. Time windows for event alignments
     % =====================================================================
