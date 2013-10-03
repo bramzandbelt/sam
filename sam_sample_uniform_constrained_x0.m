@@ -7,7 +7,7 @@ function X0 = sam_sample_uniform_constrained_x0(N,LB,UB,varargin)
 % SYNTAX 
 % SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB);
 % SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,linConA,linConB);
-% SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,linConA,linConB,nonLinCon);
+% SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,linConA,linConB,nonLinCon,solverType);
 %  
 % EXAMPLES 
 %  
@@ -47,10 +47,11 @@ elseif nargin == 5
   linConA   = varargin{1};
   linConB   = varargin{2};
   nonLinCon = [];
-elseif nargin == 6
+elseif nargin == 7
   linConA   = varargin{1};
   linConB   = varargin{2};
   nonLinCon = varargin{3};
+  solverType = varargin{4};
 end
 
 iRep = 1;
@@ -74,7 +75,15 @@ while iRep < MAX_N_REP + 1
 
   % Check nonlinear constraints, if any
   if ~isempty(nonLinCon)
-    [c,~] = cellfun(@(x) nonLinCon(x),XCell,'Uni',0);
+    switch lower(solverType)
+      case 'fminsearchcon'
+        % Inequality constraints
+        c = cellfun(@(x) nonLinCon(x),XCell,'Uni',0);
+
+      case {'fmincon','ga'}
+        % Inequality and equality constraints
+        [c,~] = cellfun(@(x) nonLinCon(x),XCell,'Uni',0);
+    end
     iNonLinCon = cell2mat(cellfun(@(x) all(x < 0),c,'Uni',0));
   end
 
