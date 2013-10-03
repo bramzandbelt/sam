@@ -8,11 +8,10 @@
 % $Created : Mon 09 Sep 2013 13:07:49 CDT by bram 
 % $Modified: Sat 21 Sep 2013 12:24:04 CDT by bram
 
-
 iStartVal = 1;
 
- 
 % CONTENTS 
+timeStr = datestr(now,'yyyy-mm-dd-THHMMSS');
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. INPUT/OUTPUT
@@ -23,16 +22,16 @@ switch matlabroot
    case '/Applications/MATLAB_R2013a.app' % local
       bzenv('all')
       
-      SAM.io.outDir                      = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/';
-      SAM.io.obsFile                  = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/obs.mat';
+      SAM.io.outDir                       = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/';
+      SAM.io.obsFile                      = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/obs.mat';
       
    otherwise   % ACCRE
 
       addpath('/home/zandbeb/m-files/sam/sam_20131002/');
       addpath(genpath('/home/zandbeb/m-files/general/'));
       
-      SAM.io.outDir                      = '/scratch/zandbeb/sam/subj08/';
-      SAM.io.obsFile                  = '/scratch/zandbeb/sam/subj08/obs.mat';
+      SAM.io.outDir                       = '/scratch/zandbeb/sam/subj08/';
+      SAM.io.obsFile                      = '/scratch/zandbeb/sam/subj08/obs.mat';
 
 end
 
@@ -163,7 +162,7 @@ SAM.des.durationSTOP               = 'trial';
 %                 then be adjusted manually, and the model is run again, in
 %                 order to get starting parameters that produce predictions
 
-SAM.sim.goal                          = 'optimize';
+SAM.sim.goal                       = 'explore';
 
 % #.#. Scope of simulation
 % =========================================================================
@@ -334,60 +333,60 @@ switch lower(SAM.sim.goal)
     % Specify parameter bounds, starting values, and names
     % =====================================================================
     
-    switch lower(SAM.optim.solverType)
-      case 'fminsearch'
-      case 'fminsearchbnd'
-                                            % OUTPUTS
-        [LB, ...                            % Lower bounds
-         UB, ...                            % Upper bounds 
-         ~, ...                             % Starting values
-         tg] ...                            % Function accepting X and returning 
-         ...
-         = sam_get_bnds(...                 % FUNCTION
-         ...                                % INPUTS
-         SAM);                              % SAM structure
-      case 'fminsearchcon'
-                                            % OUTPUTS
-        [LB, ...                            % Lower bounds
-         UB, ...                            % Upper bounds 
-         X0, ...                             % Starting values
-         tg, ...                            % Parameter name
-         linConA, ...                       % Term A in linear inequality A*X <= B
-         linConB, ...                       % Term B in linear inequality A*X <= B
-         nonLinCon] ...                     % Function accepting X and returning 
-         ...                                % nonlinear inequalities and equalities
-         ...
-         = sam_get_bnds(...                 % FUNCTION
-         ...                                % INPUTS
-         SAM);                              % SAM structure
-      case 'fmincon'
-        [LB, ...                            % Lower bounds
-         UB, ...                            % Upper bounds 
-         ~, ...                             % Starting values
-         tg, ...                            % Parameter name
-         linConA, ...                       % Term A in linear inequality A*X <= B
-         linConB, ...                       % Term B in linear inequality A*X <= B
-         nonLinCon] ...                     % Function accepting X and returning 
-         ...                                % nonlinear inequalities and equalities
-         ...
-         = sam_get_bnds(...                 % FUNCTION
-         ...                                % INPUTS
-         SAM);                              % SAM structure
-      case 'ga'
-                                            % OUTPUTS
-        [LB, ...                            % Lower bounds
-         UB, ...                            % Upper bounds 
-         ~, ...                             % Starting values
-         tg, ...                            % Parameter name
-         linConA, ...                       % Term A in linear inequality A*X <= B
-         linConB, ...                       % Term B in linear inequality A*X <= B
-         nonLinCon] ...                     % Function accepting X and returning 
-         ...                                % nonlinear inequalities and equalities
-         ...
-         = sam_get_bnds(...                 % FUNCTION
-         ...                                % INPUTS
-         SAM);                              % SAM structure
-    end
+%     switch lower(SAM.optim.solverType)
+%       case 'fminsearch'
+%       case 'fminsearchbnd'
+%                                             % OUTPUTS
+%         [LB, ...                            % Lower bounds
+%          UB, ...                            % Upper bounds 
+%          ~, ...                             % Starting values
+%          tg] ...                            % Function accepting X and returning 
+%          ...
+%          = sam_get_bnds(...                 % FUNCTION
+%          ...                                % INPUTS
+%          SAM);                              % SAM structure
+%       case 'fminsearchcon'
+%                                             % OUTPUTS
+%         [LB, ...                            % Lower bounds
+%          UB, ...                            % Upper bounds 
+%          X0, ...                             % Starting values
+%          tg, ...                            % Parameter name
+%          linConA, ...                       % Term A in linear inequality A*X <= B
+%          linConB, ...                       % Term B in linear inequality A*X <= B
+%          nonLinCon] ...                     % Function accepting X and returning 
+%          ...                                % nonlinear inequalities and equalities
+%          ...
+%          = sam_get_bnds(...                 % FUNCTION
+%          ...                                % INPUTS
+%          SAM);                              % SAM structure
+%       case 'fmincon'
+%         [LB, ...                            % Lower bounds
+%          UB, ...                            % Upper bounds 
+%          ~, ...                             % Starting values
+%          tg, ...                            % Parameter name
+%          linConA, ...                       % Term A in linear inequality A*X <= B
+%          linConB, ...                       % Term B in linear inequality A*X <= B
+%          nonLinCon] ...                     % Function accepting X and returning 
+%          ...                                % nonlinear inequalities and equalities
+%          ...
+%          = sam_get_bnds(...                 % FUNCTION
+%          ...                                % INPUTS
+%          SAM);                              % SAM structure
+%       case 'ga'
+%                                             % OUTPUTS
+%         [LB, ...                            % Lower bounds
+%          UB, ...                            % Upper bounds 
+%          ~, ...                             % Starting values
+%          tg, ...                            % Parameter name
+%          linConA, ...                       % Term A in linear inequality A*X <= B
+%          linConB, ...                       % Term B in linear inequality A*X <= B
+%          nonLinCon] ...                     % Function accepting X and returning 
+%          ...                                % nonlinear inequalities and equalities
+%          ...
+%          = sam_get_bnds(...                 % FUNCTION
+%          ...                                % INPUTS
+%          SAM);                              % SAM structure
+%     end
     
     
     
@@ -454,8 +453,8 @@ switch lower(SAM.sim.goal)
         
       case 'fminsearchcon'
 
-        SAM.optim.solverOpts.MaxFunEvals      = 150000;
-        SAM.optim.solverOpts.MaxIter          = 1000;
+        SAM.optim.solverOpts.MaxFunEvals      = 2000;
+        SAM.optim.solverOpts.MaxIter          = 2000;
         SAM.optim.solverOpts.TolFun           = 1e-4;
         SAM.optim.solverOpts.TolX             = 1e-4;
         
@@ -489,7 +488,7 @@ switch lower(SAM.sim.goal)
                                                  @optimplotfunccount};
     end
     
-    % Read starting values from file
+    % Read starting values, bounds, and constraints from file
     % ---------------------------------------------------------------------
 %     fName = fullfile(SAM.io.outDir,sprintf('x0_%strials_c%s_i%s_p%s.mat', ...
 %                                             SAM.sim.scope, ...
@@ -503,29 +502,48 @@ switch lower(SAM.sim.goal)
 %     % Select X0 corresponding to the starting value index
 %     SAM.optim.X0                          = X0Struct.X0(iStartVal,:);
     
+    outDir = SAM.io.outDir;
+    choiceMechType = SAM.des.choiceMech.type;
+    inhibMechType = SAM.des.inhibMech.type;
+    condParam = SAM.des.condParam;
+    simScope = SAM.sim.scope;
+    solverType = SAM.optim.solverType;
     
-    SAM.optim.X0                         = X0;
+    % Specify file with starting values
+    X0fName = sprintf('x0_%strials_c%s_i%s_p%s.mat',simScope, ...
+                choiceMechType,inhibMechType,condParam);
+    X0Path = fullfile(outDir,X0fName);
+
+    % Load the file with starting values
+    X0Struct = load(X0Path);
     
+    % Set the starting values and parameter names
+    SAM.optim.X0                         = X0Struct.X0(iStartVal,:);
+    SAM.optim.XName                      = X0Struct.tg;
     
-    % Parameter names
-    % ---------------------------------------------------------------------
-    SAM.optim.XName                       = tg;
+    % Specify file with constraints
+    constrfName = sprintf('constraints_%strials_c%s_i%s_p%s.mat',simScope, ...
+                choiceMechType,inhibMechType,condParam);
+    constrPath = fullfile(outDir,constrfName);
+    
+    % Load the file with constraints
+    constrStruct = load(constrPath);
     
     % Lower and upper bounds
     % ---------------------------------------------------------------------
-    switch lower(SAM.optim.solverType)
+    switch lower(solverType)
       case {'fminsearchbnd','fminsearchcon','fmincon','ga'}
-        SAM.optim.LB                      = LB;
-        SAM.optim.UB                      = UB;
+        SAM.optim.LB                      = constrStruct.LB;
+        SAM.optim.UB                      = constrStruct.UB;
     end
     
     % Linear and nonlinear (in)equalities
     % ---------------------------------------------------------------------
     switch lower(SAM.optim.solverType)
       case {'fminsearchcon','fmincon','ga'}
-        SAM.optim.linConA                 = linConA;
-        SAM.optim.linConB                 = linConB;
-        SAM.optim.nonLinCon               = nonLinCon;
+        SAM.optim.linConA                 = constrStruct.linConA;
+        SAM.optim.linConB                 = constrStruct.linConB;
+        SAM.optim.nonLinCon               = constrStruct.nonLinCon;
     end
     
     % Cost function specifics
@@ -558,7 +576,7 @@ switch lower(SAM.sim.goal)
                 'i',SAM.des.inhibMech.type,'_', ...
                 SAM.des.condParam,'_', ...
                 SAM.sim.scope,'Trials_', ...
-                datestr(now,'yyyy-mm-dd-THHMMSS'), ...
+                timeStr, ...
                 '.mat'];
     
     % Iteration log file
@@ -581,19 +599,22 @@ switch lower(SAM.sim.goal)
   case 'explore'
     
                                         % OUTPUTS
-    [LB, ...                            % Lower bounds
-     UB, ...                            % Upper bounds 
-     X0, ...                            % Starting values
-     tg] ...                            % Function accepting X and returning 
-     ...
-     = sam_get_bnds(...                 % FUNCTION
-     ...                                % INPUTS
-     SAM);                              % SAM structure
+%     [LB, ...                            % Lower bounds
+%      UB, ...                            % Upper bounds 
+%      X0, ...                            % Starting values
+%      tg] ...                            % Function accepting X and returning 
+%      ...
+%      = sam_get_bnds(...                 % FUNCTION
+%      ...                                % INPUTS
+%      SAM);                              % SAM structure
     
     
     % Starting values
     % ---------------------------------------------------------------------
-    SAM.explore.X                                 = X0;
+    
+    X0Struct = load('/Users/bramzandbelt/Documents/PROJECTS/SAM/output/subj08/bla.mat');
+    
+    SAM.explore.X                                 = X0Struct.X0;
     
     % #.#. Time windows for event alignments
     % =====================================================================
@@ -623,7 +644,7 @@ choiceMechType  = SAM.des.choiceMech.type;
 inhibMechType   = SAM.des.inhibMech.type;
 condParam       = SAM.des.condParam;
 
-fName = sprintf('job_%s_%strials_c%s_i%s_p%s.mat',simGoal,simScope, ...
-                choiceMechType,inhibMechType,condParam);
+fName = sprintf('job_%s_%strials_c%s_i%s_p%s_%s.mat',simGoal,simScope, ...
+                choiceMechType,inhibMechType,condParam,timeStr);
 
 save(fullfile(SAM.io.outDir,fName),'SAM');

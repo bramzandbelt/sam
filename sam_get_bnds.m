@@ -1,4 +1,4 @@
-function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(SAM)
+function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(varargin)
 % Returns parameter bounds, starting values, and names for given model
 %  
 % DESCRIPTION 
@@ -21,9 +21,15 @@ function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(SAM)
 %                   * 't0', non-decision time
 %                   * 'v', accumulation rate of target
 %                   * 'zc', threshold
+% simGoal         - goal of the simulation (char array)
+%                   * 'optimize'
+%                   * 'explore'
 % simScope        - scope of simulation (char array)
 %                   * 'go', only go trials
 %                   * 'all', go and stopp trials
+% solverType      - type of optimization solver (this will cause changes in
+%                   whether nonlincon contains only c or also ceq)
+% 
 %
 % LB              - lower bounds of parameters
 % UB              - upper bounds of parameters
@@ -35,7 +41,7 @@ function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(SAM)
 %                   inequalities and equalities
 %
 % EXAMPLE
-% [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds('race','race','t0','all');
+% [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds('race','race','t0','optimize','all');
 %  
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
@@ -75,44 +81,79 @@ function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(SAM)
 % 1.1. Process inputs
 % ========================================================================= 
 
-% Choice mechanism
-% -------------------------------------------------------------------------
-choiceMechType      = SAM.des.choiceMech.type;
+if nargin == 1  % Input is SAM
+  
+  SAM = varargin{1};
+  
+  % Choice mechanism
+  % -------------------------------------------------------------------------
+  choiceMechType      = SAM.des.choiceMech.type;
 
-% Inhibition mechanism
-% -------------------------------------------------------------------------
-inhibMechType       = SAM.des.inhibMech.type;
+  % Inhibition mechanism
+  % -------------------------------------------------------------------------
+  inhibMechType       = SAM.des.inhibMech.type;
 
-% Parameter that varies across task conditions
-% -------------------------------------------------------------------------
-condParam           = SAM.des.condParam;
+  % Parameter that varies across task conditions
+  % -------------------------------------------------------------------------
+  condParam           = SAM.des.condParam;
 
-% Goal of the simulation
-% -------------------------------------------------------------------------
-simGoal             = SAM.sim.goal;
+  % Goal of the simulation
+  % -------------------------------------------------------------------------
+  simGoal             = SAM.sim.goal;
 
-% Scope of the simulation
-% -------------------------------------------------------------------------
-simScope            = SAM.sim.scope;
+  % Scope of the simulation
+  % -------------------------------------------------------------------------
+  simScope            = SAM.sim.scope;
+  
+  
+  switch lower(simGoal)
+    case 'optimize'
+      % Type of optimization solver
+      % -------------------------------------------------------------------
+      solverType          = SAM.optim.solverType;
+  end
+  
 
-% 1.2. Specify variables
+elseif nargin > 1 % Input is something like ('race,'race','t0','optimize','all')
+  
+  choiceMechType      = varargin{1};
+  inhibMechType       = varargin{2};
+  condParam           = varargin{3};
+  simGoal             = varargin{4};
+  simScope            = varargin{5};
+  
+  switch lower(simGoal)
+    case 'optimize'
+      solverType = varargin{6};
+  end
+end
+
+% 1.2. Specify static variables
+  % ========================================================================= 
+
+  % How far the lower and upper bounds are set from the best-fitting
+  % parameter (fraction between 0 and 1)
+
+  boundDist           = 0.5;
+
+% 1.3. Specify dynamic variables
 % ========================================================================= 
 
-load(SAM.io.obsFile);
-    
-% All observed RTs
-obsRt = cell2mat([obs.rtGoCorr(:);obs.rtGoComm(:);obs.rtStopFailure(:)]);
-
-switch lower(simGoal)
-  case 'optimize'
-    
-    solverType = SAM.optim.solverType;
-    
-  case 'startvals'
-    
-    solverType = 'fmincon'; % This is just to get the linear and nonlinear constraints
-    
-end
+% load(SAM.io.obsFile);
+%     
+% % All observed RTs
+% obsRt = cell2mat([obs.rtGoCorr(:);obs.rtGoComm(:);obs.rtStopFailure(:)]);
+% 
+% switch lower(simGoal)
+%   case 'optimize'
+%     
+%     solverType = SAM.optim.solverType;
+%     
+%   case 'startvals'
+%     
+%     solverType = 'fmincon'; % This is just to get the linear and nonlinear constraints
+%     
+% end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. SET LB, UB, X0 VALUES
@@ -123,165 +164,184 @@ end
 
 % 1.1.1. GO units
 % -------------------------------------------------------------------------
-z0GLB     = 0;
-z0GUB     = 200;
+% z0GLB     = 0;
+% z0GUB     = 200;
+% z0GX0     = 7.44e-5;
 z0GX0     = 7.44e-5;
 z0Gtg     = 'z0G';
+z0GLB     = (1-boundDist)*z0GX0;
+z0GUB     = (1+boundDist)*z0GX0;
              
 % 1.1.2. STOP unit
 % -------------------------------------------------------------------------
-z0SLB     = 0;
-z0SUB     = 200;
 z0SX0     = 2.26e-10;
 z0Stg     = 'z0S';
+z0SLB     = (1-boundDist)*z0SX0;
+z0SUB     = (1+boundDist)*z0SX0;
 
 % 1.2. Threshold (zc)
 % ========================================================================= 
 
 % 1.2.1. GO units
 % -------------------------------------------------------------------------
-zcGLB     = 0;
-zcGUB     = 1000;
-zcGX0     = 69.83;
-zcGtg     = 'zcG';
 
-zcGX0_c1  = 50;
-zcGX0_c2  = 69.83;
-zcGX0_c3  = 90;
-zcGtg_c1   = 'zcG_c1';
-zcGtg_c2   = 'zcG_c2';
-zcGtg_c3   = 'zcG_c3';
+switch lower(condParam)
+  case 'zc'
+    zcGX0_c1  = 38.49;
+    zcGX0_c2  = 55.95;
+    zcGX0_c3  = 70.08;
+    zcGtg_c1   = 'zcG_c1';
+    zcGtg_c2   = 'zcG_c2';
+    zcGtg_c3   = 'zcG_c3';
+    zcGLB     = (1-boundDist)*min([zcGX0_c1,zcGX0_c2,zcGX0_c3]);
+    zcGUB     = (1+boundDist)*max([zcGX0_c1,zcGX0_c2,zcGX0_c3]);
+  otherwise
+    zcGX0     = 69.83;
+    zcGtg     = 'zcG';
+    zcGLB     = (1-boundDist)*zcGX0;
+    zcGUB     = (1+boundDist)*zcGX0;
+end
 
 % 1.2.2. STOP unit
 % -------------------------------------------------------------------------
-zcSLB     = 0;
-zcSUB     = 1000;
 zcSX0     = 9.67;
 zcStg     = 'zcS';
+zcSLB     = (1-boundDist)*zcSX0;
+zcSUB     = (1+boundDist)*zcSX0;
+
 
 % 1.3. Accumulation rate correct (vCor)
 % ========================================================================= 
                  
 % 1.3.1. GO units
 % -------------------------------------------------------------------------
-vCGLB     = 0;
-vCGUB     = 5;
-vCGX0     = 0.1325;
-vCGtg     = 'vCG';
 
-vCGX0_c1  = 0.2044;
-vCGX0_c2  = 0.1325;
-vCGX0_c3  = 0.1013;
-
-vCGtg_c1  = 'vCG_c1';
-vCGtg_c2  = 'vCG_c2';
-vCGtg_c3  = 'vCG_c3';
+switch lower(condParam)
+  case 'v'
+    vCGX0_c1  = 0.2044;
+    vCGX0_c2  = 0.1325;
+    vCGX0_c3  = 0.1013;
+    vCGtg_c1  = 'vCG_c1';
+    vCGtg_c2  = 'vCG_c2';
+    vCGtg_c3  = 'vCG_c3';
+    vCGLB     = (1-boundDist)*min([vCGX0_c1,vCGX0_c2,vCGX0_c3]);
+    vCGUB     = (1+boundDist)*max([vCGX0_c1,vCGX0_c2,vCGX0_c3]);
+  otherwise
+    vCGX0     = 0.1188;
+    vCGtg     = 'vCG';
+    vCGLB     = (1-boundDist)*vCGX0;
+    vCGUB     = (1+boundDist)*vCGX0;
+end
 
 % 1.3.2. STOP unit
 % -------------------------------------------------------------------------
-vCSLB     = 0;
-vCSUB     = 50;
 vCSX0     = 0.761;
 vCStg     = 'vCS';
+vCSLB     = (1-boundDist)*vCSX0;
+vCSUB     = (1+boundDist)*vCSX0;
+
 
 % 1.4. Accumulation rate incorrect (vIncor)
 % ========================================================================= 
      
 % 1.4.1.  units
 % -------------------------------------------------------------------------
-vIGLB     = 0;
-vIGUB     = 5;
-vIGX0     = 0.0144;
-vIGtg     = 'vIG';
-
-vIGX0_c1  = 0.0584;
-vIGX0_c2  = 0.0144;
-vIGX0_c3  = 5.55e-19;
-
-vIGtg_c1  = 'vIG_c1';
-vIGtg_c2  = 'vIG_c2';
-vIGtg_c3  = 'vIG_c3';
+switch lower(condParam)
+  case 'v'
+    vIGX0_c1  = 0.0584;
+    vIGX0_c2  = 0.0144;
+    vIGX0_c3  = 5.55e-19;
+    vIGtg_c1  = 'vIG_c1';
+    vIGtg_c2  = 'vIG_c2';
+    vIGtg_c3  = 'vIG_c3';
+    vIGLB     = (1-boundDist)*min([vIGX0_c1,vIGX0_c2,vIGX0_c3]);
+    vIGUB     = (1+boundDist)*max([vIGX0_c1,vIGX0_c2,vIGX0_c3]);
+  otherwise
+    vIGX0     = 8.75e-13;
+    vIGtg     = 'vIG';
+    vIGLB     = (1-boundDist)*vIGX0;
+    vIGUB     = (1+boundDist)*vIGX0;
+end
 
 % 1.5. Non-decision time (t0)
 % ========================================================================= 
 
 % 1.5.1. GO units
 % -------------------------------------------------------------------------
-switch lower(simGoal)
-  case {'optimize','startvals'}
-    t0GLB     = 0;
-    t0GUB     = min(obsRt);
+switch lower(condParam)
+  case 't0'
+    t0GX0_c1  = 77;
+    t0GX0_c2  = 117;
+    t0GX0_c3  = 157;
+    t0Gtg_c1  = 't0G_c1';
+    t0Gtg_c2  = 't0G_c2';
+    t0Gtg_c3  = 't0G_c3';
+    t0GLB     = (1-boundDist)*min([t0GX0_c1,t0GX0_c2,t0GX0_c3]);
+    t0GUB     = (1+boundDist)*max([t0GX0_c1,t0GX0_c2,t0GX0_c3]);
   otherwise
-    t0GLB     = 0;
-    t0GUB     = 300;
+    t0GX0     = 117;
+    t0Gtg     = 't0G';
+    t0GLB     = (1-boundDist)*t0GX0;
+    t0GUB     = (1+boundDist)*t0GX0;
 end
-
-t0GX0     = 117;
-t0Gtg     = 't0G';
-
-t0GX0_c1  = 77;
-t0GX0_c2  = 117;
-t0GX0_c3  = 157;
-
-t0Gtg_c1  = 't0G_c1';
-t0Gtg_c2  = 't0G_c2';
-t0Gtg_c3  = 't0G_c3';
 
 % 1.5.2. STOP unit
 % -------------------------------------------------------------------------
-t0SLB     = 0;
-t0SUB     = 500;
 t0SX0     = 240;
-
 t0Stg     = 't0S';
+t0SLB     = (1-boundDist)*t0SX0;
+t0SUB     = (1+boundDist)*t0SX0;
+
 
 % 1.6. Extrinsic noise (se)
 % ========================================================================= 
-seLB      = 0;
-seUB      = 0;
 seX0      = 0;
 setg      = 'se';
+seLB      = 0;
+seUB      = 0;
+
 
 % 1.7. Intrinsic noise (si)
 % ========================================================================= 
-siLB      = 1;
-siUB      = 1;
 siX0      = 1;
 sitg      = 'si';
+siLB      = 1;
+siUB      = 1;
+
 
 % 1.8. Leakage constant (k)
 % ========================================================================= 
 
 % 1.8.1. GO units
 % -------------------------------------------------------------------------
-kGLB      = -realmin;%-0.005;
-kGUB      = -realmin;
 kGX0      = -realmin;
 kGtg      = 'kG';
+kGLB      = -realmin;
+kGUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear constraints
 
 % 1.8.2. STOP unit
 % -------------------------------------------------------------------------
-kSLB      = -0.005;
-kSUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear constraints
 kSX0      = -realmin;
 kStg      = 'kS';
+kSLB      = -realmin;
+kSUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear constraints
 
 % 1.9. Lateral inhibition weight (w)
 % ========================================================================= 
 
 % 1.9.1. GO units
 % -------------------------------------------------------------------------
-wGLB      = -1;
-wGUB      = 0;
 wGX0      = -0.01;
 wGtg      = 'wG';
+wGLB      = -0.2;
+wGUB      = 0;
 
 % 1.9.2. STOP unit
 % -------------------------------------------------------------------------
-wSLB      = -1;
-wSUB      = 0;
 wSX0      = -0.2;
 wStg      = 'wS';
+wSLB      = -1;
+wSUB      = 0;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. GENERATE LB, UB, AND X0 VECTORS
