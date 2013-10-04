@@ -49,7 +49,7 @@ switch env
   case 'accre'   % ACCRE
 
       % Add directories to search path
-      addpath('/home/zandbeb/m-files/sam/sam_20131002/');
+      addpath('/home/zandbeb/sam//');
       addpath(genpath('/home/zandbeb/m-files/general/'));
       
       rootDir                             = '/scratch/zandbeb/sam/';
@@ -228,7 +228,7 @@ SAM.des.durationSTOP               = 'trial';
 
 switch env
   case 'local'
-    SAM.sim.goal                       = 'explore';
+    SAM.sim.goal                       = 'optimize';
   case 'accre'
     iSimGoal = str2double(getenv('simGoal'));
     switch iSimGoal
@@ -710,7 +710,6 @@ switch lower(SAM.sim.goal)
     inhibMechType = SAM.des.inhibMech.type;
     condParam = SAM.des.condParam;
     simScope = SAM.sim.scope;
-    solverType = SAM.optim.solverType;
     
     % Specify file with starting values
     X0fName = sprintf('x0_%strials_c%s_i%s_p%s.mat',simScope, ...
