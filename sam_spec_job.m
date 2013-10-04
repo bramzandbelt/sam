@@ -755,3 +755,17 @@ fName = sprintf('job_%s_%strials_c%s_i%s_p%s_%s.mat',simGoal,simScope, ...
                 choiceMechType,inhibMechType,condParam,timeStr);
 
 save(fullfile(SAM.io.outDir,fName),'SAM');
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% #. RUN JOB
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+ 
+switch lower(SAM.sim.goal)
+  case 'startvals'
+    sam_run_job(SAM);
+  case 'optimize'
+    [X,fVal,exitFlag,solverOutput,history] = sam_run_job(SAM);
+  case 'explore'
+    [prd,modelMat] = sam_run_job(SAM);
+end
+  
