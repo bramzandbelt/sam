@@ -126,6 +126,13 @@ elseif nargin > 1 % Input is something like ('race,'race','t0','optimize','all')
     case 'optimize'
       solverType = varargin{6};
   end
+  
+  if nargin == 7
+    iSubj = varargin{7};
+  else
+    iSubj = [];
+  end
+  
 end
 
 % 1.2. Specify static variables
@@ -167,14 +174,44 @@ end
 % z0GLB     = 0;
 % z0GUB     = 200;
 % z0GX0     = 7.44e-5;
-z0GX0     = 7.44e-5;
+switch iSubj
+  case 8
+    z0GX0     = 7.44e-5;             % Subject 8
+  case 9
+    z0GX0     = 23.38;               % Subject 9
+  case 10
+    z0GX0     = 4.78e-5;              % Subject 10
+  case 11
+    z0GX0     = 4.11;                % Subject 11
+  case 12
+    z0GX0     = 13.85;               % Subject 12
+  case 13
+    z0GX0     = 2.40e-17;            % Subject 13
+  otherwise
+end
+
 z0Gtg     = 'z0G';
 z0GLB     = (1-boundDist)*z0GX0;
 z0GUB     = (1+boundDist)*z0GX0;
              
 % 1.1.2. STOP unit
 % -------------------------------------------------------------------------
-z0SX0     = 2.26e-10;
+switch iSubj
+  case 8
+    z0SX0     = 2.26e-10;             % Subject 8
+  case 9
+    z0SX0     = 9.12e-11;               % Subject 9
+  case 10
+    z0SX0     = 4.86-12;              % Subject 10
+  case 11
+    z0SX0     = 0.0725;                % Subject 11
+  case 12
+    z0SX0     = 1.14e-10;               % Subject 12
+  case 13
+    z0SX0     = 8.72e-19;            % Subject 13
+  otherwise
+end
+
 z0Stg     = 'z0S';
 z0SLB     = (1-boundDist)*z0SX0;
 z0SUB     = (1+boundDist)*z0SX0;
@@ -187,16 +224,54 @@ z0SUB     = (1+boundDist)*z0SX0;
 
 switch lower(condParam)
   case 'zc'
-    zcGX0_c1  = 38.49;
-    zcGX0_c2  = 55.95;
-    zcGX0_c3  = 70.08;
+    switch iSubj
+      case 8
+        zcGX0_c1  = 38.49;              % Subject 8
+        zcGX0_c2  = 55.95;
+        zcGX0_c3  = 70.08;
+      case 9
+        zcGX0_c1  = 49.13;              % Subject 9
+        zcGX0_c2  = 74.74;
+        zcGX0_c3  = 106.41;
+      case 10
+        zcGX0_c1  = 40.75;              % Subject 10
+        zcGX0_c2  = 53.19;
+        zcGX0_c3  = 59.01;
+      case 11
+        zcGX0_c1  = 46.40;              % Subject 11
+        zcGX0_c2  = 58.49;
+        zcGX0_c3  = 63.94;
+      case 12
+        zcGX0_c1  = 40.45;              % Subject 12
+        zcGX0_c2  = 61.98;
+        zcGX0_c3  = 73.73;
+      case 13
+        zcGX0_c1  = 32.48;              % Subject 13
+        zcGX0_c2  = 49.76;
+        zcGX0_c3  = 61.19;
+      otherwise
+    end
     zcGtg_c1   = 'zcG_c1';
     zcGtg_c2   = 'zcG_c2';
     zcGtg_c3   = 'zcG_c3';
     zcGLB     = (1-boundDist)*min([zcGX0_c1,zcGX0_c2,zcGX0_c3]);
     zcGUB     = (1+boundDist)*max([zcGX0_c1,zcGX0_c2,zcGX0_c3]);
   otherwise
-    zcGX0     = 69.83;
+    switch iSubj
+      case 8
+        zcGX0  = 69.83;              % Subject 8
+      case 9
+        zcGX0  = 80.51;              % Subject 9
+      case 10
+        zcGX0  = 60.37;              % Subject 10
+      case 11
+        zcGX0  = 64.11;              % Subject 11
+      case 12
+        zcGX0  = 67.13;              % Subject 12
+      case 13
+        zcGX0  = 59.16;              % Subject 13
+      otherwise
+    end
     zcGtg     = 'zcG';
     zcGLB     = (1-boundDist)*zcGX0;
     zcGUB     = (1+boundDist)*zcGX0;
@@ -204,11 +279,24 @@ end
 
 % 1.2.2. STOP unit
 % -------------------------------------------------------------------------
-zcSX0     = 9.67;
+switch iSubj
+  case 8
+    zcSX0  = 9.67;              % Subject 8
+  case 9
+    zcSX0  = 64.33;              % Subject 9
+  case 10
+    zcSX0  = 2.52;              % Subject 10
+  case 11
+    zcSX0  = 0.78;              % Subject 11
+  case 12
+    zcSX0  = 13.09;              % Subject 12
+  case 13
+    zcSX0  = 1.90;              % Subject 13
+  otherwise
+end
 zcStg     = 'zcS';
 zcSLB     = (1-boundDist)*zcSX0;
 zcSUB     = (1+boundDist)*zcSX0;
-
 
 % 1.3. Accumulation rate correct (vCor)
 % ========================================================================= 
@@ -218,16 +306,54 @@ zcSUB     = (1+boundDist)*zcSX0;
 
 switch lower(condParam)
   case 'v'
-    vCGX0_c1  = 0.2044;
-    vCGX0_c2  = 0.1325;
-    vCGX0_c3  = 0.1013;
+    switch iSubj
+      case 8
+        vCGX0_c1  = 0.21;             % Subject 8
+        vCGX0_c2  = 0.13;
+        vCGX0_c3  = 0.10;
+      case 9
+        vCGX0_c1  = 0.23;             % Subject 9
+        vCGX0_c2  = 0.16;
+        vCGX0_c3  = 0.11;
+      case 10
+        vCGX0_c1  = 0.18;             % Subject 10
+        vCGX0_c2  = 0.14;
+        vCGX0_c3  = 0.12;
+      case 11
+        vCGX0_c1  = 0.21;             % Subject 11
+        vCGX0_c2  = 0.17;
+        vCGX0_c3  = 0.16;
+      case 12
+        vCGX0_c1  = 0.27;             % Subject 12
+        vCGX0_c2  = 0.19;
+        vCGX0_c3  = 0.16;
+      case 13
+        vCGX0_c1  = 0.22;             % Subject 13
+        vCGX0_c2  = 0.13;
+        vCGX0_c3  = 0.11;
+      otherwise
+    end
     vCGtg_c1  = 'vCG_c1';
     vCGtg_c2  = 'vCG_c2';
     vCGtg_c3  = 'vCG_c3';
     vCGLB     = (1-boundDist)*min([vCGX0_c1,vCGX0_c2,vCGX0_c3]);
     vCGUB     = (1+boundDist)*max([vCGX0_c1,vCGX0_c2,vCGX0_c3]);
   otherwise
-    vCGX0     = 0.1188;
+    switch iSubj
+      case 8
+        vCGX0  = 0.12;              % Subject 8
+      case 9
+        vCGX0  = 0.17;              % Subject 9
+      case 10
+        vCGX0  = 0.14;              % Subject 10
+      case 11
+        vCGX0  = 0.17;              % Subject 11
+      case 12
+        vCGX0  = 0.19;              % Subject 12
+      case 13
+        vCGX0  = 0.13;              % Subject 13
+      otherwise
+    end
     vCGtg     = 'vCG';
     vCGLB     = (1-boundDist)*vCGX0;
     vCGUB     = (1+boundDist)*vCGX0;
@@ -235,11 +361,24 @@ end
 
 % 1.3.2. STOP unit
 % -------------------------------------------------------------------------
-vCSX0     = 0.761;
+switch iSubj
+  case 8
+    vCSX0  = 0.07;              % Subject 8
+  case 9
+    vCSX0  = 0.27;              % Subject 9
+  case 10
+    vCSX0  = 0.07;              % Subject 10
+  case 11
+    vCSX0  = 0.03;              % Subject 11
+  case 12
+    vCSX0  = 0.15;              % Subject 12
+  case 13
+    vCSX0  = 0.13;              % Subject 13
+  otherwise
+end
 vCStg     = 'vCS';
 vCSLB     = (1-boundDist)*vCSX0;
 vCSUB     = (1+boundDist)*vCSX0;
-
 
 % 1.4. Accumulation rate incorrect (vIncor)
 % ========================================================================= 
@@ -248,16 +387,53 @@ vCSUB     = (1+boundDist)*vCSX0;
 % -------------------------------------------------------------------------
 switch lower(condParam)
   case 'v'
-    vIGX0_c1  = 0.0584;
-    vIGX0_c2  = 0.0144;
-    vIGX0_c3  = 5.55e-19;
+    switch iSubj
+      case 8
+        vIGX0_c1  = 0.0584;           % Subject 8
+        vIGX0_c2  = 0.0144;
+        vIGX0_c3  = 5.55e-19;
+      case 9
+        vIGX0_c1  = 0.035;            % Subject 9
+        vIGX0_c2  = 5.28e-23;
+        vIGX0_c3  = 8.82e-11;
+      case 10
+        vIGX0_c1  = 0.0009;           % Subject 10
+        vIGX0_c2  = 1.11e-10;
+        vIGX0_c3  = 7.64e-40;
+      case 11
+        vIGX0_c1  = 0.029;            % Subject 11
+        vIGX0_c2  = 4.02e-5;
+        vIGX0_c3  = 3.88e-17;
+      case 12
+        vIGX0_c1  = 0.1061;           % Subject 12
+        vIGX0_c2  = 0.0441;
+        vIGX0_c3  = 0.0193;
+      case 13
+        vIGX0_c1  = 0.0315;           % Subject 13
+        vIGX0_c2  = 1.81e-20;
+        vIGX0_c3  = 7.97e-23
+    end
     vIGtg_c1  = 'vIG_c1';
     vIGtg_c2  = 'vIG_c2';
     vIGtg_c3  = 'vIG_c3';
     vIGLB     = (1-boundDist)*min([vIGX0_c1,vIGX0_c2,vIGX0_c3]);
     vIGUB     = (1+boundDist)*max([vIGX0_c1,vIGX0_c2,vIGX0_c3]);
   otherwise
-    vIGX0     = 8.75e-13;
+    switch iSubj
+      case 8
+        vIGX0  = 8.75e-13;            % Subject 8
+      case 9
+        vIGX0  = 0.0018;              % Subject 9
+      case 10
+        vIGX0  = 1.07e-10;            % Subject 10
+      case 11
+        vIGX0  = 1.62e-06;            % Subject 11
+      case 12
+        vIGX0  = 0.0325;              % Subject 12
+      case 13
+        vIGX0  = 1.95e-33;            % Subject 13
+      otherwise
+    end
     vIGtg     = 'vIG';
     vIGLB     = (1-boundDist)*vIGX0;
     vIGUB     = (1+boundDist)*vIGX0;
@@ -270,16 +446,54 @@ end
 % -------------------------------------------------------------------------
 switch lower(condParam)
   case 't0'
-    t0GX0_c1  = 77;
-    t0GX0_c2  = 117;
-    t0GX0_c3  = 157;
+    switch iSubj
+      case 8
+        t0GX0_c1  = 17;          % Subject 8 
+        t0GX0_c2  = 117;
+        t0GX0_c3  = 217;
+      case 9
+        t0GX0_c1  = 107;          % Subject 9 
+        t0GX0_c2  = 207;
+        t0GX0_c3  = 307;
+      case 10
+        t0GX0_c1  = 67;          % Subject 10
+        t0GX0_c2  = 167;
+        t0GX0_c3  = 267;
+      case 11
+        t0GX0_c1  = 98;          % Subject 11
+        t0GX0_c2  = 198;
+        t0GX0_c3  = 298;
+      case 12
+        t0GX0_c1  = 43;          % Subject 12
+        t0GX0_c2  = 143;
+        t0GX0_c3  = 243;
+      case 13
+        t0GX0_c1  = 42;          % Subject 13
+        t0GX0_c2  = 142;
+        t0GX0_c3  = 242;
+      otherwise
+    end
     t0Gtg_c1  = 't0G_c1';
     t0Gtg_c2  = 't0G_c2';
     t0Gtg_c3  = 't0G_c3';
     t0GLB     = (1-boundDist)*min([t0GX0_c1,t0GX0_c2,t0GX0_c3]);
     t0GUB     = (1+boundDist)*max([t0GX0_c1,t0GX0_c2,t0GX0_c3]);
   otherwise
-    t0GX0     = 117;
+    switch iSubj
+      case 8
+        t0GX0  = 117;            % Subject 8
+      case 9
+        t0GX0  = 207;            % Subject 9
+      case 10
+        t0GX0  = 167;            % Subject 10
+      case 11
+        t0GX0  = 198;            % Subject 11
+      case 12
+        t0GX0  = 143;            % Subject 12
+      case 13
+        t0GX0  = 142;            % Subject 13
+      otherwise
+    end
     t0Gtg     = 't0G';
     t0GLB     = (1-boundDist)*t0GX0;
     t0GUB     = (1+boundDist)*t0GX0;
@@ -287,6 +501,21 @@ end
 
 % 1.5.2. STOP unit
 % -------------------------------------------------------------------------
+switch iSubj
+  case 8
+    t0SX0  = 240;            % Subject 8
+  case 9
+    t0SX0  = 253;            % Subject 9
+  case 10
+    t0SX0  = 229;            % Subject 10
+  case 11
+    t0SX0  = 264;            % Subject 11
+  case 12
+    t0SX0  = 192;            % Subject 12
+  case 13
+    t0SX0  = 262;            % Subject 13
+  otherwise
+end
 t0SX0     = 240;
 t0Stg     = 't0S';
 t0SLB     = (1-boundDist)*t0SX0;
