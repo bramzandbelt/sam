@@ -8,7 +8,7 @@
 % $Created : Mon 09 Sep 2013 13:07:49 CDT by bram 
 % $Modified: Sat 21 Sep 2013 12:24:04 CDT by bram
 
-iStartVal = 1;
+iStartVal = str2double(getenv('iStartVal'));
 
 % CONTENTS 
 timeStr = datestr(now,'yyyy-mm-dd-THHMMSS');
@@ -751,8 +751,8 @@ choiceMechType  = SAM.des.choiceMech.type;
 inhibMechType   = SAM.des.inhibMech.type;
 condParam       = SAM.des.condParam;
 
-fName = sprintf('job_%s_%strials_c%s_i%s_p%s_%s.mat',simGoal,simScope, ...
-                choiceMechType,inhibMechType,condParam,timeStr);
+fName = sprintf('job_%s_%strials_c%s_i%s_p%s_iX%s_%s.mat',simGoal,simScope, ...
+                choiceMechType,inhibMechType,condParam,sprintf('%.3d',iStartVal),timeStr);
 
 save(fullfile(SAM.io.outDir,fName),'SAM');
 
