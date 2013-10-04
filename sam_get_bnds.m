@@ -516,7 +516,6 @@ switch iSubj
     t0SX0  = 262;            % Subject 13
   otherwise
 end
-t0SX0     = 240;
 t0Stg     = 't0S';
 t0SLB     = (1-boundDist)*t0SX0;
 t0SUB     = (1+boundDist)*t0SX0;
@@ -903,7 +902,7 @@ switch lower(condParam)
                 % Bounds
                 % ---------------------------------------------------------
                 LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB,wGLB,wSLB];
-                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
+                UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
                 
                 % Linear constraints
                 % ---------------------------------------------------------
@@ -948,7 +947,7 @@ switch lower(condParam)
                     % Bounds
                     % -----------------------------------------------------
                     LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB,wGLB,wSLB];
-                    UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
+                    UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB,wGUB,wSUB];
 
                     % Linear constraints
                     % -----------------------------------------------------
@@ -993,7 +992,7 @@ switch lower(condParam)
                     % Bounds
                     % -----------------------------------------------------
                     LB = [z0GLB,z0SLB,zcGLB,zcSLB,vCGLB,vCGLB,vCGLB,vCSLB,vIGLB,vIGLB,vIGLB,t0GLB,t0SLB,seLB,siLB,kGLB,kSLB];
-                    UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0GUB,seUB,siUB,kGUB,kSUB];
+                    UB = [z0GUB,z0SUB,zcGUB,zcSUB,vCGUB,vCGUB,vCGUB,vCSUB,vIGUB,vIGUB,vIGUB,t0GUB,t0SUB,seUB,siUB,kGUB,kSUB];
 
                     % Linear constraints
                     % -----------------------------------------------------
