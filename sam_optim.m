@@ -241,6 +241,8 @@ switch lower(solverType)
     
     solverOpts.OutputFcn        = @myoutput;
     
+    tS = tic;
+    
     [X, ...
      fVal, ...
      exitFlag, ...
@@ -268,12 +270,14 @@ switch lower(solverType)
       nonLinCon, ...
       solverOpts);
     
+    tElapse = toc(tS);
+    
       % Remove unused lines (containing only NaNs)
       iFirstNanLine = find(all(isnan(history),2),1,'first');
       history = history(1:iFirstNanLine-1,:);
     
       % Save the final log file
-      save(finalLogFile,'X','fVal','exitFlag','solverOutput','history');
+      save(finalLogFile,'X','fVal','exitFlag','solverOutput','history','tElapse');
       
       % Remove iteration log file (history is also saved in final log file)
       delete(iterLogFile);
