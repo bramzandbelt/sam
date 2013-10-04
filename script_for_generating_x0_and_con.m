@@ -10,7 +10,7 @@ solverType      = 'fminsearchcon';
 nStartPoints    = 19;
 
 % Get bounds and X0
-[LB,UB,X0,tg,linConA,linConB,nonLinCon] = sam_get_bnds(choiceMechType,inhibMechType,condParam,simGoal,simScope,solverType);
+[LB,UB,X0,tg,linConA,linConB,nonLinCon] = sam_get_bnds(choiceMechType,inhibMechType,condParam,simGoal,simScope,solverType,iSubj);
 
 % Check this
 [tg;num2cell(X0);num2cell(LB);num2cell(UB)]
