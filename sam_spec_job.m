@@ -8,7 +8,10 @@
 % $Created : Mon 09 Sep 2013 13:07:49 CDT by bram 
 % $Modified: Sat 21 Sep 2013 12:24:04 CDT by bram
 
-iStartVal = str2double(getenv('iStartVal'));
+% Starting parameter index
+% -------------------------------------------------------------------------
+% There may be a set of starting parameters at which the optimization
+% algorithm starts
 
 % CONTENTS 
 timeStr = datestr(now,'yyyy-mm-dd-THHMMSS');
@@ -44,7 +47,7 @@ switch env
       bzenv('all')
       
       % Specify
-      rootDir                             = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/';
+      rootDir                             = '/Users/bramzandbelt/Dropbox/SAM/data/';
       
   case 'accre'   % ACCRE
 
@@ -228,7 +231,7 @@ SAM.des.durationSTOP               = 'trial';
 
 switch env
   case 'local'
-    SAM.sim.goal                       = 'optimize';
+    SAM.sim.goal                           = 'explore';
   case 'accre'
     iSimGoal = str2double(getenv('simGoal'));
     switch iSimGoal
@@ -247,7 +250,7 @@ end
 
 switch env
   case 'local'
-    SAM.sim.scope                         = 'go';
+    SAM.sim.scope                             = 'go';
   case 'accre'
     iSimScope = str2double(getenv('simScope'));
     switch iSimScope
@@ -340,6 +343,17 @@ else
   end
 end
 
+% Starting value index
+% -------------------------------------------------------------------------
+% There may be a set of starting values from which optimization begins
+
+switch lower(env)
+  case 'local'
+    iStartVal = 1;
+  case 'accre'
+    iStartVal = str2double(getenv('iStartVal'));
+end
+
 switch lower(SAM.sim.goal)
   
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -425,64 +439,6 @@ switch lower(SAM.sim.goal)
     % Specify parameter bounds, starting values, and names
     % =====================================================================
     
-%     switch lower(SAM.optim.solverType)
-%       case 'fminsearch'
-%       case 'fminsearchbnd'
-%                                             % OUTPUTS
-%         [LB, ...                            % Lower bounds
-%          UB, ...                            % Upper bounds 
-%          ~, ...                             % Starting values
-%          tg] ...                            % Function accepting X and returning 
-%          ...
-%          = sam_get_bnds(...                 % FUNCTION
-%          ...                                % INPUTS
-%          SAM);                              % SAM structure
-%       case 'fminsearchcon'
-%                                             % OUTPUTS
-%         [LB, ...                            % Lower bounds
-%          UB, ...                            % Upper bounds 
-%          X0, ...                             % Starting values
-%          tg, ...                            % Parameter name
-%          linConA, ...                       % Term A in linear inequality A*X <= B
-%          linConB, ...                       % Term B in linear inequality A*X <= B
-%          nonLinCon] ...                     % Function accepting X and returning 
-%          ...                                % nonlinear inequalities and equalities
-%          ...
-%          = sam_get_bnds(...                 % FUNCTION
-%          ...                                % INPUTS
-%          SAM);                              % SAM structure
-%       case 'fmincon'
-%         [LB, ...                            % Lower bounds
-%          UB, ...                            % Upper bounds 
-%          ~, ...                             % Starting values
-%          tg, ...                            % Parameter name
-%          linConA, ...                       % Term A in linear inequality A*X <= B
-%          linConB, ...                       % Term B in linear inequality A*X <= B
-%          nonLinCon] ...                     % Function accepting X and returning 
-%          ...                                % nonlinear inequalities and equalities
-%          ...
-%          = sam_get_bnds(...                 % FUNCTION
-%          ...                                % INPUTS
-%          SAM);                              % SAM structure
-%       case 'ga'
-%                                             % OUTPUTS
-%         [LB, ...                            % Lower bounds
-%          UB, ...                            % Upper bounds 
-%          ~, ...                             % Starting values
-%          tg, ...                            % Parameter name
-%          linConA, ...                       % Term A in linear inequality A*X <= B
-%          linConB, ...                       % Term B in linear inequality A*X <= B
-%          nonLinCon] ...                     % Function accepting X and returning 
-%          ...                                % nonlinear inequalities and equalities
-%          ...
-%          = sam_get_bnds(...                 % FUNCTION
-%          ...                                % INPUTS
-%          SAM);                              % SAM structure
-%     end
-    
-    
-    
-
     % Solver options
     % ---------------------------------------------------------------------
     %
@@ -690,18 +646,7 @@ switch lower(SAM.sim.goal)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%     
     
   case 'explore'
-    
-                                        % OUTPUTS
-%     [LB, ...                            % Lower bounds
-%      UB, ...                            % Upper bounds 
-%      X0, ...                            % Starting values
-%      tg] ...                            % Function accepting X and returning 
-%      ...
-%      = sam_get_bnds(...                 % FUNCTION
-%      ...                                % INPUTS
-%      SAM);                              % SAM structure
-    
-    
+        
     % Starting values
     % ---------------------------------------------------------------------
     
@@ -745,16 +690,20 @@ end
 % #. SAVE JOB
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-simGoal         = SAM.sim.goal;
-simScope        = SAM.sim.scope;
-choiceMechType  = SAM.des.choiceMech.type;
-inhibMechType   = SAM.des.inhibMech.type;
-condParam       = SAM.des.condParam;
+switch env
+  case 'local' % Run job, do not save it
+  case 'accre' % Save and run job
+    simGoal         = SAM.sim.goal;
+    simScope        = SAM.sim.scope;
+    choiceMechType  = SAM.des.choiceMech.type;
+    inhibMechType   = SAM.des.inhibMech.type;
+    condParam       = SAM.des.condParam;
 
-fName = sprintf('job_%s_%strials_c%s_i%s_p%s_iX%s_%s.mat',simGoal,simScope, ...
-                choiceMechType,inhibMechType,condParam,sprintf('%.3d',iStartVal),timeStr);
+    fName = sprintf('job_%s_%strials_c%s_i%s_p%s_iX%s_%s.mat',simGoal,simScope, ...
+                    choiceMechType,inhibMechType,condParam,sprintf('%.3d',iStartVal),timeStr);
 
-save(fullfile(SAM.io.outDir,fName),'SAM');
+    save(fullfile(SAM.io.outDir,fName),'SAM');
+end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. RUN JOB
@@ -765,7 +714,14 @@ switch lower(SAM.sim.goal)
     sam_run_job(SAM);
   case 'optimize'
     [X,fVal,exitFlag,solverOutput,history] = sam_run_job(SAM);
+    assignin('base','X',X);
+    assignin('base','fVal',fVal);
+    assignin('base','exitFlag',exitFlag);
+    assignin('base','solverOutput',solverOutput);
+    assignin('base','history',history);
   case 'explore'
     [prd,modelMat] = sam_run_job(SAM);
+    assignin('base','prd',prd);
+    assignin('base','modelMat',modelMat);
 end
   
