@@ -14,7 +14,10 @@
 % algorithm starts
 
 % CONTENTS 
+
+
 timeStr = datestr(now,'yyyy-mm-dd-THHMMSS');
+tS      = tic;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. SPECIFY THE ENVIRONMENT
@@ -503,8 +506,8 @@ switch lower(SAM.sim.goal)
 
         SAM.optim.solverOpts.MaxFunEvals      = 2000;
         SAM.optim.solverOpts.MaxIter          = 2000;
-        SAM.optim.solverOpts.TolFun           = 1e-4;
-        SAM.optim.solverOpts.TolX             = 1e-4;
+        SAM.optim.solverOpts.TolFun           = 1e-5;
+        SAM.optim.solverOpts.TolX             = 1e-5;
         
       case 'fmincon'
         
@@ -714,14 +717,18 @@ switch lower(SAM.sim.goal)
     sam_run_job(SAM);
   case 'optimize'
     [X,fVal,exitFlag,solverOutput,history] = sam_run_job(SAM);
+    tElapse = toc(tS);
     assignin('base','X',X);
     assignin('base','fVal',fVal);
     assignin('base','exitFlag',exitFlag);
     assignin('base','solverOutput',solverOutput);
     assignin('base','history',history);
+    assignin('base','tElapse',tElapse);
   case 'explore'
     [prd,modelMat] = sam_run_job(SAM);
+    tElapse = toc(tS);
     assignin('base','prd',prd);
     assignin('base','modelMat',modelMat);
+    assignin('base','tElapse',tElapse);
 end
   
