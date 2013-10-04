@@ -180,7 +180,7 @@ switch iSubj
   case 9
     z0GX0     = 23.38;               % Subject 9
   case 10
-    z0GX0     = 4.78e-5;              % Subject 10
+    z0GX0     = 4.78e-5;             % Subject 10
   case 11
     z0GX0     = 4.11;                % Subject 11
   case 12
@@ -202,7 +202,7 @@ switch iSubj
   case 9
     z0SX0     = 9.12e-11;               % Subject 9
   case 10
-    z0SX0     = 4.86-12;              % Subject 10
+    z0SX0     = 4.86e-12;              % Subject 10
   case 11
     z0SX0     = 0.0725;                % Subject 11
   case 12
