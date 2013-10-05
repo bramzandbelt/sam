@@ -43,7 +43,11 @@ end
 
 % RT quantiles
 % =========================================================================
-rtQ         = quantile(rt,q);
+if isempty(rt)
+  rtQ         = quantile([1e4],q);
+else
+  rtQ         = quantile(rt,q);
+end
 
 % This ensures that the slowest RT falls within the bin, instead of falling
 % in a separate bin
@@ -57,9 +61,17 @@ pDefect     = q.*p;
 
 % Probability masses
 % =========================================================================
-histCount   = histc(rt,[-Inf,rtQ,Inf]);
-histCount   = histCount(1:end-1);
-pM          = p.*histCount./sum(histCount);
+if isempty(rt)
+  histCount   = histc([1e4],[-Inf,rtQ,Inf]);
+  histCount   = histCount(1:end-1);
+  pM          = p.*histCount./sum(histCount);
+  pM          = pM(:);
+else
+  histCount   = histc(rt,[-Inf,rtQ,Inf]);
+  histCount   = histCount(1:end-1);
+  pM          = p.*histCount./sum(histCount);
+  pM          = pM(:);
+end
 
 % Frequencies
 % =========================================================================
