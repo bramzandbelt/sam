@@ -29,7 +29,7 @@ function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(varargin)
 %                   * 'all', go and stopp trials
 % solverType      - type of optimization solver (this will cause changes in
 %                   whether nonlincon contains only c or also ceq)
-% 
+% iSubj           - subject index
 %
 % LB              - lower bounds of parameters
 % UB              - upper bounds of parameters
@@ -41,7 +41,7 @@ function [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds(varargin)
 %                   inequalities and equalities
 %
 % EXAMPLE
-% [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds('race','race','t0','optimize','all');
+% [LB,UB,X0,tg,linconA,linconB,nonlincon] = sam_get_bnds('race','race','t0','optimize','all','fminsearchcon',1);
 %  
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
@@ -230,21 +230,21 @@ switch lower(condParam)
         zcGX0_c2  = 55.95;
         zcGX0_c3  = 70.08;
       case 9
-        zcGX0_c1  = 49.13;              % Subject 9
-        zcGX0_c2  = 74.74;
-        zcGX0_c3  = 106.41;
+        zcGX0_c1  = 70;                 % Subject 9
+        zcGX0_c2  = 90;
+        zcGX0_c3  = 125;
       case 10
-        zcGX0_c1  = 40.75;              % Subject 10
-        zcGX0_c2  = 53.19;
-        zcGX0_c3  = 59.01;
+        zcGX0_c1  = 40;              % Subject 10
+        zcGX0_c2  = 60;
+        zcGX0_c3  = 65;
       case 11
         zcGX0_c1  = 46.40;              % Subject 11
         zcGX0_c2  = 58.49;
         zcGX0_c3  = 63.94;
       case 12
-        zcGX0_c1  = 40.45;              % Subject 12
-        zcGX0_c2  = 61.98;
-        zcGX0_c3  = 73.73;
+        zcGX0_c1  = 50;              % Subject 12
+        zcGX0_c2  = 70;
+        zcGX0_c3  = 80;
       case 13
         zcGX0_c1  = 32.48;              % Subject 13
         zcGX0_c2  = 49.76;
@@ -411,7 +411,7 @@ switch lower(condParam)
       case 13
         vIGX0_c1  = 0.0315;           % Subject 13
         vIGX0_c2  = 1.81e-20;
-        vIGX0_c3  = 7.97e-23
+        vIGX0_c3  = 7.97e-23;
     end
     vIGtg_c1  = 'vIG_c1';
     vIGtg_c2  = 'vIG_c2';
@@ -448,29 +448,29 @@ switch lower(condParam)
   case 't0'
     switch iSubj
       case 8
-        t0GX0_c1  = 17;          % Subject 8 
-        t0GX0_c2  = 117;
-        t0GX0_c3  = 217;
+        t0GX0_c1  = 50;          % Subject 8 
+        t0GX0_c2  = 250;
+        t0GX0_c3  = 350;
       case 9
-        t0GX0_c1  = 107;          % Subject 9 
-        t0GX0_c2  = 207;
-        t0GX0_c3  = 307;
+        t0GX0_c1  = 50;          % Subject 9 
+        t0GX0_c2  = 250;
+        t0GX0_c3  = 350;
       case 10
-        t0GX0_c1  = 67;          % Subject 10
-        t0GX0_c2  = 167;
-        t0GX0_c3  = 267;
+        t0GX0_c1  = 50;          % Subject 10
+        t0GX0_c2  = 250;
+        t0GX0_c3  = 350;
       case 11
-        t0GX0_c1  = 98;          % Subject 11
-        t0GX0_c2  = 198;
-        t0GX0_c3  = 298;
+        t0GX0_c1  = 150;          % Subject 11
+        t0GX0_c2  = 200;
+        t0GX0_c3  = 250;
       case 12
-        t0GX0_c1  = 43;          % Subject 12
-        t0GX0_c2  = 143;
-        t0GX0_c3  = 243;
+        t0GX0_c1  = 50;          % Subject 12
+        t0GX0_c2  = 150;
+        t0GX0_c3  = 200;
       case 13
-        t0GX0_c1  = 42;          % Subject 13
-        t0GX0_c2  = 142;
-        t0GX0_c3  = 242;
+        t0GX0_c1  = 50;          % Subject 13
+        t0GX0_c2  = 150;
+        t0GX0_c3  = 200;
       otherwise
     end
     t0Gtg_c1  = 't0G_c1';
@@ -544,14 +544,14 @@ siUB      = 1;
 % -------------------------------------------------------------------------
 kGX0      = -realmin;
 kGtg      = 'kG';
-kGLB      = -realmin;
+kGLB      = -0.001;
 kGUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear constraints
 
 % 1.8.2. STOP unit
 % -------------------------------------------------------------------------
 kSX0      = -realmin;
 kStg      = 'kS';
-kSLB      = -realmin;
+kSLB      = -0.05;
 kSUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear constraints
 
 % 1.9. Lateral inhibition weight (w)
@@ -559,17 +559,27 @@ kSUB      = -realmin;     % Note: this should not be 0 to satisfy non-linear con
 
 % 1.9.1. GO units
 % -------------------------------------------------------------------------
-wGX0      = -0.01;
+wGX0      = -0.0001;
 wGtg      = 'wG';
-wGLB      = -0.2;
+wGLB      = -0.002;
 wGUB      = 0;
 
 % 1.9.2. STOP unit
 % -------------------------------------------------------------------------
-wSX0      = -0.2;
-wStg      = 'wS';
-wSLB      = -1;
-wSUB      = 0;
+switch lower(inhibMechType)
+  case {'race','bi'}
+    wSX0      = 0;
+    wStg      = 'wS';
+    wSLB      = 0;
+    wSUB      = 0;
+  case 'li'
+    wSX0      = -0.2;
+    wStg      = 'wS';
+    wSLB      = -1;
+    wSUB      = 0;
+end
+
+
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. GENERATE LB, UB, AND X0 VECTORS
@@ -601,8 +611,12 @@ switch lower(condParam)
                 % ---------------------------------------------------------
                 switch lower(solverType)
                   case {'fminsearchcon','fmincon','ga'}
-                    linconA = [1 -1 0 0 0 0 0 0 0 0 0]; % z0G - zcG <= 0
-                    linconB = 0;
+                    linconA = [1 -1 0 0 0 0 0 0 0 0 0; ...  % z0G - zcG <= 0
+                               0 0 0 0 1 -1 0 0 0 0 0; ...  % t0G_c1 - t0G_c2 <= 0
+                               0 0 0 0 0 1 -1 0 0 0 0];     % t0G_c2 - t0G_c3 <= 0
+                    linconB = [0; ...
+                               0; ...
+                               0];
                 end
                 
                 % Nonlinear constraints
@@ -645,8 +659,12 @@ switch lower(condParam)
                 % ---------------------------------------------------------
                 switch lower(solverType)
                   case {'fminsearchcon','fmincon','ga'}
-                    linconA = [1 -1 0 0 0 0 0 0 0 0]; % z0G - zcG <= 0
-                    linconB = 0;
+                    linconA = [1 -1 0 0 0 0 0 0 0 0; ...  % z0G - zcG <= 0
+                               0 0 0 0 1 -1 0 0 0 0; ...  % t0G_c1 - t0G_c2 <= 0
+                               0 0 0 0 0 1 -1 0 0 0];     % t0G_c2 - t0G_c3 <= 0
+                    linconB = [0; ...
+                               0; ...
+                               0];
                 end
                 
                 % Nonlinear constraints
@@ -689,8 +707,12 @@ switch lower(condParam)
                 % ---------------------------------------------------------
                 
                 linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
-                           0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
+                           0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0S - zcS <= 0
+                           0 0 0 0 0 0 0 1 -1 0 0 0 0 0 0 0 0; ... % t0G_c1 - t0G_c2 <= 0
+                           0 0 0 0 0 0 0 0 1 -1 0 0 0 0 0 0 0];    % t0G_c2 - t0G_c3 <= 0
                 linconB = [0; ...
+                           0; ...
+                           0; ...
                            0];
                 
                 % Nonlinear constraints
@@ -730,8 +752,12 @@ switch lower(condParam)
                     % Linear constraints
                     % -----------------------------------------------------
                     linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
-                               0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
-                    linconB = [0, ...
+                               0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0S - zcS <= 0
+                               0 0 0 0 0 0 0 1 -1 0 0 0 0 0 0 0 0; ... % t0G_c1 - t0G_c2 <= 0
+                               0 0 0 0 0 0 0 0 1 -1 0 0 0 0 0 0 0];    % t0G_c2 - t0G_c3 <= 0
+                    linconB = [0; ...
+                               0; ...
+                               0; ...
                                0];
 
                     % Nonlinear constraints
@@ -771,8 +797,12 @@ switch lower(condParam)
                     % Linear constraints
                     % -----------------------------------------------------
                     linconA = [1 0 -1 0 0 0 0 0 0 0 0 0 0 0 0; ... % z0G - zcG <= 0
-                               0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0];    % z0S - zcS <= 0
+                               0 1 0 -1 0 0 0 0 0 0 0 0 0 0 0; ... % z0S - zcS <= 0
+                               0 0 0 0 0 0 0 1 -1 0 0 0 0 0 0; ... % t0G_c1 - t0G_c2 <= 0
+                               0 0 0 0 0 0 0 0 1 -1 0 0 0 0 0];    % t0G_c2 - t0G_c3 <= 0
                     linconB = [0; ...
+                               0; ...
+                               0; ...
                                0];
 
                     % Nonlinear constraints
