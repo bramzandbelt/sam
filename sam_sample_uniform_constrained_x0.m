@@ -29,7 +29,7 @@ function X0 = sam_sample_uniform_constrained_x0(N,LB,UB,varargin)
 % 1. FIRST LEVEL HEADER 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-MAX_N_REP     = 100;
+MAX_N_REP     = 10000;
 
 % 1.1. Second level header
 % ========================================================================= 
@@ -103,10 +103,11 @@ while iRep < MAX_N_REP + 1
     X0 = X(iSuitable,:);
     break
   elseif numel(iSuitable) == 0
-    error('Check constraints; none of the samples met all linear and nonlinear constraints');
+    X0 = X0;
+%     error('Check constraints; none of the samples met all linear and nonlinear constraints');
   else
-    
     X0 = [X0;X(iSuitable,:)];
+  end
     
     if size(X0,1) >= N
       X0 = X0(1:N,:);
