@@ -133,8 +133,8 @@ plot(rtGoCorr,FGoCorr,'Color',colGOT,'LineWidth',3);
 plot(rtGoComm,FGoComm,'Color',colGONTE,'LineWidth',3);
 
 % Plot observed quantiles
-% scatter(quantile(obs.rtGoCorr{iCnd},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGOT,'LineWidth',2);
-% scatter(quantile(obs.rtGoComm{iCnd},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGONTE,'LineWidth',2);
+scatter(quantile(obs.rtGoCorr{iCnd},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGOT,'LineWidth',2);
+scatter(quantile(obs.rtGoComm{iCnd},[.1 .3 .5 .7 .9]),[.1 .3 .5 .7 .9],50,'ko','MarkerEdgeColor',colGONTE,'LineWidth',2);
 
 % Adjust axes
 set(gca,'XLim',xDataLim, ...
