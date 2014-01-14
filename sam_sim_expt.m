@@ -625,7 +625,7 @@ for iCnd = 1:nCnd
           if nGoCorr(iCnd) >= 1
             
             % Randomly sample one non-target GO unit
-            thisIGONT = randsample(iGONT,1);
+            thisIGONT = randsample([iGONT(:);iGONT(:)],1);  % N.B. Repeating iGONT prevents that iGONT is a scalar, under which randsample samples from 1:iGONT
             
             % Get event times of go-signals and correct responses  
             etGo = repmat(stimOns{iCnd,iTrType}(iGOT),nGoCorr(iCnd),1);
