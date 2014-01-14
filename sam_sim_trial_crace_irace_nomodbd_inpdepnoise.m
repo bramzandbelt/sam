@@ -103,10 +103,8 @@ while t < p - 1
   
 %   % Inhibition mechanism 2: lateral inhibition
 %   % -----------------------------------------------------------------------
-%   At(latInhib(:,~resp)) = 0;
-  
-  
-  
+% %   At(latInhib(:,~resp)) = 0; % This produces wrong indexing!
+%   At(latInhib & logical(repmat(~resp',n,1))) = 0;
   
 %   % Change in activation from time t to t + 1
 %   % -----------------------------------------------------------------------

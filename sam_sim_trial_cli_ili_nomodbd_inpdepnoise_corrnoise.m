@@ -1,11 +1,12 @@
-function [rt,resp,z] = sam_sim_trial_cli_ibi_nomodbd(u,A,~,C,~,SI, ...
+function [rt,resp,z] = sam_sim_trial_cli_ili_nomodbd_inpdepnoise_corrnoise(u,A,~,C,~,SI, ...
                                                          Z0,ZC,ZLB,dt, ...
                                                          tau,T, ...
-                                                         terminate,blockInput,~, ...
+                                                         sigmaXi,SigmaXi, ...
+                                                         terminate,~,latInhib, ...
                                                          n,~,p,t, ...
                                                          rt,resp, ...
                                                          z)
-% Simulate trials: C as lateral inhibition, I as blocked input, no extr. and intr. modulation
+% Simulate trials: C as lateral inhibition, I as lateral inhibition, no extr. and intr. modulation
 % 
 % DESCRIPTION 
 % SAM trial simulation function, modeling choice as lateral inhibition,
@@ -26,6 +27,8 @@ function [rt,resp,z] = sam_sim_trial_cli_ibi_nomodbd(u,A,~,C,~,SI, ...
 % dt          - time step (1x1 double)
 % tau         - time scale (1x1 double)
 % T           - time points (1xP double)
+% sigmaXi     - Strength of the noise (s.d. of the Gaussian)
+% SigmaXi     - Cholesky-like decomposed noise covariance matrix
 % terminate   - matrix indicating which units can terminate accumulation of
 %               activation when they reach threshold (Nx1 logical)
 % blockInput  - matrix indicating which units block which inputs when they
@@ -43,14 +46,15 @@ function [rt,resp,z] = sam_sim_trial_cli_ibi_nomodbd(u,A,~,C,~,SI, ...
 % rt          - response times (Nx1 double)
 % resp        - responses, inid (Nx1 logical)
 % z           - dynamics (NxP double)
-
+%
 % rt          - response times (Nx1 double)
 % resp        - responses, inid (Nx1 logical)
 % z           - activation (NxP double)
 %
-% [rt,resp,z] = SAM_SIM_TRIAL_CLI_IBI_NOMODBD(u,A,~,C,~,SI,Z0,ZC, ...
+%
+% [rt,resp,z] = SAM_SIM_TRIAL_CLI_ILI_NOMODBD(u,A,~,C,~,SI,Z0,ZC, ...
 %                                                 ZLB,dt,tau,T, ...
-%                                                 terminate,~,~, ...
+%                                                 terminate,~,~ ...
 %                                                 n,~,p,t,rt,resp,z);
 %
 % EXAMPLES 
@@ -58,7 +62,7 @@ function [rt,resp,z] = sam_sim_trial_cli_ibi_nomodbd(u,A,~,C,~,SI, ...
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Wed 24 Jul 2013 12:14:48 CDT by bram 
-% $Modified: Wed 25 Sep 2013 11:00:40 CDT by bram
+% $Modified: Wed 25 Sep 2013 11:00:43 CDT by bram
 
 % Set starting values of z(t)
 z(:,1)  = Z0;     
@@ -69,11 +73,11 @@ z(:,1)  = Z0;
 
 while t < p - 1
   
-%   % Endogenous connectivity at time t (note that A is a function of t
-%   % because lateral inhibition kicks in once a unit has reached its
-%   % threshold)
-%   % -----------------------------------------------------------------------
-%   At = A;
+  % Endogenous connectivity at time t (note that A is a function of t
+  % because lateral inhibition kicks in once a unit has reached its
+  % threshold)
+  % -----------------------------------------------------------------------
+  At = A;
   
 %   % Extrinsic modulation at time t
 %   % -----------------------------------------------------------------------
@@ -89,14 +93,14 @@ while t < p - 1
 %     Dt        = Dt + z(j,t)*D(:,:,j);
 %   end
 
-  % Inhibition mechanism 1: block input(s), if any
-  % -----------------------------------------------------------------------
-  u(any(blockInput(:,resp),2),t) = 0;
-  
-%   % Inhibition mechanism 2: lateral inhibition
+%   % Inhibition mechanism 1: block input(s), if any
 %   % -----------------------------------------------------------------------
-% %   At(latInhib(:,~resp)) = 0; % This produces wrong indexing!
-%   At(latInhib & logical(repmat(~resp',n,1))) = 0;
+%   u(any(blockInput(:,resp),2),t) = 0;
+  
+  % Inhibition mechanism 2: lateral inhibition
+  % -----------------------------------------------------------------------
+%   At(latInhib(:,~resp)) = 0; % This produces wrong indexing!
+  At(latInhib & logical(repmat(~resp',n,1))) = 0;
   
 %   % Change in activation from time t to t + 1
 %   % -----------------------------------------------------------------------
@@ -104,10 +108,10 @@ while t < p - 1
 %                 C               * u(:,t)      * dt/tau + ...  % Inputs
 %                 SI             * randn(n,1)  * sqrt(dt/tau); % Noise (in)
               
-  dzdt        = A   * z(:,t)      * dt/tau + ...   % Endogenous connectivity
+  dzdt        = At  * z(:,t)      * dt/tau + ...   % Endogenous connectivity
                 C   * u(:,t)      * dt/tau + ...   % Inputs
-                SI  * randn(n,1)  * sqrt(dt/tau);  % Noise (in)
-              
+                SI  * diag((u(:,t) ~= 0)) * (randn(1,size(SigmaXi,1)) * SigmaXi + zeros(1,n))'  * sqrt(dt/tau);  % Noise (in)
+
   % Log new activation level
   % -----------------------------------------------------------------------
   z(:,t+1)    = z(:,t) + dzdt;
