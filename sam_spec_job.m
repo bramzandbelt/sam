@@ -20,8 +20,10 @@ timeStr = datestr(now,'yyyy-mm-dd-THHMMSS');
 tS      = tic;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. SPECIFY THE ENVIRONMENT
+% 1. SPECIFY THE ENVIRONMENT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% The environment determines the root directory and how model settings are
+% specified
 
 switch matlabroot
   case '/Applications/MATLAB_R2013a.app'
@@ -31,8 +33,11 @@ switch matlabroot
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. INPUT/OUTPUT
+% 2. INPUT/OUTPUT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% Directories and paths to functions
+%
+%
 
 % Determine which subject to fit
 switch env
@@ -69,8 +74,14 @@ SAM.io.obsFile                      = fullfile(rootDir,sprintf('subj%.2d/obs.mat
 load(SAM.io.obsFile);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% #. SPECIFY MODEL DESIGN
+% 3. SPECIFY MODEL DESIGN
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+% #.1. Accumulator classes
+% ========================================================================= 
+
+SAM.des.nClass = 2;
+SAM.des.classNames = {'GO','STOP'};
 
 % #.1. Choice mechanism
 % ========================================================================= 
@@ -83,16 +94,16 @@ load(SAM.io.obsFile);
 
 switch env
   case 'local'
-    SAM.des.choiceMech.type            = 'race';
+    SAM.des.choiceMech.type                 = 'race';
   case 'accre'
     iChoiceMechType = str2double(getenv('choiceMech'));
     switch iChoiceMechType
       case 1
-        SAM.des.choiceMech.type            = 'race';
+        SAM.des.choiceMech.type             = 'race';
       case 2
-        SAM.des.choiceMech.type            = 'ffi';
+        SAM.des.choiceMech.type             = 'ffi';
       case 3
-        SAM.des.choiceMech.type            = 'li';
+        SAM.des.choiceMech.type             = 'li';
     end
 end
 
@@ -107,7 +118,7 @@ end
 
 switch env
   case 'local'
-    SAM.des.inhibMech.type            = 'race';
+    SAM.des.inhibMech.type                = 'race';
   case 'accre'
     iInhibMechType = str2double(getenv('inhibMech'));
     switch iInhibMechType
@@ -147,6 +158,14 @@ SAM.des.inpDepNoise                = true;
 % #.4. Experiment parameters
 % ========================================================================= 
 
+% Number of stimuli
+% -------------------------------------------------------------------------
+SAM.des.expt.nStm                  = [6 1];
+
+% Number of response alternatives
+% -------------------------------------------------------------------------
+SAM.des.expt.nRsp                  = [6 1];
+
 % Number of task conditions
 % -------------------------------------------------------------------------
 SAM.des.expt.nCnd                  = 3;
@@ -166,22 +185,9 @@ SAM.des.expt.stimDur               = obs.duration;
 % #.5. Model parameters
 % ========================================================================= 
 
-% Parameter that varies across task conditions
-% -------------------------------------------------------------------------
-switch env
-  case 'local'
-    SAM.des.condParam            = 'v';
-  case 'accre'
-    iCondParam = str2double(getenv('condParam'));
-    switch iCondParam
-      case 1
-        SAM.des.condParam            = 't0';
-      case 2
-        SAM.des.condParam            = 'v';
-      case 3
-        SAM.des.condParam            = 'zc';
-    end
-end
+
+% #.5. Model features
+% ========================================================================= 
 
 % Number of units
 % -------------------------------------------------------------------------
@@ -212,6 +218,106 @@ SAM.des.iSTOP                      = {7,7,7};
 %                             duration of the trial
 
 SAM.des.durationSTOP               = 'trial';
+
+
+% #.#.
+% =========================================================================
+
+% Parameter category names
+% -------------------------------------------------------------------------
+% z0
+% zc
+% v
+% ve
+% t0
+% se
+% si
+% k
+% w
+
+
+
+
+
+% Names
+SAM.des.XCat.name = {'z0','zc','v','ve','t0','se','si','k','w'};
+
+% Number
+SAM.des.XCat.n = numel(SAM.des.XCat.name);
+
+% Indices
+SAM.des.XCat.i.iZ0  = 1;  % Starting point
+SAM.des.XCat.i.iZc  = 2;  % Response threshold
+SAM.des.XCat.i.iV   = 3;  % Driving input to target unit(s)
+SAM.des.XCat.i.iVe  = 4;  % Driving input to non-target unit(s)
+SAM.des.XCat.i.iT0  = 5;  % Non-decision time
+SAM.des.XCat.i.iSe  = 6;  % Extrinsic noise, magnitude
+SAM.des.XCat.i.iSi  = 7;  % Intrinsic noise, magnitude
+SAM.des.XCat.i.iK   = 8;  % Leakage constant
+SAM.des.XCat.i.iW   = 9;  % Lateral connection weights
+
+% Included parameter categories
+SAM.des.XCat.included = logical([1 1 1 1 1 0 1 1 1]);
+
+% Class-specific parameter categories
+SAM.des.XCat.classSpecific = logical([1 1 1 1 1 0 0 1 1]);
+
+% Value when parameter category is excluded
+SAM.des.XCat.valExcluded = [0 Inf 0 0 0 0 0 0 0 0];
+
+% Scaling parameter
+SAM.des.XCat.scale.iX   = 7;    % Index of the parameter category
+SAM.des.XCat.scale.val  = 1;    % Value of the scaling parameter
+
+% Specify the parameters that potentially could vary across stimuli,
+% responses, and conditions (model features)
+% -------------------------------------------------------------------------
+%
+% Does Go RT vary across:
+% - primary stimuli?        -> vary GO parameters across stimuli
+% - response alternatives?  -> vary GO parameters across responses
+% - task conditions?        -> vary GO parameters across conditions
+%
+% Does SSRT vary across:
+% - secondary stimuli?      -> vary STOP parameters across stimuli
+% - response alternatives?  -> vary STOP parameters across responses
+% - task conditions?        -> vary STOP parameters across conditions
+
+SAM.des.XCat.features = false(3,SAM.des.XCat.n,SAM.des.nClass);
+
+% primary stimuli (e.g. go-left, go-right)
+  % None.
+
+% secondary stimuli (e.g. stop, ignore)
+  % None.
+  
+% response Go alternatives (e.g. left hand, right hand)
+  % None.
+SAM.des.XCat.features(2,SAM.des.XCat.i.iZ0,1)  = 1; % z0
+SAM.des.XCat.features(2,SAM.des.XCat.i.iZc,1)  = 1; % zc
+  
+% response Stop alternatives (this may only be relevant to action-selective
+% stopping)
+  % None.
+  
+% Task conditions for GO parameters
+SAM.des.XCat.features(3,SAM.des.XCat.i.iZ0,1)  = 1; % z0
+SAM.des.XCat.features(3,SAM.des.XCat.i.iZc,1)  = 1; % zc
+SAM.des.XCat.features(3,SAM.des.XCat.i.iV,1)   = 1; % v
+SAM.des.XCat.features(3,SAM.des.XCat.i.iVe,1)  = 1; % ve
+SAM.des.XCat.features(3,SAM.des.XCat.i.iT0,1)  = 1; % t0
+
+% Task conditions for STOP parameters
+  % None.
+
+
+% Compute all possible models and their specifics
+models = sam_spec_potential_models(SAM);
+
+% Now, select one model, and get starting parameters, bounds, etc.
+
+model = models(65);
+
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. SPECIFY MODEL SIMULATION SETTINGS
@@ -279,6 +385,10 @@ end
 % #.#. Random number generator seed
 % =========================================================================
 
+% Reinitialize the random number generator to its startup configuration
+rng('default');
+
+% Now, seed the random number generator based on the current time
 SAM.sim.rngID                         = rng('shuffle'); % MATLAB's default
 
 % #.#. Moment in the simulation when to seed the random number generator
@@ -419,6 +529,9 @@ switch lower(SAM.sim.goal)
 % #. SPECIFY MODEL OPTIMIZATION SETTINGS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
   
+
+
+
   case 'optimize'
     
     % Optimization solver
@@ -434,179 +547,44 @@ switch lower(SAM.sim.goal)
     % ga              - genetic algorithm
     % sa              - simulated annealing
 
-    SAM.optim.solverType                      = 'fminsearchcon';
+    SAM.optim.solverType  = 'fminsearchcon';
+    SAM.optim.solverOpts  = sam_get_solver_opts('fminsearchcon');
     
+    % Initial parameters
+    % ===================================================================== 
+    X0                    = sam_get_x0(SAM);
+    SAM.optim.X0          = X0;
     
+    % Alternatively, a row vector of parameters can be specified. The
+    % number should correspond to the sum of the vector in model.XSpec.n,
+    % e.g.:
+    % SAM.optim.X0 = [0 0 100 100 ... -realmin];
     
+    % Parameter constraints
+    % ===================================================================== 
     
-    % Specify parameter bounds, starting values, and names
-    % =====================================================================
-    
-    % Solver options
-    % ---------------------------------------------------------------------
-    %
-    % Solver            Options structure function    Important fields
-    % ------            --------------------------    ---------------------
-    % 'de'              ?
-    % 'fminsearchcon'   optimset(@fminsearch)
-    % 'ga'              gaoptimset(@ga)
-    % 'sa'              saoptimset(@simulannealbnd)
-    %
+    % Hard lower and upper bounds
+    SAM.des.XCat.hardLB   = [zLB 0   0   0   0   0   0   -Inf     -Inf];
+    SAM.des.XCat.hardUB   = [Inf Inf Inf Inf Inf Inf Inf -realmin -realmin];
 
-    switch lower(SAM.optim.solverType)
-      case 'de'
-        error('Don''t know which option structure to use. Implement this.');
-      case 'fminsearchbnd'
-        SAM.optim.solverOpts            = optimset(@fminsearch);
-      case 'fminsearchcon'
-        SAM.optim.solverOpts            = optimset(@fminsearch);
-      case 'fmincon'
-        SAM.optim.solverOpts            = optimset(@fmincon);
-      case 'ga'
-        SAM.optim.solverOpts            = gaoptimset(@ga);
-      case 'sa'
-        SAM.optim.solverOpts            = saoptimset(@simulannealbnd);
-    end
-
-    % General options
-    SAM.optim.solverOpts.Display        = 'iter';
-    SAM.optim.solverOpts.PlotFcns       = {[]};
-
-    % Solver-specific options
-    switch lower(SAM.optim.solverType)
-      case 'de'
-
-    %     OPTIONS:
-    %  These options may be specified using parameter, value pairs or by
-    %  passing a structure. Defaults are shown in parentheses.
-    %   popsize        - total number of individuals. (100)
-    %   generations    - (10)
-    %   strategy       - mutation strategy (see MUTATE for options)
-    %   step_weight    - stepsize weight (between 0 and 2) to apply to
-    %                    differentials when mutating parameters (0.85)
-    %   crossover      - crossover probability constant (between 0 and
-    %                    1).  Percentage of random new mutated
-    %                    parameters to use in the new population (1)
-    %   range_bound    - boolean indicating whether parameters are
-    %                    strictly bound by the values in ranges (true)
-    %   start_file     - path to a MAT-file containing two variables:
-    %                     fitness
-    %                     parameters
-    %   collect_erfvec - if true, erf values will be saved. (false)
-
-
-      case 'fminsearchbnd'
+    % Bound distance from initial paremeter value for each parameter
+    % category. This can be additive and/or multiplicative.
+    SAM.des.XCat.additive       = [0   0   0   0   0   0   0   0.5 1];
+    SAM.des.XCat.multiplicative = [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0   0];
         
-        SAM.optim.solverOpts.MaxFunEvals      = 150000;
-        SAM.optim.solverOpts.MaxIter          = 50;
-        SAM.optim.solverOpts.TolFun           = 1e-4;
-        SAM.optim.solverOpts.TolX             = 1e-4;
+    constraint            = sam_get_constraint(SAM);
+    SAM.optim.constraint  = constraint;
         
-      case 'fminsearchcon'
-
-        SAM.optim.solverOpts.MaxFunEvals      = 2000;
-        SAM.optim.solverOpts.MaxIter          = 2000;
-        SAM.optim.solverOpts.TolFun           = 1e-5;
-        SAM.optim.solverOpts.TolX             = 1e-5;
-        
-      case 'fmincon'
-        
-        SAM.optim.solverOpts.MaxFunEvals      = 1000;
-        SAM.optim.solverOpts.MaxIter          = 50;
-        SAM.optim.solverOpts.TolFun           = 1e-4;
-        SAM.optim.solverOpts.TolX             = 1e-4;
-        SAM.optim.solverOpts.Algorithm        = 'interior-point';
-      case 'ga'
-
-        popSize=30;
-        nOfColony=1;
-        popVec=ones(1,nOfColony)*popSize;
-
-        SAM.optim.solverOpts.PopInitRange     = [LB;UB];
-        SAM.optim.solverOpts.PopulationSize   = popVec;
-        SAM.optim.solverOpts.EliteCount       = floor(popSize*.2);
-        SAM.optim.solverOpts.Generations      = 2;
-        SAM.optim.solverOpts.CrossoverFcn     = {@crossoverscattered};
-        SAM.optim.solverOpts.MutationFcn      = {@mutationadaptfeasible};
-        SAM.optim.solverOpts.SelectionFcn     = {@selectionroulette};
-        SAM.optim.solverOpts.Vectorized       = 'off';
-        SAM.optim.solverOpts.PlotFcns         = {@gaplotbestf,@gaplotbestindiv};
-
-      case 'sa'
-
-        SAM.optim.solverOpts.PlotFcns         = {@optimplotx, ...
-                                                 @optimplotfval, ...
-                                                 @optimplotfunccount};
-    end
-    
-    % Read starting values, bounds, and constraints from file
-    % ---------------------------------------------------------------------
-%     fName = fullfile(SAM.io.outDir,sprintf('x0_%strials_c%s_i%s_p%s.mat', ...
-%                                             SAM.sim.scope, ...
-%                                             SAM.des.choiceMech.type, ...
-%                                             SAM.des.inhibMech.type, ...
-%                                             SAM.des.condParam));
-%     
-%     % Load the file with starting values
-%     X0Struct = load(fName,'X0');
-% 
-%     % Select X0 corresponding to the starting value index
-%     SAM.optim.X0                          = X0Struct.X0(iStartVal,:);
-    
-    outDir = SAM.io.outDir;
-    choiceMechType = SAM.des.choiceMech.type;
-    inhibMechType = SAM.des.inhibMech.type;
-    condParam = SAM.des.condParam;
-    simScope = SAM.sim.scope;
-    solverType = SAM.optim.solverType;
-    
-    % Specify file with starting values
-    X0fName = sprintf('x0_%strials_c%s_i%s_p%s.mat',simScope, ...
-                choiceMechType,inhibMechType,condParam);
-    X0Path = fullfile(outDir,X0fName);
-
-    % Load the file with starting values
-    X0Struct = load(X0Path);
-    
-    % Set the starting values and parameter names
-    SAM.optim.X0                         = X0Struct.X0(iStartVal,:);
-    SAM.optim.XName                      = X0Struct.tg;
-    
-    % Specify file with constraints
-    constrfName = sprintf('constraints_%strials_c%s_i%s_p%s.mat',simScope, ...
-                choiceMechType,inhibMechType,condParam);
-    constrPath = fullfile(outDir,constrfName);
-    
-    % Load the file with constraints
-    constrStruct = load(constrPath);
-    
-    % Lower and upper bounds
-    % ---------------------------------------------------------------------
-    switch lower(solverType)
-      case {'fminsearchbnd','fminsearchcon','fmincon','ga'}
-        SAM.optim.LB                      = constrStruct.LB;
-        SAM.optim.UB                      = constrStruct.UB;
-    end
-    
-    % Linear and nonlinear (in)equalities
-    % ---------------------------------------------------------------------
-    switch lower(SAM.optim.solverType)
-      case {'fminsearchcon','fmincon','ga'}
-        SAM.optim.linConA                 = constrStruct.linConA;
-        SAM.optim.linConB                 = constrStruct.linConB;
-        SAM.optim.nonLinCon               = constrStruct.nonLinCon;
-    end
-    
     % Cost function specifics
     % ===================================================================== 
     
     % Cost function 
     % ---------------------------------------------------------------------
-    SAM.optim.costFun                         = @sam_cost;
+    SAM.optim.cost.fun                         = @sam_cost;
 
     % Cost function statistic type
     % ---------------------------------------------------------------------
-    SAM.optim.costStat                        = 'chisquare';
+    SAM.optim.cost.stat                        = 'chisquare';
 
     % Cumulative probabilities for which to compute quantiles
     % ---------------------------------------------------------------------
@@ -711,7 +689,7 @@ end
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % #. RUN JOB
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
- 
+
 switch lower(SAM.sim.goal)
   case 'startvals'
     sam_run_job(SAM);
