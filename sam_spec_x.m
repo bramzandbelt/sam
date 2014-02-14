@@ -46,25 +46,25 @@ XSpec       = struct('nCombi',[], ...
 
 nClass        = size(features,3);
 
-nStm          = SAM.des.expt.nStm;
-nRsp          = SAM.des.expt.nRsp;
-nCnd          = SAM.des.expt.nCnd;
+nStm          = SAM.expt.nStm;
+nRsp          = SAM.expt.nRsp;
+nCnd          = SAM.expt.nCnd;
 
 taskFactors   = [nStm;nRsp;nCnd,nCnd];
 
-included      = SAM.des.XCat.included;
+included      = SAM.model.XCat.included;
 
-classSpecific = SAM.des.XCat.classSpecific;
+classSpecific = SAM.model.XCat.classSpecific;
 
-nXCat         = SAM.des.XCat.n;
+nXCat         = SAM.model.XCat.n;
 
-XCatName      = SAM.des.XCat.name;
+XCatName      = SAM.model.XCat.name;
 
-className     = SAM.des.classNames;
+className     = SAM.model.general.classNames;
 
-iVe           = SAM.des.XCat.i.iVe;
+iVe           = SAM.model.XCat.i.iVe;
 
-iScale        = SAM.des.XCat.scale.iX;
+iScale        = SAM.model.XCat.scale.iX;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. DETERMINE ALL FACTORIAL COMBINATIONS OF TASK FACTORS

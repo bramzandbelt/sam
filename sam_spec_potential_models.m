@@ -32,7 +32,7 @@ function models = sam_spec_potential_models(SAM)
 % 1.1. Process inputs
 % =========================================================================
 
-features = SAM.des.XCat.features;
+features = SAM.model.features;
 
 % 1.2. Dynamic variables
 % =========================================================================
