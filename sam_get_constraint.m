@@ -1,4 +1,4 @@
-function sam_get_constraint(SAM)
+function constraint = sam_get_constraint(SAM)
 % SAM_GET_CONSTRAINT <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -28,38 +28,53 @@ function sam_get_constraint(SAM)
 
 
 % Parameter category specifics
-XCat        = SAM.des.XCat;
+XCat        = SAM.model.XCat;
 
 % Parameter specifics
-XSpec       = model.XSpec;
+XSpec       = SAM.model.variants.toFit.XSpec;
 
 simScope    = SAM.sim.scope;
+
+
+nStm            = SAM.expt.nStm;
+nRsp            = SAM.expt.nRsp;
+nCnd            = SAM.expt.nCnd;
 
 switch lower(simScope)
   case 'go'
     nClass  = 1;
-    nCat = XSpec.n.nCatClass(1,:);
-    freeCat = XSpec.free.freeCatClass(1,:);
+    nCat    = XSpec.n.nCatClass(1,:);
+    free    = cell2mat(XSpec.free.freeCatClass(1,:));
   case 'all'
     nClass  = 2;
-    nCat = XSpec.n.nCat;
-    freeCat = XSpec.free.freeCat;
+    nCat    = XSpec.n.nCat;
+    free    = XSpec.free.free;
+    % Set GO parameters to fixed parameters
+    free([XSpec.i.iCatClass{1,:}]) = false;
 end
 
 % Number of parameters per parameter category
-nCat        = model.XSpec.n.nCat;
+nCat        = XSpec.n.nCat;
 
 solverType  = SAM.optim.solver.type;
 
-additive        = SAM.des.XCat.additive;
-multiplicative  = SAM.des.XCat.multiplicative;
+additive        = SAM.model.XCat.additive;
+multiplicative  = SAM.model.XCat.multiplicative;
 
-% Paremeter category column indices
+X0          = SAM.optim.x0Base;
+
+modelToFit      = SAM.model.variants.toFit;
+
+% Parameter category column indices
 % -------------------------------------------------------------------------
-iZ0 = SAM.des.XCat.i.iZ0;
-iZc = SAM.des.XCat.i.iZc;
-iV  = SAM.des.XCat.i.iV;
-iK  = SAM.des.XCat.i.iK;
+iZ0 = SAM.model.XCat.i.iZ0;
+iZc = SAM.model.XCat.i.iZc;
+iV  = SAM.model.XCat.i.iV;
+iK  = SAM.model.XCat.i.iK;
+
+% 1.2. Define dynamic variables
+% =========================================================================
+taskFactors   = [nStm;nRsp;nCnd,nCnd];
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,7 +87,7 @@ XAdditive       = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,additive,'Un
 
 % Hard lower and upper bounds, , for each parameter
 XHardLB         = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,XCat.hardLB,'Uni',0));
-XHardUB         = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,XCat.hardLB,'Uni',0));
+XHardUB         = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,XCat.hardUB,'Uni',0));
 
 % Set bounds
 LB              = X0 - X0*diag(XMultiplicative) - XAdditive;
@@ -83,7 +98,8 @@ LB(LB<XHardLB)  = XHardLB(LB<XHardLB);
 UB(UB>XHardUB)  = XHardUB(UB>XHardUB);
 
 % Correct for fixed parameters
-
+LB(~free)       = X0(~free);
+UB(~free)       = X0(~free);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. LINEAR CONSTRAINTS
@@ -107,14 +123,25 @@ b = cell(nClass,1);
 
 for iClass = 1:nClass
   
+  nCombiZ0 = diag(taskFactors(:,iClass)) * any(modelToFit.features(:,iZ0,iClass),2);
+  nCombiZ0(nCombiZ0 == 0) = 1;
+  nCombiZ0 = prod(nCombiZ0);
+  
+  nCombiZc = diag(taskFactors(:,iClass)) * any(modelToFit.features(:,iZc,iClass),2);
+  nCombiZc(nCombiZc == 0) = 1;
+  nCombiZc = prod(nCombiZc);
+  
+  nCombi = max([nCombiZ0,nCombiZc]);
+  combiLevels = fullfact([nCombiZ0,nCombiZc]);
+  
   % Pre-allocate linConA and linConB
-  A{iClass} = zeros(XSpec.nCombi{iClass},XSpec.n.n);
-  b{iClass} = zeros(XSpec.nCombi{iClass},1);
+  A{iClass} = zeros(nCombi,XSpec.n.n);
+  b{iClass} = zeros(nCombi,1);
   
   % z0 - zc should be smaller than 0
-  for iCombi = 1:XSpec.nCombi{iClass}
-    A{iClass}(iCombi,XSpec.i.iCatClass{iClass,iZ0}(iCombi)) = 1;
-    A{iClass}(iCombi,XSpec.i.iCatClass{iClass,iZc}(iCombi)) = -1;
+  for iCombi = 1:nCombi
+    A{iClass}(iCombi,XSpec.i.iCatClass{iClass,iZ0}(combiLevels(iCombi,1))) = 1;
+    A{iClass}(iCombi,XSpec.i.iCatClass{iClass,iZc}(combiLevels(iCombi,2))) = -1;
   end
   
 end
@@ -134,42 +161,32 @@ b = cell2mat(b(:));
 C = cell(nClass,1);
 
 for iClass = 1:nClass
+    
+  nCombiZc = diag(taskFactors(:,iClass)) * any(modelToFit.features(:,iZc,iClass),2);
+  nCombiZc(nCombiZc == 0) = 1;
+  nCombiZc = prod(nCombiZc);
   
-  C{iClass} = cell(XSpec.nCombi{iClass},1);
+  nCombiV = diag(taskFactors(:,iClass)) * any(modelToFit.features(:,iV,iClass),2);
+  nCombiV(nCombiV == 0) = 1;
+  nCombiV = prod(nCombiV);
   
-  for iCombi = 1:XSpec.nCombi{iClass}
+  nCombiK = diag(taskFactors(:,iClass)) * any(modelToFit.features(:,iK,iClass),2);
+  nCombiK(nCombiK == 0) = 1;
+  nCombiK = prod(nCombiK);
+  
+  nCombi = max([nCombiZc,nCombiV,nCombiK]);
+  combiLevels = fullfact([nCombiZc,nCombiV,nCombiK]);
+  
+  C{iClass} = cell(nCombi,1);
+  
+  for iCombi = 1:nCombi
     
-    if numel(X.i.iCatClass{iClass,iZc}) == XSpec.nCombi{iClass}
-      tmpIZc        = num2str(X.i.iCatClass{iClass,iZc}(iCombi));
-    elseif numel(X.i.iCatClass{iClass,iZc}) == 1
-      tmpIZc        = num2str(X.i.iCatClass{iClass,iZc});
-    else
-      error(['The number of zc parameters in class %d does not equal ', ...
-             'the number of task factor combinations, nor does it ', ...
-             'equal one.',iClass]);
-    end
+    tmpIZc = XSpec.i.iCatClass{iClass,iZc}(combiLevels(iCombi,1));
+    tmpIV = XSpec.i.iCatClass{iClass,iV}(combiLevels(iCombi,2));
+    tmpIK = XSpec.i.iCatClass{iClass,iK}(combiLevels(iCombi,3));
     
-    if numel(X.i.iCatClass{iClass,iV}) == XSpec.nCombi{iClass}
-      tmpIV        = num2str(X.i.iCatClass{iClass,iV}(iCombi));
-    elseif numel(X.i.iCatClass{iClass,iV}) == 1
-      tmpIV        = num2str(X.i.iCatClass{iClass,iV});
-    else
-      error(['The number of v parameters in class %d does not equal ', ...
-             'the number of task factor combinations, nor does it ', ...
-             'equal one.',iClass]);
-    end
+    C{iClass}{iCombi} = ['x(',num2str(tmpIZc),') - x(',num2str(tmpIV),') ./ -x(',num2str(tmpIK),');'];
     
-    if numel(X.i.iCatClass{iClass,iK}) == XSpec.nCombi{iClass}
-      tmpIK        = num2str(X.i.iCatClass{iClass,iK}(iCombi));
-    elseif numel(X.i.iCatClass{iClass,iK}) == 1
-      tmpIK        = num2str(X.i.iCatClass{iClass,iK});
-    else
-      error(['The number of k parameters in class %d does not equal ', ...
-             'the number of task factor combinations, nor does it ', ...
-             'equal one.',iClass]);
-    end
-
-    C{iClass}{iCombi} = ['x(',tmpIZc,') - x(',tmpIV,') ./ -x(',tmpIK,');'];
   end
   
 end
@@ -199,6 +216,11 @@ constraint.linear.A             = A;
 constraint.linear.b             = b;
 constraint.linear.Aeq           = [];
 constraint.linear.beq           = [];
-constraint.nonlinear.nonLinCon  = nonLinCon;
-constraint.nonlinear.C          = C;
-constraint.nonlinear.Ceq        = Ceq;
+switch lower(solverType)
+  case 'fminsearchcon'
+    constraint.nonlinear.nonLinCon  = nonLinCon;
+  case {'fmincon','ga'}
+    constraint.nonlinear.nonLinCon  = nonLinCon;
+    constraint.nonlinear.C          = C;
+    constraint.nonlinear.Ceq        = Ceq;
+end
