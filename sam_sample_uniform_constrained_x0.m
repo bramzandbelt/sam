@@ -6,8 +6,8 @@ function X0 = sam_sample_uniform_constrained_x0(N,LB,UB,varargin)
 %  
 % SYNTAX 
 % SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB);
-% SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,linConA,linConB);
-% SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,linConA,linConB,nonLinCon,solverType);
+% SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,A,b);
+% SAM_SAMPLE_UNIFORM_CONSTRAINED_X0(N,LB,UB,A,b,nonLinCon,solverType);
 %  
 % EXAMPLES 
 %  
