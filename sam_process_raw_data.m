@@ -1,4 +1,4 @@
-function sam_process_raw_data
+function sam_process_raw_data(SAM)
 % SAM_PROCESS_RAW_DATA <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -37,54 +37,35 @@ function sam_process_raw_data
 % Bram Zandbelt, bramzandbelt@gmail.com 
 % $Created : Fri 23 Aug 2013 12:08:07 CDT by bram 
 % $Modified: Fri 23 Aug 2013 12:08:07 CDT by bram 
-
- 
-% CONTENTS 
-% 1. FIRST LEVEL HEADER 
-%    1.1 Second level header 
-%        1.1.1 Third level header 
-
  
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. PROCESSING INPUTS AND SPECIFYING VARIABLES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-% 1.#. Static variables
+% 1.1. Process inputs
 % =========================================================================
 
-% Input/Output
-% -------------------------------------------------------------------------
-INPUT_DIR_LOCAL   = '/Users/bramzandbelt/Documents/PROJECTS/SAM/input/';
-OUTPUT_DIR_LOCAL  = '/Users/bramzandbelt/Documents/PROJECTS/SAM/output/';
+rawDataDir        = SAM.io.rawDataDir;
+workDir           = SAM.io.workDir;
 
-% Trial and event numbers, onsets, and durations
-% -------------------------------------------------------------------------
-N_CND             = 3;    % Number of task conditions (choice alternatives)
-N_SSD             = 5;    % Number of stop-signal delays
-M                 = [6 1];% Number of inputs for Go and Stop
-TRIAL_DURATION    = 2500; % Trial duration
-STM1_ONS          = 250;  % Stimulus 1 onset
-STM1_DUR          = 2000; % Stimulus 1 duration
-STM2_DUR          = 100;  % Stimulus 2 duration
+nStm              = SAM.expt.nStm;                                            
+nRsp              = SAM.expt.nRsp;
+nCnd              = SAM.expt.nCnd;                                            
+nSsd              = SAM.expt.nSsd;                                            
+trialDur          = SAM.expt.trialDur;
+stmOns            = SAM.expt.stmOns;                                        
+stmDur            = SAM.expt.stmDur;                                       
 
-% 1.#. Dynamic variables
+modelToFit        = SAM.model.variants.toFit;
+
+% 1.2. Dynamic variables
 % =========================================================================
-
-% Input/Output
-% -------------------------------------------------------------------------
-
-switch matlabroot
-  case '/Applications/MATLAB_R2013a.app'
-    inputDir  = INPUT_DIR_LOCAL;
-    outputDir = OUTPUT_DIR_LOCAL;
-  otherwise
-    inputDir  = INPUT_DIR_ACCRE;
-    outputDir = OUTPUT_DIR_ACCRE;
-end
     
 % Miscellaneous
 % -------------------------------------------------------------------------
-trueM       = arrayfun(@(x) true(x,1),M,'Uni',0);
+trueM             = arrayfun(@(x) true(x,1),nStm,'Uni',0);
+
+taskFactors       = [nStm;nRsp;nCnd,nCnd];
 
 % 1.#. Pre-allocate arrays
 % =========================================================================
@@ -107,7 +88,7 @@ allObs      = dataset({[],'subj'}, ...
 
 % 2.1 Identify task performance files
 % =========================================================================
-file = regexpdir(inputDir,'^subject.*-ss.*.txt$');
+file = regexpdir(rawDataDir,'^subject.*-ss.*.txt$');
 
 % 2.2 Import data
 % =========================================================================
@@ -132,7 +113,7 @@ for iFile = 1:size(file,1)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2. RECODE DATA
+% 3. RECODE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % Make coding of correct stimulus-response mapping easier
@@ -191,13 +172,13 @@ allObs.cnd2            = zeros(size(allObs,1),1);
 
 % Onset and duration of stimulus 1 (go-signal)
 iStm1                   = allObs.stm1 > 0;
-allObs.stm1Ons(iStm1)  = STM1_ONS;
-allObs.stm1Dur(iStm1)  = STM1_DUR;
+allObs.stm1Ons(iStm1)  = stmOns(1);
+allObs.stm1Dur(iStm1)  = stmDur(1);
                         
 % Onset and duration of stimulus 2 (stop-signal)
 iStm2                   = allObs.stm2 > 0;
 allObs.stm2Ons(iStm2)  = allObs.stm1Ons(iStm2) + allObs.ssd(iStm2);
-allObs.stm2Dur(iStm2)  = STM2_DUR;
+allObs.stm2Dur(iStm2)  = stmDur(2);
 allObs.cnd2(iStm2)     = allObs.cnd1(iStm2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -226,52 +207,52 @@ for iSubj = 1:nSubj
   % =====================================================================
   
   % Dataset array
-	obs           = dataset({zeros(N_CND,1),'nGo'}, ...
-                          {zeros(N_CND,1),'nGoCorr'}, ...
-                          {zeros(N_CND,1),'nGoComm'}, ...
-                          {zeros(N_CND,N_SSD),'nStop'}, ...
-                          {zeros(N_CND,N_SSD),'nStopFailure'}, ...
-                          {zeros(N_CND,N_SSD),'nStopSuccess'}, ...
-                          {zeros(N_CND,1),'pGoCorr'}, ...
-                          {zeros(N_CND,1),'pGoComm'}, ...
-                          {zeros(N_CND,N_SSD),'pStopFailure'}, ...
-                          {zeros(N_CND,N_SSD),'ssd'}, ...
-                          {zeros(N_CND,N_SSD),'inhibFunc'}, ...
-                          {cell(N_CND,1),'rtGoCorr'}, ...
-                          {cell(N_CND,1),'rtGoComm'}, ...
-                          {cell(N_CND,N_SSD),'rtStopFailure'}, ...
-                          {cell(N_CND,N_SSD+1),'onset'}, ...
-                          {cell(N_CND,N_SSD+1),'duration'});
+	obs           = dataset({zeros(nCnd,1),'nGo'}, ...
+                          {zeros(nCnd,1),'nGoCorr'}, ...
+                          {zeros(nCnd,1),'nGoComm'}, ...
+                          {zeros(nCnd,nSsd),'nStop'}, ...
+                          {zeros(nCnd,nSsd),'nStopFailure'}, ...
+                          {zeros(nCnd,nSsd),'nStopSuccess'}, ...
+                          {zeros(nCnd,1),'pGoCorr'}, ...
+                          {zeros(nCnd,1),'pGoComm'}, ...
+                          {zeros(nCnd,nSsd),'pStopFailure'}, ...
+                          {zeros(nCnd,nSsd),'ssd'}, ...
+                          {zeros(nCnd,nSsd),'inhibFunc'}, ...
+                          {cell(nCnd,1),'rtGoCorr'}, ...
+                          {cell(nCnd,1),'rtGoComm'}, ...
+                          {cell(nCnd,nSsd),'rtStopFailure'}, ...
+                          {cell(nCnd,nSsd+1),'onset'}, ...
+                          {cell(nCnd,nSsd+1),'duration'});
   
   % Trial numbers
-  nGo           = zeros(N_CND,1);               % All go
-  nGoCorr       = zeros(N_CND,1);               % Correct go
-  nGoComm       = zeros(N_CND,1);               % Commission error go
-  nStop         = zeros(N_CND,N_SSD);           % All stop
-  nStopSuccess  = zeros(N_CND,N_SSD);           % Successful stop
-  nStopFailure  = zeros(N_CND,N_SSD);           % Failed stop
+  nGo           = zeros(nCnd,1);               % All go
+  nGoCorr       = zeros(nCnd,1);               % Correct go
+  nGoComm       = zeros(nCnd,1);               % Commission error go
+  nStop         = zeros(nCnd,nSsd);           % All stop
+  nStopSuccess  = zeros(nCnd,nSsd);           % Successful stop
+  nStopFailure  = zeros(nCnd,nSsd);           % Failed stop
   
   % Response probabilities
-  pGoCorr       = zeros(N_CND,1);
-  pGoComm       = zeros(N_CND,1);
-  pStopFailure  = zeros(N_CND,N_SSD);
+  pGoCorr       = zeros(nCnd,1);
+  pGoComm       = zeros(nCnd,1);
+  pStopFailure  = zeros(nCnd,nSsd);
   
   % Response times
-  rtGoCorr      = cell(N_CND,1);
-  rtGoComm      = cell(N_CND,1);
-  rtStopFailure = cell(N_CND,N_SSD);
+  rtGoCorr      = cell(nCnd,1);
+  rtGoComm      = cell(nCnd,1);
+  rtStopFailure = cell(nCnd,nSsd);
   
   % Stop-signal delays
-  ssd           = nan(N_CND,N_SSD);
+  ssd           = nan(nCnd,nSsd);
   
   % Inhibition function
-  inhibFunc     = nan(N_CND,N_SSD);
+  inhibFunc     = nan(nCnd,nSsd);
   
   % Event onsets and durations
-  ons           = cell(N_CND,N_SSD+1);
-  dur           = cell(N_CND,N_SSD+1);
+  ons           = cell(nCnd,nSsd+1);
+  dur           = cell(nCnd,nSsd+1);
   
-  for iCnd = 1:N_CND
+  for iCnd = 1:nCnd
                     
     % 4.2. Classify Go trials
     % =====================================================================
@@ -307,13 +288,13 @@ for iSubj = 1:nSubj
 
     % 4.2.5. Onset & duration
     % ---------------------------------------------------------------------
-    ons{iCnd,1}     = blkdiag(trueM{:})*[STM1_ONS 0]';
-    dur{iCnd,1}     = blkdiag(trueM{:})*[STM1_DUR 0]';
+    ons{iCnd,1}     = blkdiag(trueM{:})*[stmOns(1) 0]';
+    dur{iCnd,1}     = blkdiag(trueM{:})*[stmDur(1) 0]';
     
     % 4.3. Classify Stop trials
     % =====================================================================
 
-    for iSsd = 1:N_SSD
+    for iSsd = 1:nSsd
 
       % 4.3.1. Trial indices
       % -------------------------------------------------------------------
@@ -350,14 +331,14 @@ for iSubj = 1:nSubj
 
       % 4.3.6. Onset & duration
       % -------------------------------------------------------------------
-      ons{iCnd,iSsd + 1}     = blkdiag(trueM{:})*[STM1_ONS STM1_ONS + ssd(iCnd,iSsd)]';
-      dur{iCnd,iSsd + 1}     = blkdiag(trueM{:})*[STM1_DUR STM2_DUR]';
+      ons{iCnd,iSsd + 1}     = blkdiag(trueM{:})*[stmOns(1) stmOns(1) + ssd(iCnd,iSsd)]';
+      dur{iCnd,iSsd + 1}     = blkdiag(trueM{:})*[stmDur(1) stmDur(2)]';
       
     end
 
     % 4.3.6. Inhibition function
     % ---------------------------------------------------------------------
-    inhibFunc(iCnd,:) = reshape(nStopFailure(iCnd,:)./nStop(iCnd,:),1,N_SSD);
+    inhibFunc(iCnd,:) = reshape(nStopFailure(iCnd,:)./nStop(iCnd,:),1,nSsd);
     
   end
   
