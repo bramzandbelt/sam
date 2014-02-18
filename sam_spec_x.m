@@ -124,17 +124,20 @@ XSpec.n.nCatClass        = nCatClass;
 freeCat = arrayfun(@(a,b) repmat(a,1,b),included,nCat,'Uni',0);
 
 % Correct for the scaling parameter
-freeCat{iScale} = 0;
+freeCat{iScale} = false;
 
 freeCatClass = cell(nClass,nXCat);
 
 for iXCat = 1:nXCat
   if sum(nCatClass(:,iXCat)) == nCat(iXCat)
-    freeCatClass(:,iXCat) = mat2cell(ones(nCat(iXCat),1),nCatClass(:,iXCat),1);
+    freeCatClass(:,iXCat) = mat2cell(true(nCat(iXCat),1),nCatClass(:,iXCat),1);
   elseif XSpec.n.nCat(iXCat) == 1
     freeCatClass(:,iXCat) = repmat(freeCat(iXCat),nClass,1);
   end
 end
+
+% Ensure row vectors
+freeCatClass = cellfun(@(in1) in1(:)',freeCatClass,'Uni',0);
 
 % Put variables in output structure
 XSpec.free.free         = [freeCat{:}];
@@ -161,6 +164,9 @@ for iXCat = 1:nXCat
     iCatClass(:,iXCat) = repmat(iCat(iXCat),nClass,1);
   end
 end
+
+% Ensure row vectors
+iCatClass = cellfun(@(in1) in1(:)',iCatClass,'Uni',0);
 
 % Put variables in output structure
 XSpec.i.iCat = iCat;
