@@ -58,6 +58,9 @@ stmDur            = SAM.expt.stmDur;
 
 modelToFit        = SAM.model.variants.toFit;
 
+qntls             = SAM.optim.cost.stat.cumProb;
+minBinSize        = SAM.optim.cost.stat.minBinSize;
+
 % 1.2. Dynamic variables
 % =========================================================================
     
@@ -65,6 +68,7 @@ modelToFit        = SAM.model.variants.toFit;
 % -------------------------------------------------------------------------
 trueM             = arrayfun(@(x) true(x,1),nStm,'Uni',0);
 
+nClass            = numel(SAM.model.general.classNames);
 taskFactors       = [nStm;nRsp;nCnd,nCnd];
 
 % 1.#. Pre-allocate arrays
@@ -72,7 +76,7 @@ taskFactors       = [nStm;nRsp;nCnd,nCnd];
 
 allObs      = dataset({[],'subj'}, ...
                       {[],'sess'}, ...
-                      {[],'cnd1'}, ...
+                      {[],'cnd'}, ...
                       {[],'block'}, ...
                       {[],'stm1'}, ...
                       {[],'stm2'}, ...
@@ -103,7 +107,7 @@ for iFile = 1:size(file,1)
     % Import into dataset array
     warning off
     thisData = dataset('File',file{iFile},'HeaderLines',1,'VarNames', ...
-          {'cnd1','block','stm1','stm2','iSSD','acc','resp','rt','ssd'});
+          {'cnd','block','stm1','stm2','iSSD','acc','resp','rt','ssd'});
     warning on
     thisData.subj = id(1)*ones(size(thisData,1),1);
     thisData.sess = id(2)*ones(size(thisData,1),1);
@@ -111,6 +115,10 @@ for iFile = 1:size(file,1)
     % Concatenate dataset arrays
     allObs = [allObs;thisData]; 
 end
+
+% Add variables
+allObs.rsp1 = allObs.stm1;
+allObs.rsp2 = allObs.stm2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. RECODE DATA
@@ -133,53 +141,54 @@ end
 
 % Sort rows of dataset in the following order: i) subject, ii) session,
 % iii) condition, iv) stim2
-% allData = sortrows(allData,{'subj','sess','cnd1','stm2','ssd','acc','rt'});
+% allData = sortrows(allData,{'subj','sess','cnd','stm2','ssd','acc','rt'});
                     
 % Identify stimulus-condition combinations
-s0c2  = allObs.stm1 == 0  & allObs.cnd1 == 2;
-s1c2  = allObs.stm1 == 1  & allObs.cnd1 == 2;
-s2c4  = allObs.stm1 == 2  & allObs.cnd1 == 4;
-s3c4  = allObs.stm1 == 3  & allObs.cnd1 == 4;
-s4c4  = allObs.stm1 == 4  & allObs.cnd1 == 4;
-s5c4  = allObs.stm1 == 5  & allObs.cnd1 == 4;
-s6c6  = allObs.stm1 == 6  & allObs.cnd1 == 6;
-s7c6  = allObs.stm1 == 7  & allObs.cnd1 == 6;
-s8c6  = allObs.stm1 == 8  & allObs.cnd1 == 6;
-s9c6  = allObs.stm1 == 9  & allObs.cnd1 == 6;
-s10c6 = allObs.stm1 == 10 & allObs.cnd1 == 6;
-s11c6 = allObs.stm1 == 11 & allObs.cnd1 == 6;
+s0c2  = allObs.stm1 == 0  & allObs.cnd == 2;
+s1c2  = allObs.stm1 == 1  & allObs.cnd == 2;
+s2c4  = allObs.stm1 == 2  & allObs.cnd == 4;
+s3c4  = allObs.stm1 == 3  & allObs.cnd == 4;
+s4c4  = allObs.stm1 == 4  & allObs.cnd == 4;
+s5c4  = allObs.stm1 == 5  & allObs.cnd == 4;
+s6c6  = allObs.stm1 == 6  & allObs.cnd == 6;
+s7c6  = allObs.stm1 == 7  & allObs.cnd == 6;
+s8c6  = allObs.stm1 == 8  & allObs.cnd == 6;
+s9c6  = allObs.stm1 == 9  & allObs.cnd == 6;
+s10c6 = allObs.stm1 == 10 & allObs.cnd == 6;
+s11c6 = allObs.stm1 == 11 & allObs.cnd == 6;
 
 % Recode data
-allObs.stm1(s0c2)      = 3; allObs.cnd1(s0c2)   = 1;
-allObs.stm1(s1c2)      = 4; allObs.cnd1(s1c2)   = 1;
-allObs.cnd1(s2c4)      = 2;
-allObs.cnd1(s3c4)      = 2;
-allObs.cnd1(s4c4)      = 2;
-allObs.cnd1(s5c4)      = 2;
-allObs.stm1(s6c6)      = 1; allObs.cnd1(s6c6)   = 3;
-allObs.stm1(s7c6)      = 2; allObs.cnd1(s7c6)   = 3;
-allObs.stm1(s8c6)      = 3; allObs.cnd1(s8c6)   = 3;
-allObs.stm1(s9c6)      = 4; allObs.cnd1(s9c6)   = 3;
-allObs.stm1(s10c6)     = 5; allObs.cnd1(s10c6)  = 3;
-allObs.stm1(s11c6)     = 6; allObs.cnd1(s11c6)  = 3;
-                                                  
+allObs.stm1(s0c2)      = 3; allObs.rsp1(s0c2)      = 3; allObs.cnd(s0c2)   = 1;
+allObs.stm1(s1c2)      = 4; allObs.rsp1(s1c2)      = 4; allObs.cnd(s1c2)   = 1;
+allObs.stm1(s2c4)      = 2; allObs.rsp1(s2c4)      = 2; allObs.cnd(s2c4)   = 2;
+allObs.stm1(s3c4)      = 3; allObs.rsp1(s3c4)      = 3; allObs.cnd(s3c4)   = 2;
+allObs.stm1(s4c4)      = 4; allObs.rsp1(s4c4)      = 4; allObs.cnd(s4c4)   = 2;
+allObs.stm1(s5c4)      = 5; allObs.rsp1(s5c4)      = 5; allObs.cnd(s5c4)   = 2;
+allObs.stm1(s6c6)      = 1; allObs.rsp1(s6c6)      = 1; allObs.cnd(s6c6)   = 3;
+allObs.stm1(s7c6)      = 2; allObs.rsp1(s7c6)      = 2; allObs.cnd(s7c6)   = 3;
+allObs.stm1(s8c6)      = 3; allObs.rsp1(s8c6)      = 3; allObs.cnd(s8c6)   = 3;
+allObs.stm1(s9c6)      = 4; allObs.rsp1(s9c6)      = 4; allObs.cnd(s9c6)   = 3;
+allObs.stm1(s10c6)     = 5; allObs.rsp1(s10c6)     = 5; allObs.cnd(s10c6)  = 3;
+allObs.stm1(s11c6)     = 6; allObs.rsp1(s11c6)     = 6; allObs.cnd(s11c6)  = 3;
+
 % Add event onsets and durations
 allObs.stm1Ons         = zeros(size(allObs,1),1);
 allObs.stm1Dur         = zeros(size(allObs,1),1);
 allObs.stm2Ons         = zeros(size(allObs,1),1);
 allObs.stm2Dur         = zeros(size(allObs,1),1);
-allObs.cnd2            = zeros(size(allObs,1),1);
 
 % Onset and duration of stimulus 1 (go-signal)
-iStm1                   = allObs.stm1 > 0;
+iStm1                  = allObs.stm1 > 0;
 allObs.stm1Ons(iStm1)  = stmOns(1);
 allObs.stm1Dur(iStm1)  = stmDur(1);
                         
 % Onset and duration of stimulus 2 (stop-signal)
-iStm2                   = allObs.stm2 > 0;
+iStm2                  = allObs.stm2 > 0;
+allObs.rsp2(iStm2)     = 1;
 allObs.stm2Ons(iStm2)  = allObs.stm1Ons(iStm2) + allObs.ssd(iStm2);
 allObs.stm2Dur(iStm2)  = stmDur(2);
-allObs.cnd2(iStm2)     = allObs.cnd1(iStm2);
+
+allObs = allObs(:,[1 2 4 3 5 14 15 6 16 17 7 8 12 13 9 10 11]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. REMOVE PRACTICE BLOCKS AND OUTLIER TRIALS
@@ -195,7 +204,101 @@ allObs(allObs.block < 3,:) = [];
 allObs(allObs.stm2 == 0 & allObs.rt < 150,:) = [];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 4. CLASSIFY TRIALS, COMPUTE DESCRIPTIVES, AND SAVE DATA
+% 4. CATEGORIZE DATA BASED ON MODEL FEATURES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Go trials
+% =========================================================================================================================
+signatureGo   = any(modelToFit.features(:,:,1),2);
+
+if ~isequal(signatureGo,[0 0 0]')
+  combiGo       = fullfact(taskFactors(signatureGo,1))';
+else
+  combiGo       = 1;
+end
+
+if isequal(signatureGo,[0 0 0]')
+  funGo = @(in1) sprintf('{GO}',in1);
+elseif isequal(signatureGo,[1 0 0]')
+  funGo = @(in1) sprintf('{GO:s%d}',in1);
+elseif isequal(signatureGo,[0 1 0]')
+  funGo = @(in1) sprintf('{GO:r%d}',in1);
+elseif isequal(signatureGo,[0 0 1]')
+  funGo = @(in1) sprintf('{GO:c%d}',in1);
+elseif isequal(signatureGo,[1 1 0]')
+  funGo = @(in1) sprintf('{GO:s%d,r%d}',in1);
+elseif isequal(signatureGo,[1 0 1]')
+  funGo = @(in1) sprintf('{GO:s%d,c%d}',in1);
+elseif isequal(signatureGo,[0 1 1]')
+  funGo = @(in1) sprintf('{GO:r%d,c%d}',in1);
+elseif isequal(signatureGo,[1 1 1]')
+  funGo = @(in1) sprintf('{GO:s%d,r%d,c%d}',in1);
+end
+
+if all(combiGo(:) == 1)
+  combiCellGo = mat2cell(combiGo,1,ones(size(combiGo,2),1));
+else
+  combiCellGo = mat2cell(combiGo,size(combiGo,1),ones(size(combiGo,2),1));
+end
+
+tagGo = cellfun(@(in1) ['goTrial_',funGo(in1)],combiCellGo,'Uni',0);
+
+% Stop trials
+% =========================================================================================================================
+signatureStop         = any(modelToFit.features(:,:,2),2);
+
+if ~isequal(signatureGo,[0 0 0]') && ~isequal(signatureStop,[0 0 0]')
+  combiStop             = fullfact([nSsd;taskFactors(signatureGo,1);taskFactors(signatureStop,2)])';
+elseif ~isequal(signatureGo,[0 0 0]') && isequal(signatureStop,[0 0 0]')  
+  combiStop             = fullfact([nSsd;taskFactors(signatureGo,1)])';
+elseif isequal(signatureGo,[0 0 0]') && ~isequal(signatureStop,[0 0 0]')  
+  combiStop             = fullfact([nSsd;taskFactors(signatureStop,1)])';
+elseif isequal(signatureGo,[0 0 0]') && isequal(signatureStop,[0 0 0]')  
+  combiStop             = fullfact([nSsd,1,1])';
+end
+
+if isequal(signatureStop,[0 0 0]')
+  funStop = @(in1) sprintf('{STOP}',in1);
+elseif isequal(signatureStop,[1 0 0]')
+  funStop = @(in1) sprintf('{STOP:s%d}',in1);
+elseif isequal(signatureStop,[0 1 0]')
+  funStop = @(in1) sprintf('{STOP:r%d}',in1);
+elseif isequal(signatureStop,[0 0 1]')
+  funStop = @(in1) sprintf('{STOP:c%d}',in1);
+elseif isequal(signatureStop,[1 1 0]')
+  funStop = @(in1) sprintf('{STOP:s%d,r%d}',in1);
+elseif isequal(signatureStop,[1 0 1]')
+  funStop = @(in1) sprintf('{STOP:s%d,c%d}',in1);
+elseif isequal(signatureStop,[0 1 1]')
+  funStop = @(in1) sprintf('{STOP:r%d,c%d}',in1);
+elseif isequal(signatureStop,[1 1 1]')
+  funStop = @(in1) sprintf('{STOP:s%d,r%d,c%d}',in1);
+end
+
+nFactGo = numel(taskFactors(signatureGo,1));
+nFactStop = numel(taskFactors(signatureStop,1));
+
+if all(all(combiStop(2:end,:) == 1))
+  combiCellStop = mat2cell(combiStop,[1;1;1],ones(size(combiStop,2),1));
+else
+  combiCellStop = mat2cell(combiStop,[1;nFactGo;nFactStop],ones(size(combiStop,2),1));
+end
+
+tagStop = cellfun(@(in1,in2,in3) ['stopTrial_ssd',sprintf('%d',in1),'_',funGo(in2),'_',funStop(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0)
+
+% All tags
+tagAll = [tagGo,tagStop]';
+
+% All combi cells combines
+combiCellAll = [combiCellGo,mat2cell(combiCellStop,size(combiCellStop,1),ones(1,size(combiCellStop,2)))];
+
+% Number of trial categories
+nTrialCat = numel([tagGo,tagStop]);
+nTrialCatGo = numel(tagGo);
+nTrialCatStop = numel(tagStop);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 5. CLASSIFY TRIALS, COMPUTE DESCRIPTIVES, AND SAVE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 subj = unique(allObs.subj);
@@ -207,50 +310,190 @@ for iSubj = 1:nSubj
   % =====================================================================
   
   % Dataset array
-	obs           = dataset({zeros(nCnd,1),'nGo'}, ...
-                          {zeros(nCnd,1),'nGoCorr'}, ...
-                          {zeros(nCnd,1),'nGoComm'}, ...
-                          {zeros(nCnd,nSsd),'nStop'}, ...
-                          {zeros(nCnd,nSsd),'nStopFailure'}, ...
-                          {zeros(nCnd,nSsd),'nStopSuccess'}, ...
-                          {zeros(nCnd,1),'pGoCorr'}, ...
-                          {zeros(nCnd,1),'pGoComm'}, ...
-                          {zeros(nCnd,nSsd),'pStopFailure'}, ...
-                          {zeros(nCnd,nSsd),'ssd'}, ...
-                          {zeros(nCnd,nSsd),'inhibFunc'}, ...
-                          {cell(nCnd,1),'rtGoCorr'}, ...
-                          {cell(nCnd,1),'rtGoComm'}, ...
-                          {cell(nCnd,nSsd),'rtStopFailure'}, ...
-                          {cell(nCnd,nSsd+1),'onset'}, ...
-                          {cell(nCnd,nSsd+1),'duration'});
-  
-  % Trial numbers
-  nGo           = zeros(nCnd,1);               % All go
-  nGoCorr       = zeros(nCnd,1);               % Correct go
-  nGoComm       = zeros(nCnd,1);               % Commission error go
-  nStop         = zeros(nCnd,nSsd);           % All stop
-  nStopSuccess  = zeros(nCnd,nSsd);           % Successful stop
-  nStopFailure  = zeros(nCnd,nSsd);           % Failed stop
-  
-  % Response probabilities
-  pGoCorr       = zeros(nCnd,1);
-  pGoComm       = zeros(nCnd,1);
-  pStopFailure  = zeros(nCnd,nSsd);
-  
-  % Response times
-  rtGoCorr      = cell(nCnd,1);
-  rtGoComm      = cell(nCnd,1);
-  rtStopFailure = cell(nCnd,nSsd);
-  
-  % Stop-signal delays
-  ssd           = nan(nCnd,nSsd);
-  
-  % Inhibition function
-  inhibFunc     = nan(nCnd,nSsd);
-  
-  % Event onsets and durations
-  ons           = cell(nCnd,nSsd+1);
-  dur           = cell(nCnd,nSsd+1);
+	obs           = dataset({cell(nTrialCat,1),'trialCat'}, ...
+                          {cell(nTrialCat,1),'onset'}, ...
+                          {cell(nTrialCat,1),'duration'}, ...
+                          {zeros(nTrialCat,1),'ssd'}, ...
+                          {zeros(nTrialCat,1),'nTotal'}, ...
+                          {zeros(nTrialCat,1),'nCorr'}, ...
+                          {zeros(nTrialCat,1),'nError'}, ...
+                          {zeros(nTrialCat,1),'pTotal'}, ...
+                          {zeros(nTrialCat,1),'pCorr'}, ...
+                          {zeros(nTrialCat,1),'pError'}, ...
+                          {cell(nTrialCat,1),'rtCorr'}, ...
+                          {cell(nTrialCat,1),'rtError'}, ...
+                          {cell(nTrialCat,1),'rtQCorr'}, ...
+                          {cell(nTrialCat,1),'rtQError'}, ...
+                          {cell(nTrialCat,1),'fCorr'}, ...
+                          {cell(nTrialCat,1),'fError'}, ...
+                          {cell(nTrialCat,1),'pMassCorr'}, ...
+                          {cell(nTrialCat,1),'pMassError'}, ...
+                          {cell(nTrialCat,1),'pDefectiveCorr'}, ...
+                          {cell(nTrialCat,1),'pDefectiveError'});
+                        
+	% Some general matrices
+  iSsd = [zeros(numel(tagGo),1);cell2mat(combiCellStop(1,:))'];
+                        
+	for iTrialCat = 1:nTrialCat
+    
+    obs.trialCat{iTrialCat} = tagAll{iTrialCat};
+    
+    
+    if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*'))
+      
+      if isequal(signatureGo,[0 0 0]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0);
+      elseif isequal(signatureGo,[1 0 0]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.stm1    == combiGo(1,iTrialCat));
+      elseif isequal(signatureGo,[0 1 0]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.rsp1    == combiGo(1,iTrialCat));
+      elseif isequal(signatureGo,[0 0 1]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.cnd     == combiGo(1,iTrialCat));
+      elseif isequal(signatureGo,[1 1 0]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.stm1    == combiGo(1,iTrialCat) & ...
+                       allObs.rsp1    == combiGo(2,iTrialCat));
+      elseif isequal(signatureGo,[1 0 1]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.stm1    == combiGo(1,iTrialCat) & ...
+                       allObs.cnd     == combiGo(2,iTrialCat));
+      elseif isequal(signatureGo,[0 1 1]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.rsp1    == combiGo(1,iTrialCat) & ...
+                       allObs.cnd     == combiGo(2,iTrialCat));
+      elseif isequal(signatureGo,[1 1 1]')
+        iSelect = find(allObs.subj    == subj(iSubj) & ...
+                       allObs.stm2    == 0 & ...
+                       allObs.stm1    == combiGo(1,iTrialCat) & ...
+                       allObs.rsp1    == combiGo(2,iTrialCat) & ...
+                       allObs.cnd     == combiGo(3,iTrialCat));
+      end
+    elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*'))
+      
+      % Select trials based on GO criteria
+      if isequal(signatureGo,[0 0 0]')
+        iSelectGo = find(allObs.subj    == subj(iSubj));
+      elseif isequal(signatureGo,[1 0 0]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.stm1    == combiCellStop{2,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureGo,[0 1 0]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.rsp1    == combiCellStop{2,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureGo,[0 0 1]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.cnd     == combiCellStop{2,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureGo,[1 1 0]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.stm1    == combiCellStop{2,iTrialCat-nTrialCatGo}(1) & ...
+                         allObs.rsp1    == combiCellStop{2,iTrialCat-nTrialCatGo}(2));
+      elseif isequal(signatureGo,[1 0 1]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.stm1    == combiCellStop{2,iTrialCat-nTrialCatGo}(1) & ...
+                         allObs.cnd     == combiCellStop{2,iTrialCat-nTrialCatGo}(2));
+      elseif isequal(signatureGo,[0 1 1]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.rsp1    == combiCellStop{2,iTrialCat-nTrialCatGo}(1)& ...
+                         allObs.cnd     == combiCellStop{2,iTrialCat-nTrialCatGo}(2));
+      elseif isequal(signatureGo,[1 1 1]')
+        iSelectGo = find(allObs.subj    == subj(iSubj) & ...
+                         allObs.stm1    == combiCellStop{2,iTrialCat-nTrialCatGo}(1) & ...
+                         allObs.rsp1    == combiCellStop{2,iTrialCat-nTrialCatGo}(2) & ...
+                         allObs.cnd     == combiCellStop{2,iTrialCat-nTrialCatGo}(3));
+      end
+      
+      % Select trials based on STOP criteria
+      if isequal(signatureStop,[0 0 0]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.stm2    > 0 & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureStop,[1 0 0]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.stm2    == 1 & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.stm2    == combiCellStop{3,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureStop,[0 1 0]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.stm2    > 0 & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.rsp2    == combiCellStop{3,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureStop,[0 0 1]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.stm2    > 0 & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.cnd     == combiCellStop{3,iTrialCat-nTrialCatGo}(1));
+      elseif isequal(signatureStop,[1 1 0]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.stm2    == combiCellStop{3,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.rsp2    == combiCellStop{3,iTrialCat-nTrialCatGo}(2));
+      elseif isequal(signatureStop,[1 0 1]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.stm2    == combiCellStop{3,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.cnd     == combiCellStop{3,iTrialCat-nTrialCatGo}(2));
+      elseif isequal(signatureStop,[0 1 1]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.stm2    > 0 & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.rsp2    == combiCellStop{3,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.cnd     == combiCellStop{3,iTrialCat-nTrialCatGo}(2));
+      elseif isequal(signatureStop,[1 1 1]')
+        iSelectStop = find(allObs.subj    == subj(iSubj) & ...
+                           allObs.iSSD    == combiCellStop{1,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.stm2    == combiCellStop{3,iTrialCat-nTrialCatGo}(1) & ...
+                           allObs.rsp2    == combiCellStop{3,iTrialCat-nTrialCatGo}(2) & ...
+                           allObs.cnd     == combiCellStop{3,iTrialCat-nTrialCatGo}(3));
+      end
+      
+      % Only keep trials satisfying both criteria
+      iSelect = intersect(iSelectGo,iSelectStop);
+ 
+    end
+    
+    iSelectCorr   = intersect(iSelect, find(allObs.acc == 2));
+    iSelectError  = intersect(iSelect,find(allObs.acc ~= 2));
+        
+    % Number of trials
+    obs.nTotal(iTrialCat)   = numel(iSelect);
+    obs.nCorr(iTrialCat)    = numel(iSelectCorr);
+    obs.nError(iTrialCat)   = numel(iSelectError);
+    
+    % Probability
+    obs.pCorr(iTrialCat)    = numel(iSelectCorr)./numel(iSelect);
+    obs.pError(iTrialCat)   = numel(iSelectError)./numel(iSelect);
+    
+    % Response time
+    obs.rtCorr{iTrialCat}   = sort(allObs.rt(iSelectCorr));
+    obs.rtError{iTrialCat}  = sort(allObs.rt(iSelectError));
+    
+    obs.ssd(iTrialCat)      = max([0,unique(nonnans(allObs.ssd(iSelect)))]);
+    
+    
+    if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*')) && obs.nCorr(iTrialCat) > 0
+      [obs.rtQCorr{iTrialCat}, ...
+       obs.pDefectiveCorr{iTrialCat}, ...
+       obs.fCorr{iTrialCat}, ...
+       obs.pMassCorr{iTrialCat}]  = sam_bin_data(obs.rtCorr{iTrialCat},obs.pCorr(iTrialCat),obs.nCorr(iTrialCat),qntls,minBinSize);
+    end
+    
+    if obs.nError(iTrialCat) > 0
+      [obs.rtQError{iTrialCat}, ...
+       obs.pDefectiveError{iTrialCat}, ...
+       obs.fError{iTrialCat}, ...
+       obs.pMassError{iTrialCat}]  = sam_bin_data(obs.rtError{iTrialCat},obs.pError(iTrialCat),obs.nError(iTrialCat),qntls,minBinSize);
+    end
+    
+  end
   
   for iCnd = 1:nCnd
                     
@@ -261,7 +504,7 @@ for iSubj = 1:nSubj
     % ---------------------------------------------------------------------
     iGo             = find(allObs.subj    == subj(iSubj) & ...
                            allObs.stm2    == 0 & ...
-                           allObs.cnd1    == iCnd);
+                           allObs.cnd    == iCnd);
 
     iGoCorr         = intersect(iGo, ...
                                 find(allObs.acc == 2));
@@ -301,7 +544,7 @@ for iSubj = 1:nSubj
       iStop                   = find(allObs.subj    == subj(iSubj) & ...
                                      allObs.stm2    == 1 & ...
                                      allObs.iSSD    == iSsd & ...
-                                     allObs.cnd1    == iCnd);
+                                     allObs.cnd    == iCnd);
       iStopSuccess            = intersect(iStop, ...
                                           find(allObs.acc == 2));
       iStopFailure            = intersect(iStop, ...
