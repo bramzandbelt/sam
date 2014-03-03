@@ -1,4 +1,4 @@
-function sam_process_raw_data(SAM)
+function obs = sam_process_raw_data(SAM)
 % SAM_PROCESS_RAW_DATA <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -218,21 +218,21 @@ else
 end
 
 if isequal(signatureGo,[0 0 0]')
-  funGo = @(in1) sprintf('{GO}',in1);
+  funGO = @(in1) sprintf('{GO}',in1);
 elseif isequal(signatureGo,[1 0 0]')
-  funGo = @(in1) sprintf('{GO:s%d}',in1);
+  funGO = @(in1) sprintf('{GO:s%d}',in1);
 elseif isequal(signatureGo,[0 1 0]')
-  funGo = @(in1) sprintf('{GO:r%d}',in1);
+  funGO = @(in1) sprintf('{GO:r%d}',in1);
 elseif isequal(signatureGo,[0 0 1]')
-  funGo = @(in1) sprintf('{GO:c%d}',in1);
+  funGO = @(in1) sprintf('{GO:c%d}',in1);
 elseif isequal(signatureGo,[1 1 0]')
-  funGo = @(in1) sprintf('{GO:s%d,r%d}',in1);
+  funGO = @(in1) sprintf('{GO:s%d,r%d}',in1);
 elseif isequal(signatureGo,[1 0 1]')
-  funGo = @(in1) sprintf('{GO:s%d,c%d}',in1);
+  funGO = @(in1) sprintf('{GO:s%d,c%d}',in1);
 elseif isequal(signatureGo,[0 1 1]')
-  funGo = @(in1) sprintf('{GO:r%d,c%d}',in1);
+  funGO = @(in1) sprintf('{GO:r%d,c%d}',in1);
 elseif isequal(signatureGo,[1 1 1]')
-  funGo = @(in1) sprintf('{GO:s%d,r%d,c%d}',in1);
+  funGO = @(in1) sprintf('{GO:s%d,r%d,c%d}',in1);
 end
 
 if all(combiGo(:) == 1)
@@ -241,7 +241,7 @@ else
   combiCellGo = mat2cell(combiGo,size(combiGo,1),ones(size(combiGo,2),1));
 end
 
-tagGo = cellfun(@(in1) ['goTrial_',funGo(in1)],combiCellGo,'Uni',0);
+tagGo = cellfun(@(in1) ['goTrial_',funGO(in1)],combiCellGo,'Uni',0);
 
 % Stop trials
 % =========================================================================================================================
@@ -258,21 +258,21 @@ elseif isequal(signatureGo,[0 0 0]') && isequal(signatureStop,[0 0 0]')
 end
 
 if isequal(signatureStop,[0 0 0]')
-  funStop = @(in1) sprintf('{STOP}',in1);
+  funSTOP = @(in1) sprintf('{STOP}',in1);
 elseif isequal(signatureStop,[1 0 0]')
-  funStop = @(in1) sprintf('{STOP:s%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:s%d}',in1);
 elseif isequal(signatureStop,[0 1 0]')
-  funStop = @(in1) sprintf('{STOP:r%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:r%d}',in1);
 elseif isequal(signatureStop,[0 0 1]')
-  funStop = @(in1) sprintf('{STOP:c%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:c%d}',in1);
 elseif isequal(signatureStop,[1 1 0]')
-  funStop = @(in1) sprintf('{STOP:s%d,r%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:s%d,r%d}',in1);
 elseif isequal(signatureStop,[1 0 1]')
-  funStop = @(in1) sprintf('{STOP:s%d,c%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:s%d,c%d}',in1);
 elseif isequal(signatureStop,[0 1 1]')
-  funStop = @(in1) sprintf('{STOP:r%d,c%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:r%d,c%d}',in1);
 elseif isequal(signatureStop,[1 1 1]')
-  funStop = @(in1) sprintf('{STOP:s%d,r%d,c%d}',in1);
+  funSTOP = @(in1) sprintf('{STOP:s%d,r%d,c%d}',in1);
 end
 
 nFactGo = numel(taskFactors(signatureGo,1));
@@ -284,7 +284,7 @@ else
   combiCellStop = mat2cell(combiStop,[1;nFactGo;nFactStop],ones(size(combiStop,2),1));
 end
 
-tagStop = cellfun(@(in1,in2,in3) ['stopTrial_ssd',sprintf('%d',in1),'_',funGo(in2),'_',funStop(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0)
+tagStop = cellfun(@(in1,in2,in3) ['stopTrial_ssd',sprintf('%d',in1),'_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
 
 % All tags
 tagAll = [tagGo,tagStop]';
@@ -311,6 +311,8 @@ for iSubj = 1:nSubj
   
   % Dataset array
 	obs           = dataset({cell(nTrialCat,1),'trialCat'}, ...
+                          {cell(nTrialCat,1),'funGO'}, ...
+                          {cell(nTrialCat,1),'funSTOP'}, ...
                           {cell(nTrialCat,1),'onset'}, ...
                           {cell(nTrialCat,1),'duration'}, ...
                           {zeros(nTrialCat,1),'ssd'}, ...
@@ -494,6 +496,9 @@ for iSubj = 1:nSubj
     end
     
   end
+  
+break  
+  
   
   for iCnd = 1:nCnd
                     

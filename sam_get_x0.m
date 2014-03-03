@@ -174,7 +174,7 @@ function XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels)
   end
   
   
-  % Now compute from this 3D matrix, the output vector XOut correspodning to the signature of the model to fit
+  % Now compute from this 3D matrix, the output vector XOut corresponding to the signature of the model to fit
   if isequal(signatureModelToFit,[0 0 0])
     XOut    = nanmean(nanmean(nanmean(XVec2Mat,3),2),1);
   elseif isequal(signatureModelToFit,[1 0 0])
