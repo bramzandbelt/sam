@@ -147,4 +147,4 @@ u = diag(v)*u;
 
 % 2.4. Add extrinsic noise of weight se
 % =========================================================================
-u = diag(se)*randn(m,q) + u;
+u = se*randn(m,q) + u;
