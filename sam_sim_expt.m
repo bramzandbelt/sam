@@ -1,4 +1,4 @@
-function varargout = sam_sim_expt(simGoal,X,SAM,VCor,VIncor,S,terminate,blockInput,latInhib,varargin)
+function varargout = sam_sim_expt(simGoal,X,SAM,varargin)
 % Simulates response times and model dynamics for go and stop trials of the
 % stop-signal task
 %  
@@ -6,8 +6,8 @@ function varargout = sam_sim_expt(simGoal,X,SAM,VCor,VIncor,S,terminate,blockInp
 % <Describe more extensively what this function does> 
 %  
 % SYNTAX 
-% prdOptimData = SAM_SIM_EXPT('optimize',X,SAM,VCor,VIncor,S,terminate,blockInput,latInhib,prdOptimData); 
-% [prd,modelMat] = SAM_SIM_EXPT('explore',X,SAM,VCor,VIncor,S,terminate,blockInput,latInhib,prd); 
+% prdOptimData = SAM_SIM_EXPT('optimize',X,SAM,prdOptimData); 
+% [prd,modelMat] = SAM_SIM_EXPT('explore',X,SAM,prd); 
 %  
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
@@ -35,6 +35,199 @@ function varargout = sam_sim_expt(simGoal,X,SAM,VCor,VIncor,S,terminate,blockInp
 %   4.5.Log model predictions
 % 5.OUTPUT
 
+% % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% % 1. PROCESS INPUTS AND SPECIFY VARIABLES
+% % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+% 
+% % 1.1. Process inputs
+% % ========================================================================= 
+% 
+% switch simGoal
+%   case 'optimize'
+%     prdOptimData = varargin{1};
+%   case 'explore'
+%     prd = varargin{1};
+% end
+% 
+% % 1.1.1. Type of choice mechanism
+% % -------------------------------------------------------------------------
+% choiceMechType  = SAM.des.choiceMech.type;
+% 
+% % 1.1.2. Type of inhibition mechanism
+% % -------------------------------------------------------------------------
+% inhibMechType   = SAM.des.inhibMech.type;
+% 
+% % 1.1.3. Accumulation mechanism
+% % -------------------------------------------------------------------------
+% 
+% % Lower bound on activation
+% zLB           = SAM.des.accumMech.zLB;
+% 
+% % Time window during which accumulation is 'recorded'
+% timeWindow    = SAM.des.accumMech.timeWindow;
+% 
+% % Time step
+% dt            = SAM.des.time.dt;
+% 
+% % Time constant
+% tau           = SAM.des.time.tau;
+% 
+% % Model parameters
+% % -------------------------------------------------------------------------
+% 
+% % Parameter that varies across conditions
+% condParam     = SAM.des.condParam;
+% 
+% % Number of GO and STOP units
+% nGo           = SAM.des.nGO;
+% nStop         = SAM.des.nSTOP;
+% 
+% durationSTOP  = SAM.des.durationSTOP;
+% 
+% % Simulator parameters
+% % -------------------------------------------------------------------------
+% simScope      = SAM.sim.scope;
+% 
+% nSim          = SAM.sim.nSim;
+% 
+% trialSimFun   = SAM.sim.trialSimFun;
+% 
+% % Experimental parameters
+% % -------------------------------------------------------------------------
+% 
+% % Number of conditions
+% nCnd          = SAM.des.expt.nCnd;
+% 
+% % Number of stop-signal delays
+% nSsd          = SAM.des.expt.nSsd;
+% 
+% % Stimulus onsets
+% stimOns       = SAM.des.expt.stimOns;
+% 
+% % Stimulus durations
+% stimDur       = SAM.des.expt.stimDur;
+% 
+% 
+% switch simGoal
+%   case 'explore'
+%     
+%     % Time windows for alignment on go-signal
+%     tWinGo    = SAM.explore.tWinGo;
+%     
+%     % Time windows for alignment on stop-signal
+%     tWinStop  = SAM.explore.tWinStop;
+%     
+%     % Time windows for alignment on response
+%     tWinResp  = SAM.explore.tWinGo;
+% end
+% 
+% % 1.2. Specify static variables
+% % =========================================================================
+% 
+switch simGoal
+  case 'explore'
+    % Cumulative probabilities for quantile averaging of model dynamics
+    CUM_PROB = 0:0.01:1;
+end
+% 
+% % 1.3. Specify dynamic variables
+% % =========================================================================
+% 
+% switch lower(simScope)
+%   case 'go'
+%     % Number of units
+%     N = nGo;
+%     
+%     % Number of model inputs (go and stop stimuli)
+%     M = nGo;
+%     
+%     % Number of trial types: Go trials only
+%     nTrType = 1;
+%     
+%     % Adjust stimulus onsets to include data from Go trials only
+%     stimOns   = cellfun(@(a) a(1:M),stimOns,'Uni',0);
+%     
+%     % Adjust stimulus durations to include data from Go trials only
+%     stimDur   = cellfun(@(a) a(1:M),stimDur,'Uni',0);
+%     
+%   case 'all'
+%     % Number of units
+%     N = [nGo nStop];
+%     
+%     % Number of model inputs (go and stop stimuli)
+%     M = [nGo nStop];
+%     
+%     % Number of trial types: Go trials, and Stop trials with nSSD delays
+%     nTrType = 1 + nSsd;
+% end
+% 
+% % 1.4. Pre-allocate empty arrays
+% % =========================================================================
+% 
+% % 1.4.1. Trial numbers
+% % -------------------------------------------------------------------------
+% nGoCorr         = nan(nCnd,1);         % Go correct
+% nGoComm         = nan(nCnd,1);         % Go commission error
+% nGoOmit         = nan(nCnd,1);         % Go omission error
+% 
+% switch lower(simScope)
+%   case 'all'
+%     nStopFailure  = nan(nCnd,nSsd);   % Stop failure
+%     nStopSuccess  = nan(nCnd,nSsd);   % Stop success
+% end
+% 
+% % 1.4.2. Trial probabilities
+% % -------------------------------------------------------------------------
+% pGoCorr         = nan(nCnd,1);         % Go correct
+% pGoComm         = nan(nCnd,1);         % Go commission error
+% pGoOmit         = nan(nCnd,1);         % Go omission error
+% 
+% switch lower(simScope)
+%   case 'all'
+%     pStopFailure  = nan(nCnd,nSsd);   % Stop failure
+%     pStopSuccess  = nan(nCnd,nSsd);   % Stop success
+% end
+% 
+% % 1.4.3. Response times
+% % -------------------------------------------------------------------------
+% rtGoCorr        = cell(nCnd,1);        % Go correct
+% rtGoComm        = cell(nCnd,1);        % Go commission error
+% 
+% switch lower(simScope)
+%   case 'all'
+%     rtStopFailure = cell(nCnd,nSsd);  % Stop failure
+%     rtStopSuccess = cell(nCnd,nSsd);  % Stop success
+% end
+% 
+% % 1.4.4. Inhibition function
+% % -------------------------------------------------------------------------
+% switch lower(simScope)
+%   case 'all'
+%     inhibFunc     = cell(nCnd,1);
+% end
+% 
+% % 1.4.5. Structure of model matrices
+% % -------------------------------------------------------------------------
+% switch simGoal
+%   case 'explore'
+%     modelMat = struct('A',[], ...     % Endogenous connectivity matrix
+%                       'B',[], ...     % Extrinsic modulation matrix
+%                       'C',[], ...     % Exogenous connectivity matrix
+%                       'D',[], ...     % Intrinsic modulation matrix
+%                       'V',[], ...     % Accumulation rate matrix
+%                       'SE',[], ...    % Extrinsic noise matrix
+%                       'SI',[], ...    % Intrinsic noise matrix
+%                       'Z0',[], ...    % Starting value matrix
+%                       'ZC',[], ...    % Threshold matrix
+%                       'zLB',[], ...   % Lower bound on activation
+%                       'accumOns',[], ... % Accumulation onset times
+%                       'terminate',[], ... % Termination matrix
+%                       'blockInput',[], ... % Blocked input matrix
+%                       'latInhib',[]);       % Lateral inhibition matrix
+%                     
+% end
+% 
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. PROCESS INPUTS AND SPECIFY VARIABLES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -42,196 +235,70 @@ function varargout = sam_sim_expt(simGoal,X,SAM,VCor,VIncor,S,terminate,blockInp
 % 1.1. Process inputs
 % ========================================================================= 
 
-switch simGoal
-  case 'optimize'
-    prdOptimData = varargin{1};
-  case 'explore'
-    prd = varargin{1};
+nTrialCat     = size(SAM.optim.obs,1);
+
+% 1.1.1. Experiment variables
+% -------------------------------------------------------------------------------------------------------------------------
+
+N             = SAM.expt.nRsp;
+trialDur      = SAM.expt.trialDur;
+
+nRsp          = SAM.expt.nRsp;
+nStm          = SAM.expt.nStm;
+i1            = [1,cumsum(nRsp(1:end-1)) + 1];          % Index of first response alternative, per class
+iEnd          = cumsum(nRsp);                           % Index of last response alternative, per class
+iRsp          = arrayfun(@(a,b) a:b,i1,iEnd,'Uni',0);   % Indices of all response alternatives, per class
+
+
+% 1.1.2. Model variables
+% -------------------------------------------------------------------------------------------------------------------------
+
+terminate     = SAM.model.mat.terminate;
+blockInput    = SAM.model.mat.interClassBlockInp;
+latInhib      = SAM.model.mat.interClassLatInhib;
+
+
+dt            = SAM.model.accum.dt;
+timeWindow    = SAM.model.accum.window;
+zLB           = SAM.model.accum.zLB;
+tau           = SAM.model.accum.tau;
+accumTWindow  = SAM.model.accum.window;
+
+
+signatureGo   = any(SAM.model.variants.toFit.features(:,:,1),2);
+signatureStop = any(SAM.model.variants.toFit.features(:,:,2),2);
+
+% We can control the random variability in starting point, non-decision time, and accumulation rate
+if SAM.model.accum.randomZ0
+  randomZ0Factor = 1;
+else
+  randomZ0Factor = realmin;
 end
 
-% 1.1.1. Type of choice mechanism
-% -------------------------------------------------------------------------
-choiceMechType  = SAM.des.choiceMech.type;
-
-% 1.1.2. Type of inhibition mechanism
-% -------------------------------------------------------------------------
-inhibMechType   = SAM.des.inhibMech.type;
-
-% 1.1.3. Accumulation mechanism
-% -------------------------------------------------------------------------
-
-% Lower bound on activation
-zLB           = SAM.des.accumMech.zLB;
-
-% Time window during which accumulation is 'recorded'
-timeWindow    = SAM.des.accumMech.timeWindow;
-
-% Time step
-dt            = SAM.des.time.dt;
-
-% Time constant
-tau           = SAM.des.time.tau;
-
-% Model parameters
-% -------------------------------------------------------------------------
-
-% Parameter that varies across conditions
-condParam     = SAM.des.condParam;
-
-% Number of GO and STOP units
-nGo           = SAM.des.nGO;
-nStop         = SAM.des.nSTOP;
-
-durationSTOP  = SAM.des.durationSTOP;
-
-% Simulator parameters
-% -------------------------------------------------------------------------
-simScope      = SAM.sim.scope;
-
-nSim          = SAM.sim.nSim;
-
-trialSimFun   = SAM.sim.trialSimFun;
-
-% Experimental parameters
-% -------------------------------------------------------------------------
-
-% Number of conditions
-nCnd          = SAM.des.expt.nCnd;
-
-% Number of stop-signal delays
-nSsd          = SAM.des.expt.nSsd;
-
-% Stimulus onsets
-stimOns       = SAM.des.expt.stimOns;
-
-% Stimulus durations
-stimDur       = SAM.des.expt.stimDur;
-
-
-switch simGoal
-  case 'explore'
-    
-    % Time windows for alignment on go-signal
-    tWinGo    = SAM.explore.tWinGo;
-    
-    % Time windows for alignment on stop-signal
-    tWinStop  = SAM.explore.tWinStop;
-    
-    % Time windows for alignment on response
-    tWinResp  = SAM.explore.tWinGo;
+if SAM.model.accum.randomT0
+  randomT0Factor = 1;
+else
+  randomT0Factor = realmin;
 end
 
-% 1.2. Specify static variables
-% =========================================================================
+T       = (accumTWindow(1):dt:accumTWindow(2))';
+p   = length(T);
+t1  = 1;                    % First time point
 
-switch simGoal
-  case 'explore'
-    % Cumulative probabilities for quantile averaging of model dynamics
-    CUM_PROB = 0:0.01:1;
-end
+% 1.1.3. Simulation variables
+% -------------------------------------------------------------------------------------------------------------------------
+nSim          = SAM.sim.n;
+trialSimFun   = SAM.sim.fun.trial;
+alignTWindow  = SAM.sim.tWindow;
+rngSeedStage  = SAM.sim.rng.stage;
+rngSeedId     = SAM.sim.rng.id;
 
-% 1.3. Specify dynamic variables
-% =========================================================================
-
-switch lower(simScope)
-  case 'go'
-    % Number of units
-    N = nGo;
-    
-    % Number of model inputs (go and stop stimuli)
-    M = nGo;
-    
-    % Number of trial types: Go trials only
-    nTrType = 1;
-    
-    % Adjust stimulus onsets to include data from Go trials only
-    stimOns   = cellfun(@(a) a(1:M),stimOns,'Uni',0);
-    
-    % Adjust stimulus durations to include data from Go trials only
-    stimDur   = cellfun(@(a) a(1:M),stimDur,'Uni',0);
-    
-  case 'all'
-    % Number of units
-    N = [nGo nStop];
-    
-    % Number of model inputs (go and stop stimuli)
-    M = [nGo nStop];
-    
-    % Number of trial types: Go trials, and Stop trials with nSSD delays
-    nTrType = 1 + nSsd;
-end
-
-% 1.4. Pre-allocate empty arrays
-% =========================================================================
-
-% 1.4.1. Trial numbers
-% -------------------------------------------------------------------------
-nGoCorr         = nan(nCnd,1);         % Go correct
-nGoComm         = nan(nCnd,1);         % Go commission error
-nGoOmit         = nan(nCnd,1);         % Go omission error
-
-switch lower(simScope)
-  case 'all'
-    nStopFailure  = nan(nCnd,nSsd);   % Stop failure
-    nStopSuccess  = nan(nCnd,nSsd);   % Stop success
-end
-
-% 1.4.2. Trial probabilities
-% -------------------------------------------------------------------------
-pGoCorr         = nan(nCnd,1);         % Go correct
-pGoComm         = nan(nCnd,1);         % Go commission error
-pGoOmit         = nan(nCnd,1);         % Go omission error
-
-switch lower(simScope)
-  case 'all'
-    pStopFailure  = nan(nCnd,nSsd);   % Stop failure
-    pStopSuccess  = nan(nCnd,nSsd);   % Stop success
-end
-
-% 1.4.3. Response times
-% -------------------------------------------------------------------------
-rtGoCorr        = cell(nCnd,1);        % Go correct
-rtGoComm        = cell(nCnd,1);        % Go commission error
-
-switch lower(simScope)
-  case 'all'
-    rtStopFailure = cell(nCnd,nSsd);  % Stop failure
-    rtStopSuccess = cell(nCnd,nSsd);  % Stop success
-end
-
-% 1.4.4. Inhibition function
-% -------------------------------------------------------------------------
-switch lower(simScope)
-  case 'all'
-    inhibFunc     = cell(nCnd,1);
-end
-
-% 1.4.5. Structure of model matrices
-% -------------------------------------------------------------------------
-switch simGoal
-  case 'explore'
-    modelMat = struct('A',[], ...     % Endogenous connectivity matrix
-                      'B',[], ...     % Extrinsic modulation matrix
-                      'C',[], ...     % Exogenous connectivity matrix
-                      'D',[], ...     % Intrinsic modulation matrix
-                      'V',[], ...     % Accumulation rate matrix
-                      'SE',[], ...    % Extrinsic noise matrix
-                      'SI',[], ...    % Intrinsic noise matrix
-                      'Z0',[], ...    % Starting value matrix
-                      'ZC',[], ...    % Threshold matrix
-                      'zLB',[], ...   % Lower bound on activation
-                      'accumOns',[], ... % Accumulation onset times
-                      'terminate',[], ... % Termination matrix
-                      'blockInput',[], ... % Blocked input matrix
-                      'latInhib',[]);       % Lateral inhibition matrix
-                    
-end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. SEED THE RANDOM NUMBER GENERATOR (OPTIONAL)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-switch lower(SAM.sim.rngSeedStage)
+switch lower(rngSeedStage)
   case 'sam_sim_expt'
 
     % Note: MEX functions stay in memory until they are cleared.
@@ -239,570 +306,483 @@ switch lower(SAM.sim.rngSeedStage)
     % clearing MEX functions.
 
     clear(char(trialSimFun));
-    rng(SAM.sim.rngID);
+    rng(rngSeedId);
 end
 
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 3. DECODE PARAMETER VECTOR
+% 3. SIMULATE EXPERIMEMT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-                              % OUTPUTS
-[A, ...                       % Endogenous connectivity matrix
- B, ...                       % Extrinsic modulation matrix
- C, ...                       % Exogenous connectivity matrix
- D, ...                       % Intrinsic modulation matrix
- V, ...                       % Accumulation rate matrix
- SE, ...                      % Extrinsic noise matrix
- SI, ...                      % Extrinsic noise matrix
- Z0, ...                      % Starting value matrix
- ZC, ...                      % Threshold matrix
- accumOns] ...                % Accumulation onset times
- ...
- = sam_decode_x( ...          % FUNCTION
- ...                          % INPUTS
- SAM, ...                     % SAM structure
- X, ...                       % Parameter vector
- stimOns, ...                 % Stimulus onsets
- stimDur, ...                 % Stimulus durations
- N, ...                       % Number of model units (per accumulator class)
- M, ...                       % Number of model inputs (per accumulator class)
- VCor, ...                    % Precursor matrix for correct rates
- VIncor, ...                  % Precursor matrix for error rates
- S);                          % Precursor matrix for noise
-
-% Lower bound on activation
-ZLB = zLB*ones(sum(N),1);
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 4. SIMULATE EXPERIMEMT
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% Loop over task conditions                 
-for iCnd = 1:nCnd
+% Loop over trial categories
+for iTrialCat = 1:nTrialCat
   
-  % Get unit indices for this task condition
-  iGO   = SAM.des.iGO{iCnd};
-  iGOT  = SAM.des.iGOT{iCnd};
-  iGONT = SAM.des.iGONT{iCnd};
-  iSTOP = SAM.des.iSTOP{iCnd};
+  trialCat    = SAM.optim.obs.trialCat{iTrialCat};
+  stmOns      = SAM.optim.obs.onset{iTrialCat};
+  stmDur      = SAM.optim.obs.duration{iTrialCat};
   
-  % Loop over trial types
-  for iTrType = 1:nTrType
-    
-    % 4.1. Specify timing diagram of stimuli
-    % =====================================================================
-    switch simGoal
-      case 'explore'
-        
-        % 4.1.1. Compute timing diagram
-        % -----------------------------------------------------------------
-                                          % OUTPUT
-        [tStm, ...                        % - Time
-         uStm] ...                        % - Strength of stimulus (t)
-        = sam_spec_timing_diagram ...     % FUNCTION
-         ...                              % INPUT
-        (stimOns{iCnd,iTrType}(:)', ...   % - Stimulus onset time
-         stimDur{iCnd,iTrType}(:)', ...   % - Stimulus duration
-         [], ...                          % - Strength (default = 1);
-         0, ...                           % - Magnitude of extrinsic noise
-         dt, ...                          % - Time step
-         timeWindow);                     % - Time window
-        
-       % 4.1.2. Log timing diagram
-       % ------------------------------------------------------------------
-       
-        if iTrType == 1
-          prd.tDiagram{iCnd,iTrType}.stim.go.X = tStm;
-          prd.tDiagram{iCnd,iTrType}.stim.go.Y = uStm;
-        elseif iTrType > 1
-          prd.tDiagram{iCnd,iTrType}.stim.stop.X = tStm;
-          prd.tDiagram{iCnd,iTrType}.stim.stop.Y = uStm;
-        end
-    end
-    
-    % 4.2. Timing diagram of model inputs
-    % =====================================================================
-    
-    % Onset and duration of the accumulation process
-    thisAccumOns = accumOns{iCnd,iTrType}(:)';
-    thisAccumDur = stimDur{iCnd,iTrType}(:)';
-    
-    % 4.2.1. Adjust duration of the STOP process, if needed
-    % ---------------------------------------------------------------------
-    if iTrType > 1
-      switch durationSTOP
+  iTargetGO       = find(SAM.optim.modelMat.iTarget{iTrialCat}{1});
+  iNonTargetGO    = find(SAM.optim.modelMat.iNonTarget{iTrialCat}{1});
+  iGO             = sort([iTargetGO(:);iNonTargetGO(:)]);
+  iTargetSTOP     = find(SAM.optim.modelMat.iTarget{iTrialCat}{2});
+  iNonTargetSTOP  = find(SAM.optim.modelMat.iNonTarget{iTrialCat}{2});
+  iSTOP           = sort([iTargetSTOP(:);iNonTargetSTOP(:)]);
+  
+  % Pre-allocate response time and response arrays
+  rt  = inf(sum(N),nSim);
+  
+  switch simGoal
+    case 'explore'
+      z = nan(sum(nRsp),nSim,p);
+      uLog = nan(sum(nStm),nSim,p);
+  end
+  
+  % 3.1. Decode parameter vector
+  % =====================================================================
+  [endoConn, ...
+   extrMod, ...
+   exoConn, ...
+   intrMod, ...
+   V, ...
+   SE, ...
+   SI, ...
+   Z0, ...
+   ZC, ...
+   T0] ...
+   ...
+   = sam_decode_x( ...
+   ...
+   SAM, ...
+   X, ...
+   iTrialCat);
+  
+  
+  
+  n   = size(endoConn,1);     % Number of units
+  m   = size(exoConn,2);      % Number of inputs to units
+  ZLB = zLB*ones(n,1);
+  
+  % 3.2. Simulate trials
+  % =====================================================================
+  for iTr = 1:nSim
+%   parfor iTr = 1:nSim
+
+    % 3.2.1. Timing diagram of model inputs
+    % -----------------------------------------------------------------------------------------------------------------
+
+    accumOns = stmOns(:)' + T0(:)' - T0(:)'.*randomT0Factor.*rand(1,m);
+
+    if ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
+      switch lower(SAM.accum.durSTOP)
+        case 'signal'
+          accumDur = stmDur(:)';
         case 'trial'
-          % STOP accumulation process lasts the entire trial
-          thisAccumDur(iSTOP) = timeWindow(2) - thisAccumOns(iSTOP);
+          accumDur = stmDur(:)';
+          accumDur(iRsp{2}) = trialDur - accumOns(iRsp{2});
+        otherwise
+          accumDur = stmDur(:)';
       end
+    else
+      accumDur = stmDur(:)';
     end
-    % 4.2.2. Compute timing diagram
-    % ---------------------------------------------------------------------
-    
-                                          % OUTPUT
+
     [t, ...                               % - Time
      u] ...                               % - Strength of model input
-     = sam_spec_timing_diagram ...        % FUNCTION
-     ...                                  % INPUT
-    (thisAccumOns, ...                    % - Accumulation onset time
-     thisAccumDur, ...                    % - Stimulus duration
-     V{iCnd,iTrType}, ...                 % - Input strength
-     SE{iCnd,iTrType}, ...                % - Magnitude of extrinsic noise
+    = sam_spec_timing_diagram ...         % FUNCTION
+    ...                                   % INPUT
+    (accumOns, ...                        % - Accumulation onset time
+     accumDur, ...                        % - Stimulus duration
+     V, ...                               % - Input strength
+     SE, ...                              % - Magnitude of extrinsic noise
      dt, ...                              % - Time step
      timeWindow);                         % - Time window
-    
-    % 4.2.3. Log timing diagram
-    % ---------------------------------------------------------------------
-    switch simGoal
-      case 'explore'
-        if iTrType == 1
-          prd.tDiagram{iCnd,iTrType}.modelinput.go.X = t;
-          prd.tDiagram{iCnd,iTrType}.modelinput.go.Y = u;
-        elseif iTrType > 1
-          prd.tDiagram{iCnd,iTrType}.modelinput.stop.X = t;
-          prd.tDiagram{iCnd,iTrType}.modelinput.stop.Y = u;
-        end
-    end
-    
-    % 4.3. Simulate trials
-    % =====================================================================
-    
-    % Pre-defining the following variables reduces the overhead in the trial
-    % simulation MEX functions called below
-    n   = size(A,1);  % Number of units
-    m   = size(C,1);  % Number of inputs to units
-    p   = size(u,2);  % Number of time points
-    t1  = 1;          % First time point
 
-    % Pre-allocate response time and response arrays
-    rt  = inf(sum(N),nSim);
-    
+    t = t(:)';
+
+    % 3.2.2. Simulate trials
+    % -----------------------------------------------------------------------------------------------------------------
+
     switch simGoal
       case 'optimize'
-        
-        % Reduce overhea in parfor loops by getting rid of indexing (and
-        % using feval)
-        thisC  = C{iCnd};
-        thisSI = diag(SI{iCnd,iTrType});
-        thisZC = ZC{iCnd};
-        thisT  = t(:)';
-        
-        % Reduce overhead in MEX functions by preallocating trial-dependent
-        % variables
-        thisRt    = inf(n,1);       % Response time
-        thisResp  = false(n,1);     % Response (i.e. whether a unit has reached zc)
-        thisZ     = nan(n,p);       % Activation
-        
-        % Loop over trials
-        parfor iTr = 1:nSim
-                                          % OUTPUT                          
-           rt(:,iTr) ...                  % - Response time
-           =  feval ...                   % FUNCTION
-           ...                            % INPUT
-          (trialSimFun, ...               % - Function handle
-           u, ...                         % - Timing diagram of model inputs
-           A, ...                         % - Endogenous connectivity matrix
-           B, ...                         % - Extrinsic modulation matrix
-           thisC, ...                     % - Exogenous connectivity matrix
-           D, ...                         % - Intrinsic modulation matrix
-           thisSI, ...                    % - Intrinsic noise matrix
-           Z0, ...                        % - Starting point matrix
-           thisZC, ...                    % - Threshold matrix
-           ZLB, ...                       % - Activation lower bound matrix
-           dt, ...                        % - Time step
-           tau, ...                       % - Time scale
-           thisT, ...                     % - Time points
-           terminate, ...                 % - Termination matrix
-           blockInput, ...                % - Blocked input matrix
-           latInhib, ...                  % - Lateral inhibition matrix
-           n, ...                         % - Number of units
-           m, ...                         % - Number of inputs
-           p, ...                         % - Number of time points
-           t1, ...                        % - First time index
-           thisRt, ...                    % - Array for current trial's RT
-           thisResp, ...                  % - Array for current trial's response
-           thisZ);                        % - Array for current trial's dynamics);
-        end
-        
+        rt(:,iTr) ...                  % - Response time
+        =  feval ...                   % FUNCTION
+        ...                            % INPUT
+        (trialSimFun, ...               % - Function handle
+        u, ...                         % - Timing diagram of model inputs
+        endoConn, ...                  % - Endogenous connectivity matrix
+        extrMod, ...                   % - Extrinsic modulation matrix
+        exoConn, ...                   % - Exogenous connectivity matrix
+        intrMod, ...                   % - Intrinsic modulation matrix
+        SI, ...                        % - Intrinsic noise matrix
+        Z0 - (Z0-zLB).*randomZ0Factor.*rand(n,1), ...                        % - Starting point matrix
+        ZC, ...                        % - Threshold matrix
+        ZLB, ...                       % - Activation lower bound matrix
+        dt, ...                        % - Time step
+        tau, ...                       % - Time scale
+        t, ...                         % - Time points
+        terminate, ...                 % - Termination matrix
+        blockInput, ...                % - Blocked input matrix
+        latInhib, ...                  % - Lateral inhibition matrix
+        n, ...                         % - Number of units
+        m, ...                         % - Number of inputs
+        p, ...                         % - Number of time points
+        t1, ...                        % - First time index
+        inf(n,1), ...                  % - Array for current trial's RT
+        false(n,1), ...                % - Array for current trial's response
+        nan(n,p));                     % - Array for current trial's dynamics)
+      
       case 'explore'
         
-        % Display progress
-        fprintf(['Simulating %d trials for trial type %d (of %d) in ', ...
-                 'condition %d (of %d) \n'],nSim,iTrType,nTrType,iCnd,nCnd);
-        
-        % Pre-allocate response and dynamics array
-        z = nan(sum(N),nSim,numel(t));
-        
-        % Reduce overhea in parfor loops by getting rid of indexing (and
-        % using feval)
-        thisC  = C{iCnd};
-        thisSI = diag(SI{iCnd,iTrType});
-        thisZC = ZC{iCnd};
-        thisT  = t(:)';
-        
-        % Reduce overhead in MEX functions by preallocating trial-dependent
-        % variables
-        thisRt    = inf(n,1);       % Response time
-        thisResp  = false(n,1);     % Response (i.e. whether a unit has reached zc)
-        thisZ     = nan(n,p);       % Activation
-        
-        % Loop over trials
-        parfor iTr = 1:nSim
-                                          % OUTPUT                          
-          [rt(:,iTr), ...                 % - Response time
-           ~, ...                         % - Responses
-           z(:,iTr,:)] ...                % - Dynamics
-           =  feval ...                   % FUNCTION
-           ...                            % INPUT
-          (trialSimFun, ...               % - Function handle
-           u, ...                         % - Timing diagram of model inputs
-           A, ...                         % - Endogenous connectivity matrix
-           B, ...                         % - Extrinsic modulation matrix
-           thisC, ...                     % - Exogenous connectivity matrix
-           D, ...                         % - Intrinsic modulation matrix
-           thisSI, ...                    % - Intrinsic noise matrix
-           0 + (Z0-0).*rand(n,1), ...     % - Starting point matrix (uniformly distributed)
-           thisZC, ...                    % - Threshold matrix
-           ZLB, ...                       % - Activation lower bound matrix
-           dt, ...                        % - Time step
-           tau, ...                       % - Time scale
-           thisT, ...                     % - Time points
-           terminate, ...                 % - Termination matrix
-           blockInput, ...                % - Blocked input matrix
-           latInhib, ...                  % - Lateral inhibition matrix
-           n, ...                         % - Number of units
-           m, ...                         % - Number of inputs
-           p, ...                         % - Number of time points
-           t1, ...                        % - First time index
-           thisRt, ...                    % - Array for current trial's RT
-           thisResp, ...                  % - Array for current trial's response
-           thisZ);                        % - Array for current trial's dynamics
-        end
+        [rt(:,iTr), ...                  % - Response time
+         ~, ...                         % - Responses
+         z(:,iTr,:)] ...                % - Dynamics  
+        ...
+        =  feval ...                   % FUNCTION
+        ...                            % INPUT
+        (trialSimFun, ...               % - Function handle
+        u, ...                         % - Timing diagram of model inputs
+        endoConn, ...                  % - Endogenous connectivity matrix
+        extrMod, ...                   % - Extrinsic modulation matrix
+        exoConn, ...                   % - Exogenous connectivity matrix
+        intrMod, ...                   % - Intrinsic modulation matrix
+        SI, ...                        % - Intrinsic noise matrix
+        Z0 - (Z0-zLB).*randomZ0Factor.*rand(n,1), ...                        % - Starting point matrix
+        ZC, ...                        % - Threshold matrix
+        ZLB, ...                       % - Activation lower bound matrix
+        dt, ...                        % - Time step
+        tau, ...                       % - Time scale
+        t, ...                         % - Time points
+        terminate, ...                 % - Termination matrix
+        blockInput, ...                % - Blocked input matrix
+        latInhib, ...                  % - Lateral inhibition matrix
+        n, ...                         % - Number of units
+        m, ...                         % - Number of inputs
+        p, ...                         % - Number of time points
+        t1, ...                        % - First time index
+        inf(n,1), ...                  % - Array for current trial's RT
+        false(n,1), ...                % - Array for current trial's response
+        nan(n,p));                     % - Array for current trial's dynamics)
+      
+        uLog(:,iTr,:) = u;
     end
+  end
     
-    % 4.4. Classify trials
-    % =====================================================================
+  % 3.4. Classify trials
+  % =====================================================================
+  
+  if ~isempty(regexp(trialCat,'goTrial.*', 'once'))
     
-    if iTrType == 1
-      
-      % 4.4.1. Go correct trial: only one RT, produced by target GO unit
+    % 4.4.1. Go correct trial: only one RT, produced by target GO unit
+    % -------------------------------------------------------------------
+    % Criteria (all should be met):
+    % - Target GO unit produced an RT
+    % - Target GO unit is the only unit having produced an RT
+    iCorr = rt(iTargetGO,:) < Inf & sum(rt < Inf) == 1;
+    
+    % 4.4.2. Go commission error trial: any RT produced by a non-target GO unit
+    % -------------------------------------------------------------------
+    % Criteria (all should be met):
+    % - At least one non-target GO unit has produced an RT
+    iError = any(rt(iNonTargetGO,:) < Inf,1);
+
+    % 4.4.3. Go omission error trial: no RT
+    % -------------------------------------------------------------------
+    % Criteria (all should be met):
+    % - No unit has produced an RT
+    iOmit = sum(rt < Inf) == 0;
+
+  elseif ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
+    
+    if all(SAM.model.mat.endoConn.nonSelfOther == 0) % GO and STOP race
+      % Stop success trial
       % -------------------------------------------------------------------
-      % Criteria (all should be met):
-      % - Target GO unit produced an RT
-      % - Target GO unit is the only unit having produced an RT
-      iGoCorr = rt(iGOT,:) < Inf & sum(rt < Inf) == 1;
-      
-      % 4.4.2. Go commission error trial: any RT produced by a non-target GO unit
-      % -------------------------------------------------------------------
-      % Criteria (all should be met):
-      % - At least one non-target GO unit has produced an RT
-      iGoComm = any(rt(iGONT,:) < Inf,1);
-      
-      % 4.4.3. Go omission error trial: no RT
-      % -------------------------------------------------------------------
-      % Criteria (all should be met):
-      % - No unit has produced an RT
-      iGoOmit = sum(rt < Inf) == 0;
-      
-    elseif iTrType > 1
+      % Criteria (*any* should be met)
+      % - STOP unit produces a shorter RT than any other GO units
+      % - None of the units produced an RT
+      iCorr = rt(iTargetSTOP,:) < min(rt(iGO,:),[],1) | all(rt == Inf);
       
       % Stop failure trial
       % -------------------------------------------------------------------
-      switch inhibMechType
-        case 'race'
-          % Criteria
-          % - The fastest GO unit has a shorter RT than the STOP unit
-          iStopFailure = min(rt(iGO,:),[],1) < rt(iSTOP,:);
-          
-          % Note: no distinction made between correct and error choice in
-          % Go task
-          
-        otherwise
-          % Criteria:
-          % - At least one GO unit has produced an RT
-          iStopFailure = any(rt(iGO,:) < Inf);
-          
-          % Note: no distinction made between correct and error choice in
-          % Go task
-          
-          % Note: no distinction made between trials in which the STOP unit
-          % did and did not produce an RT (i.e. STOP units cannot terminate
-          % the trial under 'blocked input' and 'lateral inhibition'
-          % inhibition mechanisms)
-          
-      end
+      % Criteria
+      % - The fastest GO unit has a shorter RT than any STOP unit
+      iError = min(rt(iGO,:),[],1) < rt(iSTOP,:);
       
+      % Note: no distinction made between correct and error choice in
+      % Go task
+      
+      iOmit = [];
+    else
       % Stop success trial
       % -------------------------------------------------------------------
-      switch inhibMechType
-        case 'race'
-          % Criteria (*any* should be met)
-          % - STOP unit produces a shorter RT than any other GO units
-          % - None of the units produced an RT
-          iStopSuccess = rt(iSTOP,:) < min(rt(iGO,:),[],1) | all(rt == Inf);
-          
-        otherwise
-          % Criteria (all should be met):
-          % - None of the GO units produced an RT
-          iStopSuccess = all(rt(iGO,:) == Inf);
-          
-%           % Stop succes trial: STOP finishes, *and* none of the GO finishes
-%           iStopSuccess = rt(iSTOP,:) < min(rt(iGO,:)) & all(rt == Inf);
-          
-          % Note: no distinction made between trials in which the STOP unit
-          % did and did not produce and RT. We may be more stringent,
-          % requiring that STOP finishes, or we could look at how
-          % computation of SSRT is influenced by including trials in which
-          % STOP did not finish versus when these trials are not included.
-          
-      end
-    end
-    
-    % 4.5. Log model predictions
-    % =====================================================================
-    
-    % 4.5.1. Trial numbers
-    % ---------------------------------------------------------------------
-    if iTrType == 1
-      nGoCorr(iCnd) = numel(find(iGoCorr));
-      nGoComm(iCnd) = numel(find(iGoComm));
-      nGoOmit(iCnd) = numel(find(iGoOmit));
-    elseif iTrType > 1
-      nStopFailure(iCnd,iTrType-1) = numel(find(iStopFailure));
-      nStopSuccess(iCnd,iTrType-1) = numel(find(iStopSuccess));
-    end
-    
-    % 4.5.2. Trial probabilities
-    % ---------------------------------------------------------------------
-    if iTrType == 1
-      pGoCorr(iCnd)   = nGoCorr(iCnd)./nSim;
-      pGoComm(iCnd)   = nGoComm(iCnd)./nSim;
-      pGoOmit(iCnd)   = nGoOmit(iCnd)./nSim;
+      % Criteria (all should be met):
+      % - None of the GO units produced an RT
+      iCorr = all(rt(iGO,:) == Inf);
       
-    elseif iTrType > 1
-      pStopFailure(iCnd,iTrType-1) = nStopFailure(iCnd,iTrType-1)./nSim;
-      pStopSuccess(iCnd,iTrType-1) = nStopSuccess(iCnd,iTrType-1)./nSim;
-    end
-    
-    % 4.5.3. Trial response times
-    % ---------------------------------------------------------------------
-    if iTrType == 1
+      % Note: no distinction made between trials in which the STOP unit
+      % did and did not produce and RT. We may be more stringent,
+      % requiring that STOP finishes, or we could look at how
+      % computation of SSRT is influenced by including trials in which
+      % STOP did not finish versus when these trials are not included.
       
-      % Go correct trials
-      if nGoCorr(iCnd) > 0
-        rtGoCorr{iCnd}  = sort(rt(iGOT,iGoCorr)) - stimOns{iCnd,iTrType}(iGOT);
-      end
+      % Stop failure trial
+      % -------------------------------------------------------------------
+      % Criteria:
+      % - At least one GO unit has produced an RT
+      iError = any(rt(iGO,:) < Inf);
 
-      % Go commission error trials
-      if nGoComm(iCnd) > 0
-        rtGoComm{iCnd}  = sort(min(rt(iGONT,iGoComm),[],1)) - stimOns{iCnd,iTrType}(iGOT);
-        % Note: stimOns for GOT and GONT are the same; I use iGOT instead
-        % of iGONT because iGOT is always a scalar, iGONT not.
-      end
+      % Note: no distinction made between correct and error choice in
+      % Go task
+
+      % Note: no distinction made between trials in which the STOP unit
+      % did and did not produce an RT (i.e. STOP units cannot terminate
+      % the trial under 'blocked input' and 'lateral inhibition'
+      % inhibition mechanisms)
       
-    elseif iTrType > 1
-      
-      % Stop failure trials
-      if nStopFailure(iCnd,iTrType-1) > 0
-        rtStopFailure{iCnd,iTrType-1} = sort(min(rt(iGO,iStopFailure),[],1)) - stimOns{iCnd,iTrType}(iGOT);
-      end
-      
-      % Stop success trials
-      if nStopSuccess(iCnd,iTrType-1) > 0
-        rtStopSuccess{iCnd,iTrType-1} = sort(rt(iSTOP,iStopSuccess)) - stimOns{iCnd,iTrType}(iSTOP);
-      end
+      iOmit = [];
     end
     
-    % 4.5.4. Model dynamics
-    % ---------------------------------------------------------------------
-    
-    switch simGoal
-      case 'explore'
-        if iTrType == 1
-          
-          % Go correct quantile averaged dynamics
-          if nGoCorr(iCnd) >= 1
-            
-            % Randomly sample one non-target GO unit
-            thisIGONT = randsample([iGONT(:);iGONT(:)],1);  % N.B. Repeating iGONT prevents that iGONT is a scalar, under which randsample samples from 1:iGONT
-            
-            % Get event times of go-signals and correct responses  
-            etGo = repmat(stimOns{iCnd,iTrType}(iGOT),nGoCorr(iCnd),1);
-            etResp = rt(iGOT,iGoCorr);
-          
-            % Get quantile averaged dynamics of GOT aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.GoCorr.goStim.GOT.qX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.goStim.GOT.qY, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.goStim.GOT.sX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.goStim.GOT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoCorr,iGOT,etGo,CUM_PROB,tWinGo);
-            
-            
-            % Get quantile averaged dynamics of GONT aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.GoCorr.goStim.GONT.qX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.goStim.GONT.qY, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.goStim.GONT.sX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.goStim.GONT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoCorr,thisIGONT,etGo,CUM_PROB,tWinGo);
-            
-          
-            % Get quantile averaged dynamics of GOT aligned on response
-            [prd.dyn{iCnd,iTrType}.GoCorr.resp.GOT.qX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.resp.GOT.qY, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.resp.GOT.sX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.resp.GOT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoCorr,iGOT,etResp,CUM_PROB,tWinGo);
-            
-            % Get quantile averaged dynamics of GONT aligned on response
-            [prd.dyn{iCnd,iTrType}.GoCorr.resp.GONT.qX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.resp.GONT.qY, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.resp.GONT.sX, ...
-             prd.dyn{iCnd,iTrType}.GoCorr.resp.GONT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoCorr,thisIGONT,etResp,CUM_PROB,tWinGo);
-          end
-          
-          if nGoComm(iCnd) >= 1
-            
-            % Get event times of go-signals and error responses  
-            etGo = repmat(stimOns{iCnd,iTrType}(iGOT),nGoComm(iCnd),1);
-            [etResp,iGONTE]   = min(rt(:,iGoComm),[],1);
-            
-            % Get quantile averaged dynamics of GOT aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.GoComm.goStim.GOT.qX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.goStim.GOT.qY, ...
-             prd.dyn{iCnd,iTrType}.GoComm.goStim.GOT.sX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.goStim.GOT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoComm,iGOT,etGo,CUM_PROB,tWinGo);
-          
-            % Get quantile averaged dynamics of GONTE aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.GoComm.goStim.GONTE.qX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.goStim.GONTE.qY, ...
-             prd.dyn{iCnd,iTrType}.GoComm.goStim.GONTE.sX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.goStim.GONTE.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoComm,iGONTE,etGo,CUM_PROB,tWinGo);
-          
-            % Get quantile averaged dynamics of GOT aligned on response
-            [prd.dyn{iCnd,iTrType}.GoComm.resp.GOT.qX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.resp.GOT.qY, ...
-             prd.dyn{iCnd,iTrType}.GoComm.resp.GOT.sX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.resp.GOT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoComm,iGOT,etResp,CUM_PROB,tWinResp);
-          
-            % Get quantile averaged dynamics of GONTE aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.GoComm.resp.GONTE.qX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.resp.GONTE.qY, ...
-             prd.dyn{iCnd,iTrType}.GoComm.resp.GONTE.sX, ...
-             prd.dyn{iCnd,iTrType}.GoComm.resp.GONTE.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iGoComm,iGONTE,etResp,CUM_PROB,tWinResp);
-          end
-          
-        elseif iTrType > 1
-          
-          if nStopFailure(iCnd,iTrType-1) >= 1
-            
-            % Get event times of go-signals, stop-signals and error responses  
-            etGo = repmat(stimOns{iCnd,iTrType}(iGOT),nStopFailure(iCnd,iTrType-1),1);
-            etStop = repmat(stimOns{iCnd,iTrType}(iSTOP),nStopFailure(iCnd,iTrType-1),1);
-            [etResp,iGORESP]   = min(rt(iGO,iStopFailure),[],1);
-            iGORESP = iGO(iGORESP);
-            
-            % Get quantile averaged dynamics of GORESP aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.StopFailure.goStim.GORESP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.goStim.GORESP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.goStim.GORESP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.goStim.GORESP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopFailure,iGORESP,etGo,CUM_PROB,tWinGo);
-            
-            % Get quantile averaged dynamics of STOP aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.StopFailure.goStim.STOP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.goStim.STOP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.goStim.STOP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.goStim.STOP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopFailure,iSTOP,etGo,CUM_PROB,tWinGo);
-            
-            % Get quantile averaged dynamics of GORESP aligned on stop-signal
-            [prd.dyn{iCnd,iTrType}.StopFailure.stopStim.GORESP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.stopStim.GORESP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.stopStim.GORESP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.stopStim.GORESP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopFailure,iGORESP,etStop,CUM_PROB,tWinStop);
-            
-            % Get quantile averaged dynamics of STOP aligned on stop-signal
-            [prd.dyn{iCnd,iTrType}.StopFailure.stopStim.STOP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.stopStim.STOP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.stopStim.STOP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.stopStim.STOP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopFailure,iSTOP,etStop,CUM_PROB,tWinStop);
-          
-            % Get quantile averaged dynamics of GORESP aligned on response
-            [prd.dyn{iCnd,iTrType}.StopFailure.resp.GORESP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.resp.GORESP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.resp.GORESP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.resp.GORESP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopFailure,iGORESP,etResp,CUM_PROB,tWinResp);
-            
-            % Get quantile averaged dynamics of STOP aligned on response
-            [prd.dyn{iCnd,iTrType}.StopFailure.resp.STOP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.resp.STOP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.resp.STOP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopFailure.resp.STOP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopFailure,iSTOP,etResp,CUM_PROB,tWinResp);
-          
-          end
-          
-          if nStopSuccess(iCnd,iTrType-1) >= 1
-            
-            % Get event times of go-signals, stop-signals and error responses  
-            etGo = repmat(stimOns{iCnd,iTrType}(iGOT),nStopSuccess(iCnd,iTrType-1),1);
-            etStop = repmat(stimOns{iCnd,iTrType}(iSTOP),nStopSuccess(iCnd,iTrType-1),1);
-            
-            % Get quantile averaged dynamics of GORESP aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.StopSuccess.goStim.GOT.qX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.goStim.GOT.qY, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.goStim.GOT.sX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.goStim.GOT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopSuccess,iGOT,etGo,CUM_PROB,tWinGo);
-            
-            % Get quantile averaged dynamics of STOP aligned on go-signal
-            [prd.dyn{iCnd,iTrType}.StopSuccess.goStim.STOP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.goStim.STOP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.goStim.STOP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.goStim.STOP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopSuccess,iSTOP,etGo,CUM_PROB,tWinGo);
-            
-            % Get quantile averaged dynamics of GORESP aligned on stop-signal
-            [prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.GOT.qX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.GOT.qY, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.GOT.sX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.GOT.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopSuccess,iGOT,etStop,CUM_PROB,tWinStop);
-            
-            % Get quantile averaged dynamics of STOP aligned on stop-signal
-            [prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.STOP.qX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.STOP.qY, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.STOP.sX, ...
-             prd.dyn{iCnd,iTrType}.StopSuccess.stopStim.STOP.sY] ...
-            = sam_get_dynamics('qav-sample100',t,z,iStopSuccess,iSTOP,etStop,CUM_PROB,tWinStop);
-          
-          end
-        end
-    end
   end
   
-  % 4.5.5. Log inhibition function
-  % -----------------------------------------------------------------------
+  % 3.5. Log model predictions
+  % =====================================================================
+
+  % 3.5.1. Trial numbers
+  % ---------------------------------------------------------------------
+  
+  % Compute
+  nCorr = numel(find(iCorr));
+  nError = numel(find(iError));
+  nOmit = numel(find(iOmit));
+  
+  % Log
+  prd.nTotal(iTrialCat) = nCorr + nError + nOmit;
+  prd.nCorr(iTrialCat) = nCorr;
+  prd.nError(iTrialCat) = nError;
+  prd.nOmit(iTrialCat) = nOmit;
+  
+  
+  % 3.5.2. Trial probabilities
+  % ---------------------------------------------------------------------
+  
+  % Compute
+  pCorr = nCorr./nSim;
+  pError = nError./nSim;
+  pOmit = nOmit./nSim;
+  
+  % Log
+  prd.pTotal(iTrialCat) = pCorr + pError + pOmit;
+  prd.pCorr(iTrialCat) = pCorr;
+  prd.pError(iTrialCat) = pError;
+  prd.pOmit(iTrialCat) = pOmit;
+  
+  % 3.5.3. Trial response times
+  % ---------------------------------------------------------------------
+  if ~isempty(regexp(trialCat,'goTrial.*', 'once'))
+    if nCorr > 0
+      rtCorr = sort(rt(iTargetGO,iCorr)) - stmOns(iTargetGO);
+      
+      prd.rtCorr{iTrialCat} = rtCorr;
+    end
+    
+    if nError > 0
+      rtError = sort(min(rt(iNonTargetGO,iError),[],1)) - stmOns(iTargetGO);
+      
+      % Note: stimOns for iTargetGO and iNonTargetGO are the same; I use iTargetGO instead
+      % of iNonTargetGO because iTargetGO is always a scalar, iNonTargetGO not.
+      
+      prd.rtError{iTrialCat} = rtError;
+    end
+    
+  elseif ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
+    if nCorr > 0
+      rtCorr = sort(rt(iSTOP,iCorr)) - stmOns(iSTOP);
+      
+      prd.rtCorr{iTrialCat} = rtCorr;
+    end
+    
+    if nError > 0
+      rtError = sort(min(rt(iGO,iError),[],1)) - stmOns(iTargetGO);
+      
+      prd.rtError{iTrialCat} = rtError;
+    end
+    
+  end
+  
+  % 3.5.4. Model dynamics
+  % ---------------------------------------------------------------------
   switch simGoal
     case 'explore'
-      switch lower(simScope)
-        case 'all'
-        inhibFunc{iCnd} = nStopFailure(iCnd,:)./nSim;
-      end                         
+      if ~isempty(regexp(trialCat,'goTrial.*', 'once'))
+        
+        % Go correct quantile averaged dynamics
+        if nCorr >= 1
+
+          % Randomly sample one non-target GO unit
+          thisINonTargetGO = randsample([iNonTargetGO(:);iNonTargetGO(:)],1);  % N.B. Repeating iNonTargetGO prevents that iNonTargetGO is a scalar, under which randsample samples from 1:iNonTargetGO
+
+          % Get event times of go-signals and correct responses  
+          etGo = repmat(stmOns(iTargetGO),nCorr,1);
+          etResp = rt(iTargetGO,iCorr);
+
+          % Get quantile averaged dynamics of targetGO aligned on go-signal
+          [prd.dyn{iTrialCat}.corr.goStim.targetGO.qX, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetGO.qY, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetGO.sX, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,iTargetGO,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of nonTargetGO aligned on go-signal
+          [prd.dyn{iTrialCat}.corr.goStim.nonTargetGO.qX, ...
+           prd.dyn{iTrialCat}.corr.goStim.nonTargetGO.qY, ...
+           prd.dyn{iTrialCat}.corr.goStim.nonTargetGO.sX, ...
+           prd.dyn{iTrialCat}.corr.goStim.nonTargetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,thisINonTargetGO,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of targetGO aligned on response
+          [prd.dyn{iTrialCat}.corr.resp.targetGO.qX, ...
+           prd.dyn{iTrialCat}.corr.resp.targetGO.qY, ...
+           prd.dyn{iTrialCat}.corr.resp.targetGO.sX, ...
+           prd.dyn{iTrialCat}.corr.resp.targetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,iTargetGO,etResp,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of nonTargetGO aligned on response
+          [prd.dyn{iTrialCat}.corr.resp.nonTargetGO.qX, ...
+           prd.dyn{iTrialCat}.corr.resp.nonTargetGO.qY, ...
+           prd.dyn{iTrialCat}.corr.resp.nonTargetGO.sX, ...
+           prd.dyn{iTrialCat}.corr.resp.nonTargetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,thisINonTargetGO,etResp,CUM_PROB,alignTWindow.go);
+        end
+
+        if nError >= 1
+
+          % Get event times of go-signals and error responses  
+          etGo = repmat(stmOns(iTargetGO),nError,1);
+          [etResp,iNonTargetGOError]   = min(rt(:,iError),[],1);
+
+          % Get quantile averaged dynamics of target GO aligned on go-signal
+          [prd.dyn{iTrialCat}.error.goStim.targetGO.qX, ...
+           prd.dyn{iTrialCat}.error.goStim.targetGO.qY, ...
+           prd.dyn{iTrialCat}.error.goStim.targetGO.sX, ...
+           prd.dyn{iTrialCat}.error.goStim.targetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iTargetGO,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of error nontarget GO aligned on go-signal
+          [prd.dyn{iTrialCat}.error.goStim.nonTargetGOError.qX, ...
+           prd.dyn{iTrialCat}.error.goStim.nonTargetGOError.qY, ...
+           prd.dyn{iTrialCat}.error.goStim.nonTargetGOError.sX, ...
+           prd.dyn{iTrialCat}.error.goStim.nonTargetGOError.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iNonTargetGOError,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of target GO aligned on response
+          [prd.dyn{iTrialCat}.error.resp.targetGO.qX, ...
+           prd.dyn{iTrialCat}.error.resp.targetGO.qY, ...
+           prd.dyn{iTrialCat}.error.resp.targetGO.sX, ...
+           prd.dyn{iTrialCat}.error.resp.targetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iTargetGO,etResp,CUM_PROB,alignTWindow.resp);
+
+          % Get quantile averaged dynamics of error nontarget GO aligned on go-signal
+          [prd.dyn{iTrialCat}.error.resp.nonTargetGOError.qX, ...
+           prd.dyn{iTrialCat}.error.resp.nonTargetGOError.qY, ...
+           prd.dyn{iTrialCat}.error.resp.nonTargetGOError.sX, ...
+           prd.dyn{iTrialCat}.error.resp.nonTargetGOError.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iNonTargetGOError,etResp,CUM_PROB,alignTWindow.resp);
+        end
+        
+      elseif ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
+        
+        if nError >= 1 % Stop failure trial
+
+          % Get event times of go-signals, stop-signals and error responses  
+          etGo = repmat(stmOns(iTargetGO),nError,1);
+          etStop = repmat(stmOns(iTargetSTOP),nError,1);
+          [etResp,iRespGO]   = min(rt(iGO,iError),[],1);
+          iRespGO = iGO(iRespGO);
+
+          % Get quantile averaged dynamics of respGO aligned on go-signal
+          [prd.dyn{iTrialCat}.error.goStim.respGO.qX, ...
+           prd.dyn{iTrialCat}.error.goStim.respGO.qY, ...
+           prd.dyn{iTrialCat}.error.goStim.respGO.sX, ...
+           prd.dyn{iTrialCat}.error.goStim.respGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iRespGO,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of targetSTOP aligned on go-signal
+          [prd.dyn{iTrialCat}.error.goStim.targetSTOP.qX, ...
+           prd.dyn{iTrialCat}.error.goStim.targetSTOP.qY, ...
+           prd.dyn{iTrialCat}.error.goStim.targetSTOP.sX, ...
+           prd.dyn{iTrialCat}.error.goStim.targetSTOP.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iTargetSTOP,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of respGO aligned on stop-signal
+          [prd.dyn{iTrialCat}.error.stopStim.respGO.qX, ...
+           prd.dyn{iTrialCat}.error.stopStim.respGO.qY, ...
+           prd.dyn{iTrialCat}.error.stopStim.respGO.sX, ...
+           prd.dyn{iTrialCat}.error.stopStim.respGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iRespGO,etStop,CUM_PROB,alignTWindow.stop);
+
+          % Get quantile averaged dynamics of targetSTOP aligned on stop-signal
+          [prd.dyn{iTrialCat}.error.stopStim.targetSTOP.qX, ...
+           prd.dyn{iTrialCat}.error.stopStim.targetSTOP.qY, ...
+           prd.dyn{iTrialCat}.error.stopStim.targetSTOP.sX, ...
+           prd.dyn{iTrialCat}.error.stopStim.targetSTOP.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iTargetSTOP,etStop,CUM_PROB,alignTWindow.stop);
+
+          % Get quantile averaged dynamics of respGO aligned on response
+          [prd.dyn{iTrialCat}.error.resp.respGO.qX, ...
+           prd.dyn{iTrialCat}.error.resp.respGO.qY, ...
+           prd.dyn{iTrialCat}.error.resp.respGO.sX, ...
+           prd.dyn{iTrialCat}.error.resp.respGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iRespGO,etResp,CUM_PROB,alignTWindow.resp);
+
+          % Get quantile averaged dynamics of targetSTOP aligned on response
+          [prd.dyn{iTrialCat}.error.resp.targetSTOP.qX, ...
+           prd.dyn{iTrialCat}.error.resp.targetSTOP.qY, ...
+           prd.dyn{iTrialCat}.error.resp.targetSTOP.sX, ...
+           prd.dyn{iTrialCat}.error.resp.targetSTOP.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iError,iTargetSTOP,etResp,CUM_PROB,alignTWindow.resp);
+
+        end
+
+        if nCorr >= 1
+
+          % Get event times of go-signals and stop-signals
+          etGo = repmat(stmOns(iTargetGO),nCorr,1);
+          etStop = repmat(stmOns(iTargetSTOP),nCorr,1);
+
+          % Get quantile averaged dynamics of target GO aligned on go-signal
+          [prd.dyn{iTrialCat}.corr.goStim.targetGO.qX, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetGO.qY, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetGO.sX, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,iTargetGO,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of target STOP aligned on go-signal
+          [prd.dyn{iTrialCat}.corr.goStim.targetSTOP.qX, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetSTOP.qY, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetSTOP.sX, ...
+           prd.dyn{iTrialCat}.corr.goStim.targetSTOP.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,iTargetSTOP,etGo,CUM_PROB,alignTWindow.go);
+
+          % Get quantile averaged dynamics of target GO aligned on stop-signal
+          [prd.dyn{iTrialCat}.corr.stopStim.targetGO.qX, ...
+           prd.dyn{iTrialCat}.corr.stopStim.targetGO.qY, ...
+           prd.dyn{iTrialCat}.corr.stopStim.targetGO.sX, ...
+           prd.dyn{iTrialCat}.corr.stopStim.targetGO.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,iTargetGO,etStop,CUM_PROB,alignTWindow.stop);
+
+          % Get quantile averaged dynamics of target STOP aligned on stop-signal
+          [prd.dyn{iTrialCat}.corr.stopStim.targetSTOP.qX, ...
+           prd.dyn{iTrialCat}.corr.stopStim.targetSTOP.qY, ...
+           prd.dyn{iTrialCat}.corr.stopStim.targetSTOP.sX, ...
+           prd.dyn{iTrialCat}.corr.stopStim.targetSTOP.sY] ...
+          = sam_get_dynamics('qav-sample100',T,z,iCorr,iTargetSTOP,etStop,CUM_PROB,alignTWindow.stop);
+
+        end
+      end
   end
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 5. OUTPUT
+% 4. OUTPUT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 switch simGoal
@@ -811,10 +791,10 @@ switch simGoal
     % Make one array of trial probabilities and response times
     switch lower(simScope)
       case 'go'
-        prdOptimData.P       = [pGoCorr,pGoComm];
-        prdOptimData.rt      = [rtGoCorr,rtGoComm];
+        prdOptimData.P       = [pCorr,pError];
+        prdOptimData.rt      = [rtCorr,rtError];
       case 'all'
-        prdOptimData.P       = [pGoCorr,pGoComm,pStopFailure];
+        prdOptimData.P       = [pCorr,pGoComm,pStopFailure];
         prdOptimData.rt      = [rtGoCorr,rtGoComm,rtStopFailure];
     end
     
@@ -856,7 +836,7 @@ switch simGoal
     modelMat.Z0 = Z0;
     modelMat.ZC = ZC;
     modelMat.ZLB = ZLB;
-    modelMat.accumOns = accumOns;
+%     modelMat.accumOns = accumOns;
     modelMat.terminate = terminate;
     modelMat.blockInput = blockInput;
     modelMat.latInhib = latInhib;
