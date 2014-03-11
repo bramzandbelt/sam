@@ -340,7 +340,7 @@ for iSubj = 1:nSubj
     
     obs.trialCat{iTrialCat} = tagAll{iTrialCat};
     
-    
+    % If this is a Go trial
     if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*'))
       
       if isequal(signatureGo,[0 0 0]')
@@ -380,6 +380,9 @@ for iSubj = 1:nSubj
                        allObs.rsp1    == combiGo(2,iTrialCat) & ...
                        allObs.cnd     == combiGo(3,iTrialCat));
       end
+      
+      
+    % If this is a Stop trial 
     elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*'))
       
       % Select trials based on GO criteria
@@ -459,7 +462,11 @@ for iSubj = 1:nSubj
       
       % Only keep trials satisfying both criteria
       iSelect = intersect(iSelectGo,iSelectStop);
- 
+
+      
+      
+      
+      
     end
     
     iSelectCorr   = intersect(iSelect, find(allObs.acc == 2));
@@ -495,7 +502,59 @@ for iSubj = 1:nSubj
        obs.pMassError{iTrialCat}]  = sam_bin_data(obs.rtError{iTrialCat},obs.pError(iTrialCat),obs.nError(iTrialCat),qntls,minBinSize);
     end
     
+    
+    if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*'))
+      obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) 0]';
+      obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur(1) 0]';
+    elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*'))
+      obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) stmOns(1) + obs.ssd(iTrialCat)]';
+      obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur]';
+    end
+    
+    
+    
+    
+%     % 4.1.1. Compute timing diagram
+%         % -----------------------------------------------------------------
+%                                           % OUTPUT
+%         [tStm, ...                        % - Time
+%          uStm] ...                        % - Strength of stimulus (t)
+%         = sam_spec_timing_diagram ...     % FUNCTION
+%          ...                              % INPUT
+%         (stimOns(:)', ...                 % - Stimulus onset time
+%          stimDur(:)', ...                 % - Stimulus duration
+%          [], ...                          % - Strength (default = 1);
+%          0, ...                           % - Magnitude of extrinsic noise
+%          dt, ...                          % - Time step
+%          timeWindow);                     % - Time window
+    
   end
+  
+%   % Timing diagram
+%   
+%   ons           = [0 0 0];
+%   dur           = [2000 2000 0];
+%   v             = [3,3,5];
+%   se            = [0.5 0.5 0.5];
+%   dt            = 10;
+%   tWindow       = [-500 2500];
+%  
+%   [t,u] = sam_spec_timing_diagram(ons,dur,v,se,dt,tWindow);
+%   figure;stairs(t,u');
+%   xlabel('time (ms)')
+%   ylabel('signal strength (a.u.)');
+%   
+%   
+%   [tStm, ...                        % - Time
+%    uStm] ...                        % - Strength of stimulus (t)
+%   = sam_spec_timing_diagram ...     % FUNCTION
+%    ...                              % INPUT
+%   (stimOns{iCnd,iTrType}(:)', ...   % - Stimulus onset time
+%    stimDur{iCnd,iTrType}(:)', ...   % - Stimulus duration
+%    [], ...                          % - Strength (default = 1);
+%    0, ...                           % - Magnitude of extrinsic noise
+%    dt, ...                          % - Time step
+%    timeWindow);  
   
 break  
   
