@@ -1,13 +1,13 @@
-function varargout = sam_sim_expt(simGoal,X,SAM,varargin)
+function prd = sam_sim_expt(simGoal,X,SAM)
 % Simulates response times and model dynamics for go and stop trials of the
 % stop-signal task
 %  
 % DESCRIPTION 
 % <Describe more extensively what this function does> 
 %  
-% SYNTAX 
-% prdOptimData = SAM_SIM_EXPT('optimize',X,SAM,prdOptimData); 
-% [prd,modelMat] = SAM_SIM_EXPT('explore',X,SAM,prd); 
+% SYNTAX
+% prd = SAM_SIM_EXPT('optimize',X,SAM); 
+% prd = SAM_SIM_EXPT('explore',X,SAM); 
 %  
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
@@ -124,11 +124,11 @@ function varargout = sam_sim_expt(simGoal,X,SAM,varargin)
 % % 1.2. Specify static variables
 % % =========================================================================
 % 
-switch simGoal
-  case 'explore'
-    % Cumulative probabilities for quantile averaging of model dynamics
-    CUM_PROB = 0:0.01:1;
-end
+% switch simGoal
+%   case 'explore'
+%     % Cumulative probabilities for quantile averaging of model dynamics
+%     CUM_PROB = 0:0.01:1;
+% end
 % 
 % % 1.3. Specify dynamic variables
 % % =========================================================================
@@ -292,7 +292,21 @@ trialSimFun   = SAM.sim.fun.trial;
 alignTWindow  = SAM.sim.tWindow;
 rngSeedStage  = SAM.sim.rng.stage;
 rngSeedId     = SAM.sim.rng.id;
+qntls         = SAM.optim.cost.stat.cumProb;
+minBinSize    = SAM.optim.cost.stat.minBinSize;
+    
+% 1.1.4. Optimization variables
+% -------------------------------------------------------------------------------------------------------------------------
+prd           = SAM.optim.prd;
 
+% 1.2. Specify static variables
+% =========================================================================
+
+switch simGoal
+  case 'explore'
+    % Cumulative probabilities for quantile averaging of model dynamics
+    CUM_PROB = 0:0.01:1;
+end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. SEED THE RANDOM NUMBER GENERATOR (OPTIONAL)
@@ -364,8 +378,7 @@ for iTrialCat = 1:nTrialCat
   
   % 3.2. Simulate trials
   % =====================================================================
-  for iTr = 1:nSim
-%   parfor iTr = 1:nSim
+  parfor iTr = 1:nSim
 
     % 3.2.1. Timing diagram of model inputs
     % -----------------------------------------------------------------------------------------------------------------
@@ -373,7 +386,7 @@ for iTrialCat = 1:nTrialCat
     accumOns = stmOns(:)' + T0(:)' - T0(:)'.*randomT0Factor.*rand(1,m);
 
     if ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
-      switch lower(SAM.accum.durSTOP)
+      switch lower(SAM.model.accum.durSTOP)
         case 'signal'
           accumDur = stmDur(:)';
         case 'trial'
@@ -489,7 +502,7 @@ for iTrialCat = 1:nTrialCat
     % -------------------------------------------------------------------
     % Criteria (all should be met):
     % - No unit has produced an RT
-    iOmit = sum(rt < Inf) == 0;
+%     iOmit = sum(rt < Inf) == 0;
 
   elseif ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
     
@@ -510,7 +523,7 @@ for iTrialCat = 1:nTrialCat
       % Note: no distinction made between correct and error choice in
       % Go task
       
-      iOmit = [];
+%       iOmit = [];
     else
       % Stop success trial
       % -------------------------------------------------------------------
@@ -538,7 +551,7 @@ for iTrialCat = 1:nTrialCat
       % the trial under 'blocked input' and 'lateral inhibition'
       % inhibition mechanisms)
       
-      iOmit = [];
+%       iOmit = [];
     end
     
   end
@@ -552,13 +565,13 @@ for iTrialCat = 1:nTrialCat
   % Compute
   nCorr = numel(find(iCorr));
   nError = numel(find(iError));
-  nOmit = numel(find(iOmit));
+%   nOmit = numel(find(iOmit));
   
   % Log
-  prd.nTotal(iTrialCat) = nCorr + nError + nOmit;
+  prd.nTotal(iTrialCat) = nCorr + nError;
   prd.nCorr(iTrialCat) = nCorr;
   prd.nError(iTrialCat) = nError;
-  prd.nOmit(iTrialCat) = nOmit;
+%   prd.nOmit(iTrialCat) = nOmit;
   
   
   % 3.5.2. Trial probabilities
@@ -567,13 +580,13 @@ for iTrialCat = 1:nTrialCat
   % Compute
   pCorr = nCorr./nSim;
   pError = nError./nSim;
-  pOmit = nOmit./nSim;
+%   pOmit = nOmit./nSim;
   
   % Log
-  prd.pTotal(iTrialCat) = pCorr + pError + pOmit;
+  prd.pTotal(iTrialCat) = pCorr + pError;
   prd.pCorr(iTrialCat) = pCorr;
   prd.pError(iTrialCat) = pError;
-  prd.pOmit(iTrialCat) = pOmit;
+%   prd.pOmit(iTrialCat) = pOmit;
   
   % 3.5.3. Trial response times
   % ---------------------------------------------------------------------
@@ -608,8 +621,57 @@ for iTrialCat = 1:nTrialCat
     
   end
   
-  % 3.5.4. Model dynamics
-  % ---------------------------------------------------------------------
+  % 3.5.4. Model matrices used for simulating this trial category
+  % -----------------------------------------------------------------------------------------------------------------------
+  if nCorr > 0
+    
+    [prd.rtQCorr{iTrialCat}, ...
+     prd.pDefectiveCorr{iTrialCat}, ...
+     prd.fCorr{iTrialCat}, ...
+     prd.pMassCorr{iTrialCat}] = ...
+     ...
+     sam_bin_data(...
+     prd.rtCorr{iTrialCat}, ...
+     prd.pCorr(iTrialCat), ...
+     prd.nCorr(iTrialCat), ...
+     qntls, ...
+     minBinSize);
+    
+  end
+  
+  if nError > 0
+    
+    [prd.rtQError{iTrialCat}, ...
+     prd.pDefectiveError{iTrialCat}, ...
+     prd.fError{iTrialCat}, ...
+     prd.pMassError{iTrialCat}] = ...
+     ...
+     sam_bin_data(...
+     prd.rtError{iTrialCat}, ...
+     prd.pError(iTrialCat), ...
+     prd.nError(iTrialCat), ...
+     qntls, ...
+     minBinSize);
+    
+  end
+  
+  % 3.5.5. Model matrices used for simulating this trial category
+  % -----------------------------------------------------------------------------------------------------------------------
+  
+  prd.modelMat{iTrialCat}.endoConn  = endoConn;
+  prd.modelMat{iTrialCat}.extrMod   = extrMod;
+  prd.modelMat{iTrialCat}.exoConn   = exoConn;
+  prd.modelMat{iTrialCat}.intrMod   = intrMod;
+  prd.modelMat{iTrialCat}.Z0        = Z0;
+  prd.modelMat{iTrialCat}.ZC        = ZC;
+  prd.modelMat{iTrialCat}.V         = V;
+  prd.modelMat{iTrialCat}.T0        = T0;
+  prd.modelMat{iTrialCat}.SE        = SE;
+  prd.modelMat{iTrialCat}.SI        = SI;
+  prd.modelMat{iTrialCat}.ZLB       = ZLB;
+  
+  % 3.5.6. Model dynamics
+  % -----------------------------------------------------------------------------------------------------------------------
   switch simGoal
     case 'explore'
       if ~isempty(regexp(trialCat,'goTrial.*', 'once'))
@@ -779,69 +841,4 @@ for iTrialCat = 1:nTrialCat
         end
       end
   end
-end
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 4. OUTPUT
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-switch simGoal
-  case 'optimize'
-    
-    % Make one array of trial probabilities and response times
-    switch lower(simScope)
-      case 'go'
-        prdOptimData.P       = [pCorr,pError];
-        prdOptimData.rt      = [rtCorr,rtError];
-      case 'all'
-        prdOptimData.P       = [pCorr,pGoComm,pStopFailure];
-        prdOptimData.rt      = [rtGoCorr,rtGoComm,rtStopFailure];
-    end
-    
-    % Specify output
-    varargout{1} = prdOptimData;
-    
-  case 'explore'
-    
-    
-    % Place trial probabilities, response times, and inhibition function in
-    % dataset array
-    prd.pGoCorr           = pGoCorr;
-    prd.pGoComm           = pGoComm;
-    prd.pGoOmit           = pGoOmit;
-    
-    prd.rtGoCorr          = rtGoCorr;
-    prd.rtGoComm          = rtGoComm;
-    
-    switch lower(simScope)
-      case 'all'
-        
-        prd.pStopFailure  = pStopFailure;
-        prd.pStopSuccess  = pStopSuccess;
-        prd.inhibFunc     = inhibFunc;
-        
-        prd.rtStopFailure = rtStopFailure;
-        prd.rtStopSuccess = rtStopSuccess;
-        
-    end
-    
-    % Make a struct of model matrices that were used in the simulations
-    modelMat.A = A;
-    modelMat.B = B;
-    modelMat.C = C;
-    modelMat.D = D;
-    modelMat.V = V;
-    modelMat.SE = SE;
-    modelMat.SI = SI;
-    modelMat.Z0 = Z0;
-    modelMat.ZC = ZC;
-    modelMat.ZLB = ZLB;
-%     modelMat.accumOns = accumOns;
-    modelMat.terminate = terminate;
-    modelMat.blockInput = blockInput;
-    modelMat.latInhib = latInhib;
-        
-    % Specify output
-    varargout{1} = prd;
-    varargout{2} = modelMat;
 end
