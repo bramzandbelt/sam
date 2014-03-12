@@ -284,7 +284,7 @@ else
   combiCellStop = mat2cell(combiStop,[1;nFactGo;nFactStop],ones(size(combiStop,2),1));
 end
 
-tagStop = cellfun(@(in1,in2,in3) ['stopTrial_ssd',sprintf('%d',in1),'_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
+tagStop = cellfun(@(in1,in2,in3) ['stopTrial_{ssd',sprintf('%d',in1),'}_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
 
 % All tags
 tagAll = [tagGo,tagStop]';
@@ -462,10 +462,6 @@ for iSubj = 1:nSubj
       
       % Only keep trials satisfying both criteria
       iSelect = intersect(iSelectGo,iSelectStop);
-
-      
-      
-      
       
     end
     
@@ -511,9 +507,6 @@ for iSubj = 1:nSubj
       obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur]';
     end
     
-    
-    
-    
 %     % 4.1.1. Compute timing diagram
 %         % -----------------------------------------------------------------
 %                                           % OUTPUT
@@ -529,155 +522,12 @@ for iSubj = 1:nSubj
 %          timeWindow);                     % - Time window
     
   end
-  
-%   % Timing diagram
+    
+%   % 4.5. Save data
+%   % =======================================================================
+%   fName = fullfile(outputDir,sprintf('data_preproc_subj%.2d.mat',subj(iSubj)));
+%   save(fName, 'obs');
 %   
-%   ons           = [0 0 0];
-%   dur           = [2000 2000 0];
-%   v             = [3,3,5];
-%   se            = [0.5 0.5 0.5];
-%   dt            = 10;
-%   tWindow       = [-500 2500];
-%  
-%   [t,u] = sam_spec_timing_diagram(ons,dur,v,se,dt,tWindow);
-%   figure;stairs(t,u');
-%   xlabel('time (ms)')
-%   ylabel('signal strength (a.u.)');
-%   
-%   
-%   [tStm, ...                        % - Time
-%    uStm] ...                        % - Strength of stimulus (t)
-%   = sam_spec_timing_diagram ...     % FUNCTION
-%    ...                              % INPUT
-%   (stimOns{iCnd,iTrType}(:)', ...   % - Stimulus onset time
-%    stimDur{iCnd,iTrType}(:)', ...   % - Stimulus duration
-%    [], ...                          % - Strength (default = 1);
-%    0, ...                           % - Magnitude of extrinsic noise
-%    dt, ...                          % - Time step
-%    timeWindow);  
-  
-break  
-  
-  
-  for iCnd = 1:nCnd
-                    
-    % 4.2. Classify Go trials
-    % =====================================================================
-
-    % 4.2.1. Trial indices
-    % ---------------------------------------------------------------------
-    iGo             = find(allObs.subj    == subj(iSubj) & ...
-                           allObs.stm2    == 0 & ...
-                           allObs.cnd    == iCnd);
-
-    iGoCorr         = intersect(iGo, ...
-                                find(allObs.acc == 2));
-
-    iGoComm         = intersect(iGo, ...
-                                find(allObs.resp ~= allObs.stm1 & ...
-                                     allObs.rt > 0));
-
-    % 4.2.2. Trial numbers
-    % ---------------------------------------------------------------------
-    nGo(iCnd)       = numel(iGo);
-    nGoCorr(iCnd)   = numel(iGoCorr);
-    nGoComm(iCnd)   = numel(iGoComm);
-
-    % 4.2.3. Response probabilities
-    % ---------------------------------------------------------------------
-    pGoCorr(iCnd)   = nGoCorr(iCnd)./nGo(iCnd);
-    pGoComm(iCnd)   = nGoComm(iCnd)./nGo(iCnd);
-    
-    % 4.2.4. Response time
-    % ---------------------------------------------------------------------
-    rtGoCorr{iCnd}  = sort(allObs.rt(iGoCorr));
-    rtGoComm{iCnd}  = sort(allObs.rt(iGoComm));
-
-    % 4.2.5. Onset & duration
-    % ---------------------------------------------------------------------
-    ons{iCnd,1}     = blkdiag(trueM{:})*[stmOns(1) 0]';
-    dur{iCnd,1}     = blkdiag(trueM{:})*[stmDur(1) 0]';
-    
-    % 4.3. Classify Stop trials
-    % =====================================================================
-
-    for iSsd = 1:nSsd
-
-      % 4.3.1. Trial indices
-      % -------------------------------------------------------------------
-      iStop                   = find(allObs.subj    == subj(iSubj) & ...
-                                     allObs.stm2    == 1 & ...
-                                     allObs.iSSD    == iSsd & ...
-                                     allObs.cnd    == iCnd);
-      iStopSuccess            = intersect(iStop, ...
-                                          find(allObs.acc == 2));
-      iStopFailure            = intersect(iStop, ...
-                                          find(allObs.acc ~= 2));
-
-      % 4.3.2. Trial numbers
-      % -------------------------------------------------------------------
-      nStop(iCnd,iSsd)        = numel(iStop);
-      nStopSuccess(iCnd,iSsd) = numel(iStopSuccess);
-      nStopFailure(iCnd,iSsd) = numel(iStopFailure);
-
-      % 4.3.3. Response probabilities
-      % -------------------------------------------------------------------
-      pStopFailure(iCnd,iSsd)    = nStopFailure(iCnd,iSsd)./nStop(iCnd,iSsd);
-            
-      % 4.3.4. Mean stop signal delay
-      % -------------------------------------------------------------------
-      if ~isempty(iStop)
-          ssd(iCnd,iSsd)      = unique(allObs.ssd(iStop));
-      end
-
-      % 4.3.5. Response time
-      % -------------------------------------------------------------------
-      if ~isempty(iStopFailure)
-          rtStopFailure{iCnd,iSsd}  = sort(allObs.rt(iStopFailure));
-      end
-
-      % 4.3.6. Onset & duration
-      % -------------------------------------------------------------------
-      ons{iCnd,iSsd + 1}     = blkdiag(trueM{:})*[stmOns(1) stmOns(1) + ssd(iCnd,iSsd)]';
-      dur{iCnd,iSsd + 1}     = blkdiag(trueM{:})*[stmDur(1) stmDur(2)]';
-      
-    end
-
-    % 4.3.6. Inhibition function
-    % ---------------------------------------------------------------------
-    inhibFunc(iCnd,:) = reshape(nStopFailure(iCnd,:)./nStop(iCnd,:),1,nSsd);
-    
-  end
-  
-  % 4.4. Log data
-  % =======================================================================
-  obs.nGo           = nGo;
-  obs.nGoCorr       = nGoCorr;
-  obs.nGoComm       = nGoComm;
-    
-  obs.nStop         = nStop;
-  obs.nStopSuccess  = nStopSuccess;
-  obs.nStopFailure  = nStopFailure;
-    
-  obs.rtGoCorr      = rtGoCorr;
-  obs.rtGoComm      = rtGoComm;
-  obs.rtStopFailure = rtStopFailure;
-    
-  obs.ssd           = ssd;
-  obs.inhibFunc     = inhibFunc;
-    
-  obs.pGoCorr       = pGoCorr;
-  obs.pGoComm       = pGoComm;
-  obs.pStopFailure  = pStopFailure;
-    
-  obs.onset         = ons;
-  obs.duration      = dur;
-  
-  % 4.5. Save data
-  % =======================================================================
-  fName = fullfile(outputDir,sprintf('data_preproc_subj%.2d.mat',subj(iSubj)));
-  save(fName, 'obs');
-  
-  fName = fullfile(outputDir,sprintf('all_trial_data_preproc.mat',subj(iSubj)));
-  save(fName, 'allObs');
+%   fName = fullfile(outputDir,sprintf('all_trial_data_preproc.mat',subj(iSubj)));
+%   save(fName, 'allObs');
 end
