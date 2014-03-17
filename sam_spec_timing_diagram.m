@@ -1,4 +1,4 @@
-function [T,u] = sam_spec_timing_diagram(ons,dur,v,se,dt,tWindow) %#codegen
+function [T,u] = sam_spec_timing_diagram(ons,dur,v,eta,se,dt,tWindow) %#codegen
 % SAM_SPEC_TIMING_DIAGRAM Specifies timing diagram
 %  
 % SAM_SPEC_TIMING_DIAGRAM constructs input matrices that specify the accumulators that
@@ -27,9 +27,11 @@ function [T,u] = sam_spec_timing_diagram(ons,dur,v,se,dt,tWindow) %#codegen
 % [t,u] = SAM_SPEC_TIMING_DIAGRAM(ons,dur,v,se,dt,tWindow);
 % ons           - stimulus onsets (LxM double)
 % dur           - stimulus durations (LxM double)
-% v             - accumulation rates (Mx1 double)
+% v             - mean accumulation rates (Mx1 double)
 %                 if empty, defaults to ones(M,1)
-% se            - extrinsic noise magnitudes (Mx1 double)
+% eta           - between-trial variability in accumulation rate (Mx1 double)
+%                 if empty, defaults to zeros(M,1)
+% se            - extrinsic noise magnitudes (MxM double)
 %                 if empty, defaults to zeros(M,1)
 % dt            - time step size, in ms (scalar)
 %                 if empty, defaults to 1
@@ -45,7 +47,8 @@ function [T,u] = sam_spec_timing_diagram(ons,dur,v,se,dt,tWindow) %#codegen
 % ons           = [0 0 0];
 % dur           = [2000 2000 0];
 % v             = [3,3,5];
-% se            = [0.5 0.5 0.5];
+% eta           = [0,0,0];
+% se            = diag([0.5 0.5 0.5]);
 % dt            = 10;
 % tWindow       = [-500 2500];
 %
@@ -79,6 +82,10 @@ function [T,u] = sam_spec_timing_diagram(ons,dur,v,se,dt,tWindow) %#codegen
 
 if isempty(v)
   v = ones(size(ons,2),1);
+end
+
+if isempty(eta)
+  eta = ones(size(ons,2),1);
 end
 
 if isempty(se)
@@ -143,7 +150,7 @@ u   = cumsum(u,2);
 
 % 2.3. Specify strength of inputs
 % =========================================================================
-u = diag(v)*u;
+u = diag((randn(m,1) .* eta) + v) * u;
 
 % 2.4. Add extrinsic noise of weight se
 % =========================================================================
