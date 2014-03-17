@@ -83,8 +83,8 @@ switch lower(solverType)
 
       solverOpts.MaxFunEvals    = 150000;
       solverOpts.MaxIter        = 50;
-      solverOpts.TolFun         = 1e-4;
-      solverOpts.TolX           = 1e-4;
+      solverOpts.TolFun         = 1e-5;
+      solverOpts.TolX           = 1e-5;
 
   % Simplex with bounds and linear and nonlinear constraints    
   case 'fminsearchcon'
