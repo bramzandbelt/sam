@@ -148,6 +148,30 @@ XSpec.free.freeCatClass = freeCatClass;
 % 5. DETERMINE THE INDICES OF PARAMETERS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
+% This is a quick hack to get indices specific to fitting go trials and indices for fitting all trials
+
+% Go trials
+% ====================
+
+% First and last index per parameter category
+i1    = [1,cumsum(nCatClass(1,1:end-1))+1];
+iend  = cumsum(nCatClass(1,:));
+
+% Indices per parameter category
+iCat = arrayfun(@(a,b) a:b,i1,iend,'Uni',0);
+
+% iCat and iCatClass are identical. Ensure row vectors
+iCatClass = cellfun(@(in1) in1(:)',iCat,'Uni',0);
+
+% Put variables in output structure
+XSpec.i.go.iCat = iCat;
+XSpec.i.go.iCatClass = iCatClass;
+
+clear i1 iend iCat iCatClass
+
+% All trials
+% ====================
+
 % First and last index per parameter category
 i1    = [1,cumsum(nCat(1:end-1))+1];
 iend  = cumsum(nCat);
@@ -169,8 +193,8 @@ end
 iCatClass = cellfun(@(in1) in1(:)',iCatClass,'Uni',0);
 
 % Put variables in output structure
-XSpec.i.iCat = iCat;
-XSpec.i.iCatClass = iCatClass;
+XSpec.i.all.iCat = iCat;
+XSpec.i.all.iCatClass = iCatClass;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 6. DETERMINE THE NAMES OF PARAMETERS
