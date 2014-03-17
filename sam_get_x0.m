@@ -35,22 +35,37 @@ nCnd            = SAM.expt.nCnd;
 
 nXCat           = SAM.model.XCat.n;
 
+iScale          = SAM.model.XCat.scale.iX;
+scaleVal        = SAM.model.XCat.scale.val;
+
 % 1.2. Define dynamic variables
 % =========================================================================
-taskFactors   = [nStm;nRsp;nCnd,nCnd];
+taskFactors     = [nStm;nRsp;nCnd,nCnd];
 
-% Check if a file with best-fitting go parameters for present model exists
+% Check if a file with best-fitting GO parameters for present model exists
 % -------------------------------------------------------------------------
-goFile          = sprintf('bestFValX_%s_%strials_model%.3d.mat', ...
-                  modelCatTag,'go',modelToFit.i);
-existGoFile     = exist(goFile) == 2;
+bestFitGoFile          = sprintf('bestFValX_%strials_model%.3d.mat', ...
+                         'go',modelToFit.i);
+existBestFitGoFile     = exist(bestFitGoFile) == 2;
 
 % Check if a file with best-fitting parameters of parent models exist
 % -------------------------------------------------------------------------
-parentFile      = arrayfun(@(a) fullfile(workDir, ...
-                  sprintf('bestFValX_%s_%strials_model%.3d.mat', ...
-                  modelCatTag,simScope,a)),modelToFit.parents,'Uni',0);
-existParentFile = any(cellfun(@exist,parentFile(:)) == 2);
+bestFitparentFile      = arrayfun(@(a) fullfile(workDir, ...
+                         sprintf('bestFValX_%strials_model%.3d.mat', ...
+                         simScope,a)),modelToFit.parents,'Uni',0);
+existBestFitParentFile = any(cellfun(@exist,bestFitparentFile(:)) == 2);
+
+% Check if a file with user-specified starting GO parameters for present model exists
+% -------------------------------------------------------------------------
+userSpecGoFile          = sprintf('userSpecX_%strials_model%.3d.mat', ...
+                          'go',modelToFit.i);
+existUserSpecGoFile     = exist(userSpecGoFile) == 2;
+
+% Check if a file with user-specified starting GO and STOP parameters for present model exists
+% -------------------------------------------------------------------------
+userSpecAllFile          = sprintf('userSpecX_%strials_model%.3d.mat', ...
+                           'all',modelToFit.i);
+existUserSpecAllFile     = exist(userSpecAllFile) == 2;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 2. SPECIFY X0
@@ -58,15 +73,15 @@ existParentFile = any(cellfun(@exist,parentFile(:)) == 2);
 
 switch lower(simScope)
   case 'go'
-    if any(existParentFile)
+    if any(existBestFitParentFile)
             
       % Load the best-fitting parameters from the parent model (with higest index) and convert into a cell array
-      load(parentFile{end},'X');
+      load(bestFitparentFile{end},'X');
       iParent     = max(modelToFit.parents(:));
       parentModel = SAM.model.variants.tree(iParent);
       XGoParent   = mat2cell(X,1,parentModel.XSpec.n.nCatClass(1,:));
       
-      % Set starting values for GO parameters in accordance with best-fitting parameters from paranet model.
+      % Set starting values for GO parameters in accordance with best-fitting parameters from parent model.
       X0Go = cell(1,nXCat);
       iClass = 1;
       levels = taskFactors(:,iClass);
@@ -77,7 +92,17 @@ switch lower(simScope)
         XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels);
         X0Go{iXCat} = XOut;
       end
+      
       X0 = cell2mat(X0Go);
+      
+      % Set value of the scaling parameter
+      X0([modelToFit.XSpec.i.go.iCatClass{1,iScale}])  = scaleVal;
+            
+    elseif any(existUserSpecGoFile)
+      load(userSpecGoFile,'X');
+      X0 = X;
+      clear X;
+      
     elseif modelToFit.i == 1
       X0 = [];
       error('Not implemented yet');
@@ -86,15 +111,15 @@ switch lower(simScope)
     end
     
   case 'all'
-    if any(existGoFile) & any(existParentFile)
+    if any(existBestFitGoFile) & any(existBestFitParentFile)
       
       % GO parameters: use best-fitting parameters from current model as initial parameters
-      load(goFile,'X');
+      load(bestFitGoFile,'X');
       X0Go = X;
       clear X
       
       % STOP parameters: use best-fitting parameters from parent model (with highest index) as initial parameters
-      load(parentFile{end},'X');
+      load(bestFitparentFile{end},'X');
       iParent       = max(modelToFit.parents(:));
       parentModel   = SAM.model.variants.tree(iParent);
       XStopParent   = X([parentModel.XSpec.i.iCatClass{2,:}]);
@@ -121,9 +146,34 @@ switch lower(simScope)
       X0([modelToFit.XSpec.i.iCatClass{1,:}]) = X0Go;
       X0([modelToFit.XSpec.i.iCatClass{2,:}]) = X0Stop;
       
-    elseif any(existParentFile)
-      X0 = [];
-      error('Not implemented yet');
+      % Set value of the scaling parameter
+      X0([modelToFit.XSpec.i.all.iCatClass{1,iScale}])  = scaleVal;
+      X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
+      
+    elseif any(existBestFitGoFile) & any(existUserSpecAllFile)
+      
+      % GO parameters: use best-fitting parameters from current model as initial parameters
+      load(bestFitGoFile,'X');
+      X0Go = X;
+      clear X
+      
+      % STOP parameters: use user-specified parameters as initial parameters
+      load(userSpecAllFile,'X');
+      iModelToFit = SAM.model.variants.toFit.i;
+      modelToFit  = SAM.model.variants.toFit;
+      X0Stop      = X([modelToFit.XSpec.i.all.iCatClass{2,:}]);
+      
+      X0          = nan(1,modelToFit.XSpec.n.n);
+            
+      X0([modelToFit.XSpec.i.all.iCatClass{1,:}]) = X0Go;
+      X0([modelToFit.XSpec.i.all.iCatClass{2,:}]) = X0Stop;
+      
+      % Set value of the scaling parameter
+      X0([modelToFit.XSpec.i.all.iCatClass{1,iScale}])  = scaleVal;
+      X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
+      
+    elseif any(existUserSpecAllFile)
+      load(userSpecAllFile,'X');
     elseif modelToFit.i == 1
       X0 = [];
       error('Not implemented yet');
@@ -173,7 +223,6 @@ function XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels)
     error('Invalid signatureParent');
   end
   
-  
   % Now compute from this 3D matrix, the output vector XOut corresponding to the signature of the model to fit
   if isequal(signatureModelToFit,[0 0 0])
     XOut    = nanmean(nanmean(nanmean(XVec2Mat,3),2),1);
@@ -196,7 +245,6 @@ function XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels)
   end
   
   XOut = XOut(:)';
-  
   
 end
 end
