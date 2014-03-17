@@ -108,7 +108,7 @@ end
 % =========================================================================
 
 % Time vector
-T       = (tWindow(1):dt:tWindow(2))';
+T       = round((tWindow(1):dt:tWindow(2))'./dt)*dt;
 
 % Numbers
 l       = size(ons,1);                  % Events
