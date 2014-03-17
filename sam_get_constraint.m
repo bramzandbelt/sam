@@ -44,17 +44,20 @@ switch lower(simScope)
   case 'go'
     nClass  = 1;
     nCat    = XSpec.n.nCatClass(1,:);
+    
+    iCatClass = XSpec.i.go.iCatClass;
+    
     free    = cell2mat(XSpec.free.freeCatClass(1,:));
   case 'all'
     nClass  = 2;
     nCat    = XSpec.n.nCat;
+    
+    iCatClass = XSpec.i.all.iCatClass;
+    
     free    = XSpec.free.free;
     % Set GO parameters to fixed parameters
-    free([XSpec.i.iCatClass{1,:}]) = false;
+    free([iCatClass{1,:}]) = false;
 end
-
-% Number of parameters per parameter category
-nCat        = XSpec.n.nCat;
 
 solverType  = SAM.optim.solver.type;
 
@@ -135,13 +138,13 @@ for iClass = 1:nClass
   combiLevels = fullfact([nCombiZ0,nCombiZc]);
   
   % Pre-allocate linConA and linConB
-  A{iClass} = zeros(nCombi,XSpec.n.n);
+  A{iClass} = zeros(nCombi,sum(nCat));
   b{iClass} = zeros(nCombi,1);
   
   % z0 - zc should be smaller than 0
   for iCombi = 1:nCombi
-    A{iClass}(iCombi,XSpec.i.iCatClass{iClass,iZ0}(combiLevels(iCombi,1))) = 1;
-    A{iClass}(iCombi,XSpec.i.iCatClass{iClass,iZc}(combiLevels(iCombi,2))) = -1;
+    A{iClass}(iCombi,iCatClass{iClass,iZ0}(combiLevels(iCombi,1))) = 1;
+    A{iClass}(iCombi,iCatClass{iClass,iZc}(combiLevels(iCombi,2))) = -1;
   end
   
 end
@@ -181,9 +184,9 @@ for iClass = 1:nClass
   
   for iCombi = 1:nCombi
     
-    tmpIZc = XSpec.i.iCatClass{iClass,iZc}(combiLevels(iCombi,1));
-    tmpIV = XSpec.i.iCatClass{iClass,iV}(combiLevels(iCombi,2));
-    tmpIK = XSpec.i.iCatClass{iClass,iK}(combiLevels(iCombi,3));
+    tmpIZc = iCatClass{iClass,iZc}(combiLevels(iCombi,1));
+    tmpIV = iCatClass{iClass,iV}(combiLevels(iCombi,2));
+    tmpIK = iCatClass{iClass,iK}(combiLevels(iCombi,3));
     
     C{iClass}{iCombi} = ['x(',num2str(tmpIZc),') - x(',num2str(tmpIV),') ./ -x(',num2str(tmpIK),');'];
     
@@ -203,11 +206,7 @@ switch lower(solverType)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 5. CHECK IF X0 MEETS THE BOUND, LINEAR, AND NONLINEAR CONSTRAINTS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 6. PROCESS OUTPUTS
+% 5. PROCESS OUTPUTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 constraint.bound.LB             = LB;
