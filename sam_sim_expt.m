@@ -164,12 +164,8 @@ for iTrialCat = 1:nTrialCat
   % 3.2. Simulate trials
   % =====================================================================
   
-%   prog = ProgressBar(nSim);
-  
   parfor iTr = 1:nSim
     
-%     prog.progress;
-
     % 3.2.1. Timing diagram of model inputs
     % -----------------------------------------------------------------------------------------------------------------
 
@@ -270,8 +266,6 @@ for iTrialCat = 1:nTrialCat
         uLog(:,iTr,:) = u;
     end
   end
-  
-%   prog.stop;
   
   % 3.4. Classify trials
   % =====================================================================
