@@ -1,4 +1,4 @@
-function [endoConn,extrMod,exoConn,intrMod,V,SE,SI,Z0,ZC,T0] = ...
+function [endoConn,extrMod,exoConn,intrMod,V,ETA,SE,SI,Z0,ZC,T0] = ...
           sam_decode_x(SAM,X,iTrial)
 % function [endoConn,extrMod,exoConn,intrMod,V,SE,SI,Z0,ZC,accumOns] = ...
 %           sam_decode_x(SAM,X,iTrial)
@@ -35,6 +35,7 @@ iZ0       = SAM.model.XCat.i.iZ0;
 iZc       = SAM.model.XCat.i.iZc;
 iV        = SAM.model.XCat.i.iV;
 iVe       = SAM.model.XCat.i.iVe;
+iEta      = SAM.model.XCat.i.iEta;
 iT0       = SAM.model.XCat.i.iT0;
 iSe       = SAM.model.XCat.i.iSe;
 iSi       = SAM.model.XCat.i.iSi;
@@ -43,13 +44,14 @@ iW        = SAM.model.XCat.i.iW;
 
 simScope  = SAM.sim.scope;
 
+nRsp      = SAM.expt.nRsp;
+nStm      = SAM.expt.nStm;
+
 switch lower(simScope)
   case 'go'
-    N         = SAM.expt.nRsp(1);
-    M         = SAM.expt.nStm(1);
+    iCatClass = SAM.model.variants.toFit.XSpec.i.go.iCatClass;
   case 'all'
-    N         = SAM.expt.nRsp;
-    M         = SAM.expt.nStm;
+    iCatClass = SAM.model.variants.toFit.XSpec.i.all.iCatClass;
 end
 
 trialCat    = SAM.optim.obs.trialCat{iTrial};
@@ -67,15 +69,15 @@ endoConn  = SAM.model.mat.endoConn;
 % 1.2. Specify dynamic variables
 % ========================================================================= 
 
-trueN = arrayfun(@(x) true(x,1),N,'Uni',0);
-trueM = arrayfun(@(x) true(x,1),M,'Uni',0);
+trueNRsp = arrayfun(@(x) true(x,1),nRsp,'Uni',0);
+trueNStm = arrayfun(@(x) true(x,1),nStm,'Uni',0);
 
 % Parse trial type 
 if ~isempty(regexp(trialCat,'^goTrial_', 'once'))
   token = regexp(trialCat,'goTrial_(\S*)','tokens');
   tagGO   = token{1}{1};
 elseif ~isempty(regexp(trialCat,'^stopTrial_', 'once'))
-  token = regexp(trialCat,'stopTrial_ssd(\w*)_(\S*)_(\S*)','tokens');
+  token = regexp(trialCat,'stopTrial_{ssd(\w*)}_(\S*)_(\S*)','tokens');
 %   tagSsd  = str2double(token{1}{1});
   tagGO   = token{1}{2};
   tagSTOP = token{1}{3};
@@ -151,15 +153,16 @@ end
 % 2. CONVERT X TO INDIVIDUAL PARAMETERS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-z0 = get_value_per_xcat(SAM,X,indexMat,iZ0);
-zc = get_value_per_xcat(SAM,X,indexMat,iZc);
-v  = get_value_per_xcat(SAM,X,indexMat,iV);
-ve = get_value_per_xcat(SAM,X,indexMat,iVe);
-t0 = get_value_per_xcat(SAM,X,indexMat,iT0);
-se = get_value_per_xcat(SAM,X,indexMat,iSe);
-si = get_value_per_xcat(SAM,X,indexMat,iSi);
-k  = get_value_per_xcat(SAM,X,indexMat,iK);
-w  = get_value_per_xcat(SAM,X,indexMat,iW);
+z0  = get_value_per_xcat(SAM,X,indexMat,iZ0,iCatClass);
+zc  = get_value_per_xcat(SAM,X,indexMat,iZc,iCatClass);
+v   = get_value_per_xcat(SAM,X,indexMat,iV,iCatClass);
+ve  = get_value_per_xcat(SAM,X,indexMat,iVe,iCatClass);
+eta = get_value_per_xcat(SAM,X,indexMat,iEta,iCatClass);
+t0  = get_value_per_xcat(SAM,X,indexMat,iT0,iCatClass);
+se  = get_value_per_xcat(SAM,X,indexMat,iSe,iCatClass);
+si  = get_value_per_xcat(SAM,X,indexMat,iSi,iCatClass);
+k   = get_value_per_xcat(SAM,X,indexMat,iK,iCatClass);
+w   = get_value_per_xcat(SAM,X,indexMat,iW,iCatClass);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 3. ENCODE CONNECTIVITY MATRICES
@@ -168,26 +171,26 @@ w  = get_value_per_xcat(SAM,X,indexMat,iW);
 % Consider adding an additional parameter class to distinguish lateral inhibition within and between accumulator classes
 
 % Endogenous connectivity
-endoConnSelf          = endoConn.self * diag(blkdiag(trueN{:}) * k(:));
-endoConnNonSelfSame   = endoConn.nonSelfSame * diag(blkdiag(trueN{:}) * w(:));
-endoConnNonSelfOther  = endoConn.nonSelfOther * diag(blkdiag(trueN{:}) * w(:));
+endoConnSelf          = endoConn.self * diag(blkdiag(trueNRsp{:}) * k(:));
+endoConnNonSelfSame   = endoConn.nonSelfSame * diag(blkdiag(trueNRsp{:}) * w(:));
+endoConnNonSelfOther  = endoConn.nonSelfOther * diag(blkdiag(trueNRsp{:}) * w(:));
 endoConn              = endoConnSelf + endoConnNonSelfSame + endoConnNonSelfOther;
 
 % Extrinsic and intrinsic modulation 
-extrMod = zeros(sum(N),sum(N),sum(M));
-intrMod = zeros(sum(N),sum(N),sum(N));
+extrMod = zeros(sum(nRsp),sum(nRsp),sum(nStm));
+intrMod = zeros(sum(nRsp),sum(nRsp),sum(nRsp));
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 4. ENCODE STARTING POINT MATRIX
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-Z0 = blkdiag(trueN{:}) * z0(:);
+Z0 = blkdiag(trueNRsp{:}) * z0(:);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 5. ENCODE THRESHOLD MATRIX
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-ZC = blkdiag(trueN{:}) * zc(:);
+ZC = blkdiag(trueNRsp{:}) * zc(:);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 6. ACCUMULATION RATES
@@ -195,18 +198,20 @@ ZC = blkdiag(trueN{:}) * zc(:);
 
 V = blkdiag(iTarget{:}) * v + blkdiag(iNonTarget{:}) * ve;
 
+ETA = blkdiag(iTarget{:}) * eta + blkdiag(iNonTarget{:}) * eta;
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 7. EXTRINSIC AND INTRINSIC NOISE
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-SE = diag(blkdiag(trueM{:}) * se(:));
-SI = diag(blkdiag(trueN{:}) * si(:));
+SE = diag(blkdiag(trueNStm{:}) * se(:));
+SI = diag(blkdiag(trueNRsp{:}) * si(:));
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 8. SPECIFY ONSETS AND DURATIONS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-T0 = blkdiag(trueM{:}) * t0(:);
+T0 = blkdiag(trueNStm{:}) * t0(:);
 
 % THIS NEEDS TO BE IMPLEMENTED
 
@@ -227,17 +232,17 @@ T0 = blkdiag(trueM{:}) * t0(:);
 % #. NESTED FUNCTIONS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-function xval = get_value_per_xcat(SAM,X,iMat,iCol)
+function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass)
     
     switch lower(SAM.sim.scope)
       case 'go'
-        xval = SAM.model.XCat.valExcluded(iCol)*ones(1,1);
+        xval = SAM.model.XCat.valExcluded(iCol)*ones(2,1);
       case 'all'
         xval = SAM.model.XCat.valExcluded(iCol)*ones(2,1);
     end
     
     % Vector of parameter category values in X
-    valuesGO = X(SAM.model.variants.toFit.XSpec.i.iCatClass{1,iCol});
+    valuesGO = X(iCatClass{1,iCol});
     
     % Signature
     signatureGO = SAM.model.variants.toFit.features(:,iCol,1);
@@ -255,7 +260,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol)
       case 'all'
         
         % Vector of parameter category values in X
-        valuesSTOP = X(SAM.model.variants.toFit.XSpec.i.iCatClass{2,iCol});
+        valuesSTOP = X(iCatClass{2,iCol});
 
         % Signature
         signatureSTOP = SAM.model.variants.toFit.features(:,iCol,2);
