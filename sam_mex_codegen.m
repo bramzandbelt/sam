@@ -39,7 +39,7 @@ function codegen_sam_spec_timing_diagram
   ons           = coder.typeof(0,[5e1,5e1],[1,1]);
   dur           = coder.typeof(0,[5e1,5e1],[1,1]);
   v             = coder.typeof(0,[5e1,1],[1,0]);
-  se            = coder.typeof(0,[5e1,1],[1,0]);
+  se            = coder.typeof(0,[5e1,5e1],[1,1]);
   dt            = coder.typeof(0,[1,1],[0,0]);
   tWindow       = coder.typeof(0,[1,2],[0,0]);
   
