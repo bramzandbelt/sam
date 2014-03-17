@@ -14,220 +14,6 @@ function prd = sam_sim_expt(simGoal,X,SAM)
 % $Created : Sat 21 Sep 2013 12:54:52 CDT by bram 
 % $Modified: Mon 23 Sep 2013 20:54:22 CDT by bramzandbelt
 
-% CONTENTS 
-% 1.PROCESS INPUTS AND SPECIFY VARIABLES
-%   1.1.Process inputs
-%   1.2.Specify static variables
-%   1.3.Specify dynamic variables
-%   1.4.Pre-allocate empty arrays
-%       1.4.1.Trial numbers
-%       1.4.2.Trial probabilities
-%       1.4.3.Response times
-%       1.4.4.Inhibition function
-%       1.4.5.Structure of model matrices
-% 2.DECODE PARAMETER VECTOR
-% 3.SEED THE RANDOM NUMBER GENERATOR
-% 4.SIMULATE EXPERIMENT
-%   4.1.Specify timing diagram of stimuli
-%   4.2.Specify timing diagram of model inputs
-%   4.3.Simulate trials
-%   4.4.Classify trials
-%   4.5.Log model predictions
-% 5.OUTPUT
-
-% % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% % 1. PROCESS INPUTS AND SPECIFY VARIABLES
-% % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 
-% % 1.1. Process inputs
-% % ========================================================================= 
-% 
-% switch simGoal
-%   case 'optimize'
-%     prdOptimData = varargin{1};
-%   case 'explore'
-%     prd = varargin{1};
-% end
-% 
-% % 1.1.1. Type of choice mechanism
-% % -------------------------------------------------------------------------
-% choiceMechType  = SAM.des.choiceMech.type;
-% 
-% % 1.1.2. Type of inhibition mechanism
-% % -------------------------------------------------------------------------
-% inhibMechType   = SAM.des.inhibMech.type;
-% 
-% % 1.1.3. Accumulation mechanism
-% % -------------------------------------------------------------------------
-% 
-% % Lower bound on activation
-% zLB           = SAM.des.accumMech.zLB;
-% 
-% % Time window during which accumulation is 'recorded'
-% timeWindow    = SAM.des.accumMech.timeWindow;
-% 
-% % Time step
-% dt            = SAM.des.time.dt;
-% 
-% % Time constant
-% tau           = SAM.des.time.tau;
-% 
-% % Model parameters
-% % -------------------------------------------------------------------------
-% 
-% % Parameter that varies across conditions
-% condParam     = SAM.des.condParam;
-% 
-% % Number of GO and STOP units
-% nGo           = SAM.des.nGO;
-% nStop         = SAM.des.nSTOP;
-% 
-% durationSTOP  = SAM.des.durationSTOP;
-% 
-% % Simulator parameters
-% % -------------------------------------------------------------------------
-% simScope      = SAM.sim.scope;
-% 
-% nSim          = SAM.sim.nSim;
-% 
-% trialSimFun   = SAM.sim.trialSimFun;
-% 
-% % Experimental parameters
-% % -------------------------------------------------------------------------
-% 
-% % Number of conditions
-% nCnd          = SAM.des.expt.nCnd;
-% 
-% % Number of stop-signal delays
-% nSsd          = SAM.des.expt.nSsd;
-% 
-% % Stimulus onsets
-% stimOns       = SAM.des.expt.stimOns;
-% 
-% % Stimulus durations
-% stimDur       = SAM.des.expt.stimDur;
-% 
-% 
-% switch simGoal
-%   case 'explore'
-%     
-%     % Time windows for alignment on go-signal
-%     tWinGo    = SAM.explore.tWinGo;
-%     
-%     % Time windows for alignment on stop-signal
-%     tWinStop  = SAM.explore.tWinStop;
-%     
-%     % Time windows for alignment on response
-%     tWinResp  = SAM.explore.tWinGo;
-% end
-% 
-% % 1.2. Specify static variables
-% % =========================================================================
-% 
-% switch simGoal
-%   case 'explore'
-%     % Cumulative probabilities for quantile averaging of model dynamics
-%     CUM_PROB = 0:0.01:1;
-% end
-% 
-% % 1.3. Specify dynamic variables
-% % =========================================================================
-% 
-% switch lower(simScope)
-%   case 'go'
-%     % Number of units
-%     N = nGo;
-%     
-%     % Number of model inputs (go and stop stimuli)
-%     M = nGo;
-%     
-%     % Number of trial types: Go trials only
-%     nTrType = 1;
-%     
-%     % Adjust stimulus onsets to include data from Go trials only
-%     stimOns   = cellfun(@(a) a(1:M),stimOns,'Uni',0);
-%     
-%     % Adjust stimulus durations to include data from Go trials only
-%     stimDur   = cellfun(@(a) a(1:M),stimDur,'Uni',0);
-%     
-%   case 'all'
-%     % Number of units
-%     N = [nGo nStop];
-%     
-%     % Number of model inputs (go and stop stimuli)
-%     M = [nGo nStop];
-%     
-%     % Number of trial types: Go trials, and Stop trials with nSSD delays
-%     nTrType = 1 + nSsd;
-% end
-% 
-% % 1.4. Pre-allocate empty arrays
-% % =========================================================================
-% 
-% % 1.4.1. Trial numbers
-% % -------------------------------------------------------------------------
-% nGoCorr         = nan(nCnd,1);         % Go correct
-% nGoComm         = nan(nCnd,1);         % Go commission error
-% nGoOmit         = nan(nCnd,1);         % Go omission error
-% 
-% switch lower(simScope)
-%   case 'all'
-%     nStopFailure  = nan(nCnd,nSsd);   % Stop failure
-%     nStopSuccess  = nan(nCnd,nSsd);   % Stop success
-% end
-% 
-% % 1.4.2. Trial probabilities
-% % -------------------------------------------------------------------------
-% pGoCorr         = nan(nCnd,1);         % Go correct
-% pGoComm         = nan(nCnd,1);         % Go commission error
-% pGoOmit         = nan(nCnd,1);         % Go omission error
-% 
-% switch lower(simScope)
-%   case 'all'
-%     pStopFailure  = nan(nCnd,nSsd);   % Stop failure
-%     pStopSuccess  = nan(nCnd,nSsd);   % Stop success
-% end
-% 
-% % 1.4.3. Response times
-% % -------------------------------------------------------------------------
-% rtGoCorr        = cell(nCnd,1);        % Go correct
-% rtGoComm        = cell(nCnd,1);        % Go commission error
-% 
-% switch lower(simScope)
-%   case 'all'
-%     rtStopFailure = cell(nCnd,nSsd);  % Stop failure
-%     rtStopSuccess = cell(nCnd,nSsd);  % Stop success
-% end
-% 
-% % 1.4.4. Inhibition function
-% % -------------------------------------------------------------------------
-% switch lower(simScope)
-%   case 'all'
-%     inhibFunc     = cell(nCnd,1);
-% end
-% 
-% % 1.4.5. Structure of model matrices
-% % -------------------------------------------------------------------------
-% switch simGoal
-%   case 'explore'
-%     modelMat = struct('A',[], ...     % Endogenous connectivity matrix
-%                       'B',[], ...     % Extrinsic modulation matrix
-%                       'C',[], ...     % Exogenous connectivity matrix
-%                       'D',[], ...     % Intrinsic modulation matrix
-%                       'V',[], ...     % Accumulation rate matrix
-%                       'SE',[], ...    % Extrinsic noise matrix
-%                       'SI',[], ...    % Intrinsic noise matrix
-%                       'Z0',[], ...    % Starting value matrix
-%                       'ZC',[], ...    % Threshold matrix
-%                       'zLB',[], ...   % Lower bound on activation
-%                       'accumOns',[], ... % Accumulation onset times
-%                       'terminate',[], ... % Termination matrix
-%                       'blockInput',[], ... % Blocked input matrix
-%                       'latInhib',[]);       % Lateral inhibition matrix
-%                     
-% end
-% 
-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. PROCESS INPUTS AND SPECIFY VARIABLES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -263,7 +49,6 @@ timeWindow    = SAM.model.accum.window;
 zLB           = SAM.model.accum.zLB;
 tau           = SAM.model.accum.tau;
 accumTWindow  = SAM.model.accum.window;
-
 
 signatureGo   = any(SAM.model.variants.toFit.features(:,:,1),2);
 signatureStop = any(SAM.model.variants.toFit.features(:,:,2),2);
@@ -323,7 +108,6 @@ switch lower(rngSeedStage)
     rng(rngSeedId);
 end
 
-
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 3. SIMULATE EXPERIMEMT
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -358,6 +142,7 @@ for iTrialCat = 1:nTrialCat
    exoConn, ...
    intrMod, ...
    V, ...
+   ETA, ...
    SE, ...
    SI, ...
    Z0, ...
@@ -378,7 +163,12 @@ for iTrialCat = 1:nTrialCat
   
   % 3.2. Simulate trials
   % =====================================================================
+  
+%   prog = ProgressBar(nSim);
+  
   parfor iTr = 1:nSim
+    
+%     prog.progress;
 
     % 3.2.1. Timing diagram of model inputs
     % -----------------------------------------------------------------------------------------------------------------
@@ -406,6 +196,7 @@ for iTrialCat = 1:nTrialCat
     (accumOns, ...                        % - Accumulation onset time
      accumDur, ...                        % - Stimulus duration
      V, ...                               % - Input strength
+     ETA, ...                             % - Trial-to-trial variability in input strength
      SE, ...                              % - Magnitude of extrinsic noise
      dt, ...                              % - Time step
      timeWindow);                         % - Time window
@@ -479,7 +270,9 @@ for iTrialCat = 1:nTrialCat
         uLog(:,iTr,:) = u;
     end
   end
-    
+  
+%   prog.stop;
+  
   % 3.4. Classify trials
   % =====================================================================
   
@@ -665,6 +458,7 @@ for iTrialCat = 1:nTrialCat
   prd.modelMat{iTrialCat}.Z0        = Z0;
   prd.modelMat{iTrialCat}.ZC        = ZC;
   prd.modelMat{iTrialCat}.V         = V;
+  prd.modelMat{iTrialCat}.ETA       = ETA;
   prd.modelMat{iTrialCat}.T0        = T0;
   prd.modelMat{iTrialCat}.SE        = SE;
   prd.modelMat{iTrialCat}.SI        = SI;
