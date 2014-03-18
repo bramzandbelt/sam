@@ -30,11 +30,7 @@ N             = SAM.expt.nRsp;
 trialDur      = SAM.expt.trialDur;
 
 nRsp          = SAM.expt.nRsp;
-nStm          = SAM.expt.nStm;
-i1            = [1,cumsum(nRsp(1:end-1)) + 1];          % Index of first response alternative, per class
-iEnd          = cumsum(nRsp);                           % Index of last response alternative, per class
-iRsp          = arrayfun(@(a,b) a:b,i1,iEnd,'Uni',0);   % Indices of all response alternatives, per class
-
+% nStm          = SAM.expt.nStm;
 
 % 1.1.2. Model variables
 % -------------------------------------------------------------------------------------------------------------------------
@@ -49,9 +45,7 @@ timeWindow    = SAM.model.accum.window;
 zLB           = SAM.model.accum.zLB;
 tau           = SAM.model.accum.tau;
 accumTWindow  = SAM.model.accum.window;
-
-signatureGo   = any(SAM.model.variants.toFit.features(:,:,1),2);
-signatureStop = any(SAM.model.variants.toFit.features(:,:,2),2);
+durSTOP       = SAM.model.accum.durSTOP;
 
 % We can control the random variability in starting point, non-decision time, and accumulation rate
 if SAM.model.accum.randomZ0
@@ -132,7 +126,7 @@ for iTrialCat = 1:nTrialCat
   switch simGoal
     case 'explore'
       z = nan(sum(nRsp),nSim,p);
-      uLog = nan(sum(nStm),nSim,p);
+%       uLog = nan(sum(nStm),nSim,p);
   end
   
   % 3.1. Decode parameter vector
@@ -155,8 +149,6 @@ for iTrialCat = 1:nTrialCat
    X, ...
    iTrialCat);
   
-  
-  
   n   = size(endoConn,1);     % Number of units
   m   = size(exoConn,2);      % Number of inputs to units
   ZLB = zLB*ones(n,1);
@@ -164,38 +156,44 @@ for iTrialCat = 1:nTrialCat
   % 3.2. Simulate trials
   % =====================================================================
   
+  % Make sure that these variables are row vectors
+  stmOns  = stmOns(:)';
+  stmDur  = stmDur(:)';
+  T0      = T0(:)';
+  
+  if ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
+    switch lower(durSTOP)
+      case 'trial'
+        accumDurFactor = zeros(1,m);
+        accumDurFactor(iSTOP) = 1;
+      otherwise
+        accumDurFactor = zeros(1,m);
+    end
+  else
+    accumDurFactor = zeros(1,m);
+  end
+
   parfor iTr = 1:nSim
     
     % 3.2.1. Timing diagram of model inputs
     % -----------------------------------------------------------------------------------------------------------------
 
-    accumOns = stmOns(:)' + T0(:)' - T0(:)'.*randomT0Factor.*rand(1,m);
-
-    if ~isempty(regexp(trialCat,'stopTrial.*', 'once'))
-      switch lower(SAM.model.accum.durSTOP)
-        case 'signal'
-          accumDur = stmDur(:)';
-        case 'trial'
-          accumDur = stmDur(:)';
-          accumDur(iRsp{2}) = trialDur - accumOns(iRsp{2});
-        otherwise
-          accumDur = stmDur(:)';
-      end
-    else
-      accumDur = stmDur(:)';
-    end
-
-    [t, ...                               % - Time
-     u] ...                               % - Strength of model input
-    = sam_spec_timing_diagram ...         % FUNCTION
-    ...                                   % INPUT
-    (accumOns, ...                        % - Accumulation onset time
-     accumDur, ...                        % - Stimulus duration
-     V, ...                               % - Input strength
-     ETA, ...                             % - Trial-to-trial variability in input strength
-     SE, ...                              % - Magnitude of extrinsic noise
-     dt, ...                              % - Time step
-     timeWindow);                         % - Time window
+    t0Var = randomT0Factor.*rand(1,m);
+    accumOns = stmOns + T0 - T0.*t0Var;
+    accumDur = stmDur - accumDurFactor.*(trialDur-stmDur-accumOns);
+    
+    [t, ...                                               % - Time
+     u] ...                                               % - Strength of model input
+    = sam_spec_timing_diagram_mex ...                     % FUNCTION
+    ...                                                   % INPUT
+    (accumOns, ...                                        % - Accumulation onset time
+     accumDur, ...                                        % - Stimulus duration
+     V, ...                                               % - Input strength
+     ETA, ...                                             % - Trial-to-trial variability in input strength
+     SE, ...                                              % - Magnitude of extrinsic noise
+     dt, ...                                              % - Time step
+     timeWindow);                                         % - Time window
+    
 
     t = t(:)';
 
@@ -263,7 +261,7 @@ for iTrialCat = 1:nTrialCat
         false(n,1), ...                % - Array for current trial's response
         nan(n,p));                     % - Array for current trial's dynamics)
       
-        uLog(:,iTr,:) = u;
+%         uLog(:,iTr,:) = u;
     end
   end
   
@@ -458,7 +456,14 @@ for iTrialCat = 1:nTrialCat
   prd.modelMat{iTrialCat}.SI        = SI;
   prd.modelMat{iTrialCat}.ZLB       = ZLB;
   
-  % 3.5.6. Model dynamics
+  
+  % 3.5.6. Model inputts
+  % -----------------------------------------------------------------------------------------------------------------------
+  
+  % Implement this
+  
+  
+  % 3.5.7. Model dynamics
   % -----------------------------------------------------------------------------------------------------------------------
   switch simGoal
     case 'explore'
