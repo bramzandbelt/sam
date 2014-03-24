@@ -44,26 +44,26 @@ taskFactors     = [nStm;nRsp;nCnd,nCnd];
 
 % Check if a file with best-fitting GO parameters for present model exists
 % -------------------------------------------------------------------------
-bestFitGoFile          = sprintf('bestFValX_%strials_model%.3d.mat', ...
+bestFitGoFile          = sprintf('bestFValX_%strials_model%.3d.txt', ...
                          'go',modelToFit.i);
 existBestFitGoFile     = exist(bestFitGoFile) == 2;
 
 % Check if a file with best-fitting parameters of parent models exist
 % -------------------------------------------------------------------------
 bestFitparentFile      = arrayfun(@(a) fullfile(workDir, ...
-                         sprintf('bestFValX_%strials_model%.3d.mat', ...
+                         sprintf('bestFValX_%strials_model%.3d.txt', ...
                          simScope,a)),modelToFit.parents,'Uni',0);
 existBestFitParentFile = any(cellfun(@exist,bestFitparentFile(:)) == 2);
 
 % Check if a file with user-specified starting GO parameters for present model exists
 % -------------------------------------------------------------------------
-userSpecGoFile          = sprintf('userSpecX_%strials_model%.3d.mat', ...
+userSpecGoFile          = sprintf('userSpecX_%strials_model%.3d.txt', ...
                           'go',modelToFit.i);
 existUserSpecGoFile     = exist(userSpecGoFile) == 2;
 
 % Check if a file with user-specified starting GO and STOP parameters for present model exists
 % -------------------------------------------------------------------------
-userSpecAllFile          = sprintf('userSpecX_%strials_model%.3d.mat', ...
+userSpecAllFile          = sprintf('userSpecX_%strials_model%.3d.txt', ...
                            'all',modelToFit.i);
 existUserSpecAllFile     = exist(userSpecAllFile) == 2;
 
@@ -76,7 +76,7 @@ switch lower(simScope)
     if any(existBestFitParentFile)
             
       % Load the best-fitting parameters from the parent model (with higest index) and convert into a cell array
-      load(bestFitparentFile{end},'X');
+      X = importdata(bestFitparentFile{end});
       iParent     = max(modelToFit.parents(:));
       parentModel = SAM.model.variants.tree(iParent);
       XGoParent   = mat2cell(X,1,parentModel.XSpec.n.nCatClass(1,:));
@@ -99,7 +99,7 @@ switch lower(simScope)
       X0([modelToFit.XSpec.i.go.iCatClass{1,iScale}])  = scaleVal;
             
     elseif any(existUserSpecGoFile)
-      load(userSpecGoFile,'X');
+      X = importdata(userSpecGoFile);
       X0 = X;
       clear X;
       
@@ -114,12 +114,12 @@ switch lower(simScope)
     if any(existBestFitGoFile) & any(existBestFitParentFile)
       
       % GO parameters: use best-fitting parameters from current model as initial parameters
-      load(bestFitGoFile,'X');
+      X = importdata(bestFitGoFile);
       X0Go = X;
       clear X
       
       % STOP parameters: use best-fitting parameters from parent model (with highest index) as initial parameters
-      load(bestFitparentFile{end},'X');
+      X = importdata(bestFitparentFile{end});
       iParent       = max(modelToFit.parents(:));
       parentModel   = SAM.model.variants.tree(iParent);
       XStopParent   = X([parentModel.XSpec.i.iCatClass{2,:}]);
@@ -153,7 +153,7 @@ switch lower(simScope)
     elseif any(existBestFitGoFile) & any(existUserSpecAllFile)
       
       % GO parameters: use best-fitting parameters from current model as initial parameters
-      load(bestFitGoFile,'X');
+      X = importdata(bestFitGoFile);
       X0Go = X;
       clear X
       
@@ -173,7 +173,7 @@ switch lower(simScope)
       X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
       
     elseif any(existUserSpecAllFile)
-      load(userSpecAllFile,'X');
+      X = importdata(userSpecAllFile);
     elseif modelToFit.i == 1
       X0 = [];
       error('Not implemented yet');
