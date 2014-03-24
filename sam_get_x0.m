@@ -44,26 +44,26 @@ taskFactors     = [nStm;nRsp;nCnd,nCnd];
 
 % Check if a file with best-fitting GO parameters for present model exists
 % -------------------------------------------------------------------------
-bestFitGoFile          = sprintf('bestFValX_%strials_model%.3d.txt', ...
+bestFitGoFile          = sprintf('bestFValX_%sTrials_model%.3d.txt', ...
                          'go',modelToFit.i);
 existBestFitGoFile     = exist(bestFitGoFile) == 2;
 
 % Check if a file with best-fitting parameters of parent models exist
 % -------------------------------------------------------------------------
 bestFitparentFile      = arrayfun(@(a) fullfile(workDir, ...
-                         sprintf('bestFValX_%strials_model%.3d.txt', ...
+                         sprintf('bestFValX_%sTrials_model%.3d.txt', ...
                          simScope,a)),modelToFit.parents,'Uni',0);
 existBestFitParentFile = any(cellfun(@exist,bestFitparentFile(:)) == 2);
 
 % Check if a file with user-specified starting GO parameters for present model exists
 % -------------------------------------------------------------------------
-userSpecGoFile          = sprintf('userSpecX_%strials_model%.3d.txt', ...
+userSpecGoFile          = sprintf('userSpecX_%sTrials_model%.3d.txt', ...
                           'go',modelToFit.i);
 existUserSpecGoFile     = exist(userSpecGoFile) == 2;
 
 % Check if a file with user-specified starting GO and STOP parameters for present model exists
 % -------------------------------------------------------------------------
-userSpecAllFile          = sprintf('userSpecX_%strials_model%.3d.txt', ...
+userSpecAllFile          = sprintf('userSpecX_%sTrials_model%.3d.txt', ...
                            'all',modelToFit.i);
 existUserSpecAllFile     = exist(userSpecAllFile) == 2;
 
