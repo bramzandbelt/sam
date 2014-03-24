@@ -5,7 +5,7 @@ obs = SAM.optim.obs;
 nTrialCat = size(obs,1);
 
 % Set up panel
-figure('units','normalized','outerposition',[0 0 1 1]);
+% figure('units','normalized','outerposition',[0 0 1 1]);
 p = panel();
 p.pack(3,6);
 
@@ -46,6 +46,6 @@ for iTrialCat = 1:nTrialCat
   set(gca,'XLim',[0 2000],'YLim',[0 1]);
   
   % Legend
-  legend(sprintf('Corr(N_O=%d,N_P=%d)',nObsCorr,nPrdCorr),sprintf('Error(N_O=%d,N_P=%d)',nObsError,nPrdError));
+%   legend(sprintf('Corr(N_O=%d,N_P=%d)',nObsCorr,nPrdCorr),sprintf('Error(N_O=%d,N_P=%d)',nObsError,nPrdError));
   
 end
