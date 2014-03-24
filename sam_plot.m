@@ -4,10 +4,12 @@ obs = SAM.optim.obs;
 
 nTrialCat = size(obs,1);
 
+nHorPanel = 4;
+
 % Set up panel
 % figure('units','normalized','outerposition',[0 0 1 1]);
 p = panel();
-p.pack(6,ceil(nTrialCat/6));
+p.pack(ceil(nTrialCat/nHorPanel),nHorPanel);
 
 for iTrialCat = 1:nTrialCat
 
@@ -29,7 +31,7 @@ for iTrialCat = 1:nTrialCat
   pDefectiveObsError      = obs.pDefectiveError{iTrialCat};
   
   % Plot
-  [iColumn,iRow] = ind2sub([ceil(nTrialCat/6),6],iTrialCat);
+  [iColumn,iRow] = ind2sub([nHorPanel,ceil(nTrialCat/nHorPanel)],iTrialCat);
   p(iRow,iColumn).select();
   p(iRow,iColumn).hold('on');
   
@@ -43,9 +45,8 @@ for iTrialCat = 1:nTrialCat
   
   % Set title
   title(obs.trialCat{iTrialCat});
-  set(gca,'XLim',[0 2000],'YLim',[0 1]);
-  
-  % Legend
+  set(gca,'PlotBoxAspectRatio',[1.61,1,1],'XLim',[0 2000],'YLim',[0 1]);
+    % Legend
 %   legend(sprintf('Corr(N_O=%d,N_P=%d)',nObsCorr,nPrdCorr),sprintf('Error(N_O=%d,N_P=%d)',nObsError,nPrdError));
   
 end
