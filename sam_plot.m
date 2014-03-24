@@ -7,7 +7,7 @@ nTrialCat = size(obs,1);
 % Set up panel
 % figure('units','normalized','outerposition',[0 0 1 1]);
 p = panel();
-p.pack(3,6);
+p.pack(6,ceil(nTrialCat/6));
 
 for iTrialCat = 1:nTrialCat
 
@@ -29,7 +29,7 @@ for iTrialCat = 1:nTrialCat
   pDefectiveObsError      = obs.pDefectiveError{iTrialCat};
   
   % Plot
-  [iColumn,iRow] = ind2sub([6,3],iTrialCat);
+  [iColumn,iRow] = ind2sub([ceil(nTrialCat/6),6],iTrialCat);
   p(iRow,iColumn).select();
   p(iRow,iColumn).hold('on');
   
