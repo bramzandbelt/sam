@@ -1,5 +1,7 @@
-function [A,B,C,D,V,SE,SI,Z0,ZC,accumOns] = ...
-          sam_decode_x(SAM,X,stimOns,stimDur,N,M,VCor,VIncor,S)
+function [endoConn,extrMod,exoConn,intrMod,V,ETA,SE,SI,Z0,ZC,T0] = ...
+          sam_decode_x(SAM,X,iTrial)
+% function [endoConn,extrMod,exoConn,intrMod,V,SE,SI,Z0,ZC,accumOns] = ...
+%           sam_decode_x(SAM,X,iTrial)
 % SAM_DECODE_X <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -28,650 +30,248 @@ function [A,B,C,D,V,SE,SI,Z0,ZC,accumOns] = ...
 % 1.1. Process inputs
 % ========================================================================= 
 
-% Choice mechanism type
-choiceMechType = SAM.des.choiceMech.type;
+% Column indices
+iZ0       = SAM.model.XCat.i.iZ0;
+iZc       = SAM.model.XCat.i.iZc;
+iV        = SAM.model.XCat.i.iV;
+iVe       = SAM.model.XCat.i.iVe;
+iEta      = SAM.model.XCat.i.iEta;
+iT0       = SAM.model.XCat.i.iT0;
+iSe       = SAM.model.XCat.i.iSe;
+iSi       = SAM.model.XCat.i.iSi;
+iK        = SAM.model.XCat.i.iK;
+iW        = SAM.model.XCat.i.iW;
 
-% Inhibition mechanism type
-inhibMechType = SAM.des.inhibMech.type;
+simScope  = SAM.sim.scope;
 
-% Parameter that varies across task conditions
-condParam = SAM.des.condParam;
+nRsp      = SAM.expt.nRsp;
+nStm      = SAM.expt.nStm;
 
-% Scope of the simulation
-simScope = SAM.sim.scope;
+switch lower(simScope)
+  case 'go'
+    iCatClass = SAM.model.variants.toFit.XSpec.i.go.iCatClass;
+  case 'all'
+    iCatClass = SAM.model.variants.toFit.XSpec.i.all.iCatClass;
+end
 
-% Number of conditions
-nCnd  = SAM.des.expt.nCnd;
+trialCat    = SAM.optim.obs.trialCat{iTrial};
+stmOns      = SAM.optim.obs.onset{iTrial};
+stmDur      = SAM.optim.obs.duration{iTrial};
 
-% Indices of GO inputs, per condition
-iGO   = SAM.des.iGO;
+iTarget     = SAM.optim.modelMat.iTarget{iTrial};
+iNonTarget  = SAM.optim.modelMat.iNonTarget{iTrial};
+exoConn     = SAM.optim.modelMat.exoConn{iTrial};
+
+% #.#.#. Model matrices
+% -------------------------------------------------------------------------------------------------------------------------
+endoConn  = SAM.model.mat.endoConn;
 
 % 1.2. Specify dynamic variables
 % ========================================================================= 
 
-trueN = arrayfun(@(x) true(x,1),N,'Uni',0);
-trueM = arrayfun(@(x) true(x,1),M,'Uni',0);
- 
+trueNRsp = arrayfun(@(x) true(x,1),nRsp,'Uni',0);
+trueNStm = arrayfun(@(x) true(x,1),nStm,'Uni',0);
 
-
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-% 2. CONVERT X TO INDIVIDUAL PARAMETERS
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
-% PARAMETERS
-%z0G  - starting point of GO units
-%z0S  - starting point of STOP unit
-%zcG  - threshold of GO units
-%zcS  - threshold of STOP unit
-%vCG  - go-signal accumulation rate to target GO unit
-%vCS  - stop-signal accumulation rate to STOP unit
-%vIG  - go-signal accumulation rate to non-target GO units
-%t0G  - go-signal non-decision time
-%t0S  - stop-signal non-decision time
-%se   - extrinsic noise level
-%si   - intrinsic noise level
-%kG   - GO unit leakage constant
-%kS   - STOP unit leakage constant
-%wG   - lateral inhibition exerted by GO unit
-%wS   - lateral inhibition exerted by STOP unit
-
-% MODEL
-% 1. Choice mechanism           - race (R), feed-forward inhibition (F), or 
-%                                 lateral inhibition (L)
-% 2. Inhibition mechanism       - race (R), blocked input (B), or lateral
-%                                 inhibition (L)
-% 3. Task condition parameter   - non-decision time (T0), accumulation rate
-%                                 (V), or threshold (Zc)
-% 4. Optimization scope         - go trials (G), or go and stop trials (A)
-
-% -------------------------------------------------------------------------
-%             |                         Parameter                         |
-% -------------------------------------------------------------------------
-% Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-% -------------------------------------------------------------------------
-% R-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% R-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-
-% R-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% R-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-
-% R-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% R-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% R-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-
-% F-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% F-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-
-% F-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-% F-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-
-% F-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% F-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-% F-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-
-% L-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-
-% L-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-
-% L-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-% L-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-% L-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-
-% =========================================================================
-
-switch condParam
-  case 't0'
-    switch simScope
-      case 'go'
-        switch choiceMechType
-          case 'li'
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            
-            z0      = X(1);     % z0G
-            zc      = X(2);     % zcG
-            vcor    = X(3);     % vCG
-            vincor  = X(4);     % vIG
-            t0      = X(5:7);   % t0G_c1,t0G_c2,t0G_c3
-            se      = X(8);     % se
-            si      = X(9);     % si
-            k       = X(10);    % kG
-            w       = X(11);    % wG
-            
-          otherwise
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % R-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % R-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-R-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-B-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-L-T0-G    | 1 | 0 | 1 | 0 | 1 | 0 | 1 | 3 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            
-            z0      = X(1);     % z0G
-            zc      = X(2);     % zcG
-            vcor    = X(3);     % vCG
-            vincor  = X(4);     % vIG
-            t0      = X(5:7);   % t0G_c1,t0G_c2,t0G_c3
-            se      = X(8);     % se
-            si      = X(9);     % si
-            k       = X(10);    % kG
-            
-        end        
-      case 'all'
-        switch choiceMechType
-          case 'li'
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            
-            z0      = X(1:2);   % z0G,z0S
-            zc      = X(3:4);   % zcG,zcS
-            vcor    = X(5:6);   % vCG,vCS
-            vincor  = X(7);     % vIG
-            t0      = X(8:11);  % t0G_c1,t0G_c2,t0G_c3,t0S
-            se      = X(12);    % se
-            si      = X(13);    % si
-            k       = X(14:15); % kG,kS
-            w       = X(16:17); % wG,wS
-            
-          otherwise
-            switch inhibMechType
-              case 'li'
-                % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-                % F-L-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-                
-                z0      = X(1:2);   % z0G,z0S
-                zc      = X(3:4);   % zcG,zcS
-                vcor    = X(5:6);   % vCG,vCS
-                vincor  = X(7);     % vIG
-                t0      = X(8:11);  % t0G_c1,t0G_c2,t0G_c3,t0S
-                se      = X(12);    % se
-                si      = X(13);    % si
-                k       = X(14:15); % kG,kS
-                w       = X(16:17); % wG,wS
-                
-              otherwise
-                % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % R-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % F-R-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % F-B-T0-A    | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                
-                z0      = X(1:2);   % z0G,z0S
-                zc      = X(3:4);   % zcG,zcS
-                vcor    = X(5:6);   % vCG,vCS
-                vincor  = X(7);     % vIG
-                t0      = X(8:11);  % t0G_c1,t0G_c2,t0G_c3,t0S
-                se      = X(12);    % se
-                si      = X(13);    % si
-                k       = X(14:15); % kG,kS
-                
-            end
-        end 
-    end
-  case 'v'
-    switch simScope
-      case 'go'
-        switch choiceMechType
-          case 'li'
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            
-            z0      = X(1);     % z0G
-            zc      = X(2);     % zcG
-            vcor    = X(3:5);   % vCG_c1,vCG_c2,vCG_c3
-            vincor  = X(6:8);   % vIG_c1,vIG_c2,vIG_c3
-            t0      = X(9);     % t0G
-            se      = X(10);    % se
-            si      = X(11);    % si
-            k       = X(12);    % kG
-            w       = X(13);    % wG
-            
-          otherwise
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % R-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % R-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-R-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-B-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-L-V-G     | 1 | 0 | 1 | 0 | 3 | 0 | 3 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            
-            z0      = X(1);     % z0G
-            zc      = X(2);     % zcG
-            vcor    = X(3:5);   % vCG_c1,vCG_c2,vCG_c3
-            vincor  = X(6:8);   % vIG_c1,vIG_c2,vIG_c3
-            t0      = X(9);     % t0G
-            se      = X(10);    % se
-            si      = X(11);    % si
-            k       = X(12);    % kG
-            
-        end        
-      case 'all'
-        switch choiceMechType
-          case 'li'
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            
-            z0      = X(1:2);   % z0G,z0S
-            zc      = X(3:4);   % zcG,zcS
-            vcor    = X(5:8);   % vCG_c1,vCG_c2,vCG_c3,vCS
-            vincor  = X(9:11);  % vIG_c1,vIG_c2,vIG_c3
-            t0      = X(12:13); % t0G,t0S
-            se      = X(14);    % se
-            si      = X(15);    % si
-            k       = X(16:17); % kG,kS
-            w       = X(18:19); % wG,wS
-            
-          otherwise
-            switch inhibMechType
-              case 'li'
-                % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-                % F-L-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-                
-                z0      = X(1:2);   % z0G,z0S
-                zc      = X(3:4);   % zcG,zcS
-                vcor    = X(5:8);   % vCG_c1,vCG_c2,vCG_c3,vCS
-                vincor  = X(9:11);  % vIG_c1,vIG_c2,vIG_c3
-                t0      = X(12:13); % t0G,t0S
-                se      = X(14);    % se
-                si      = X(15);    % si
-                k       = X(16:17); % kG,kS
-                w       = X(18:19); % wG,wS
-                
-              otherwise
-                % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % R-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % F-R-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % F-B-V-A     | 1 | 1 | 1 | 1 | 3 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                
-                z0      = X(1:2);   % z0G,z0S
-                zc      = X(3:4);   % zcG,zcS
-                vcor    = X(5:8);   % vCG_c1,vCG_c2,vCG_c3,vCS
-                vincor  = X(9:11);  % vIG_c1,vIG_c2,vIG_c3
-                t0      = X(12:13); % t0G,t0S
-                se      = X(14);    % se
-                si      = X(15);    % si
-                k       = X(16:17); % kG,kS
-                                
-            end
-        end
-    end
-  case 'zc'
-    switch simScope
-      case 'go'
-        switch choiceMechType
-          case 'li'
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            % L-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 | 0 |
-            
-            z0      = X(1);     % z0G
-            zc      = X(2:4);   % zcG_c1,zcG_c2,zcG_c3
-            vcor    = X(5);     % vCG
-            vincor  = X(6);     % vIG
-            t0      = X(7);     % t0G
-            se      = X(8);     % se
-            si      = X(9);     % si
-            k       = X(10);    % kG
-            w       = X(11);    % wG
-            
-          otherwise
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % R-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % R-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % R-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-R-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-B-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            % F-L-Zc-G    | 1 | 0 | 3 | 0 | 1 | 0 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 0 | 0 |
-            
-            z0      = X(1);     % z0G
-            zc      = X(2:4);   % zcG_c1,zcG_c2,zcG_c3
-            vcor    = X(5);     % vCG
-            vincor  = X(6);     % vIG
-            t0      = X(7);     % t0G
-            se      = X(8);     % se
-            si      = X(9);     % si
-            k       = X(10);    % kG
-            
-        end        
-      case 'all'
-        switch choiceMechType
-          case 'li'
-            % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-            % L-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            % L-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-            
-            z0      = X(1:2);   % z0G,z0S
-            zc      = X(3:6);   % zcG_c1,zcG_c2,zcG_c3,zcS
-            vcor    = X(7:8);   % vCG,vCS
-            vincor  = X(9);     % vIG
-            t0      = X(10:11); % t0G,t0S
-            se      = X(12);    % se
-            si      = X(13);    % si
-            k       = X(14:15); % kG,kS
-            w       = X(16:17); % wG,wS
-            
-          otherwise
-            switch inhibMechType
-              case 'li'
-                % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-                % F-L-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
-                
-                z0      = X(1:2);   % z0G,z0S
-                zc      = X(3:6);   % zcG_c1,zcG_c2,zcG_c3,zcS
-                vcor    = X(7:8);   % vCG,vCS
-                vincor  = X(9);     % vIG
-                t0      = X(10:11); % t0G,t0S
-                se      = X(12);    % se
-                si      = X(13);    % si
-                k       = X(14:15); % kG,kS
-                w       = X(16:17); % wG,wS
-                
-              otherwise
-                % Model       |z0G|z0S|zcG|zcS|vCG|vCS|vIG|t0G|t0S| se| si| kG| kS| wG| wS|
-                % R-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % R-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % F-R-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                % F-B-Zc-A    | 1 | 1 | 3 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 |
-                
-                z0      = X(1:2);   % z0G,z0S
-                zc      = X(3:6);   % zcG_c1,zcG_c2,zcG_c3,zcS
-                vcor    = X(7:8);   % vCG,vCS
-                vincor  = X(9);     % vIG
-                t0      = X(10:11); % t0G,t0S
-                se      = X(12);    % se
-                si      = X(13);    % si
-                k       = X(14:15); % kG,kS
-                
-            end
-        end
-    end
+% Parse trial type 
+if ~isempty(regexp(trialCat,'^goTrial_', 'once'))
+  token = regexp(trialCat,'goTrial_(\S*)','tokens');
+  tagGO   = token{1}{1};
+elseif ~isempty(regexp(trialCat,'^stopTrial_', 'once'))
+  token = regexp(trialCat,'stopTrial_{ssd(\w*)}_(\S*)_(\S*)','tokens');
+%   tagSsd  = str2double(token{1}{1});
+  tagGO   = token{1}{2};
+  tagSTOP = token{1}{3};
 end
+
+% 1.2.1. Parameter indices per task factor
+% -------------------------------------------------------------------------------------------------------------------------
+% Specifies which specific index we need per task factor and accumulator category. A nan means no specific index, a number means a specific index.
+
+indexMat = nan(3,2); 
+
+if ~isempty(regexp(tagGO,'{GO}', 'once'))
+elseif ~isempty(regexp(tagGO,'{GO:s+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:s(\d+)}','tokens');
+  indexMat(1,1) = str2double(indices{1}{1});
+elseif ~isempty(regexp(tagGO,'{GO:r+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:r(\d+)}','tokens');
+  indexMat(2,1) = str2double(indices{1}{1});
+elseif ~isempty(regexp(tagGO,'{GO:c+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:c(\d+)}','tokens');
+  indexMat(3,1) = str2double(indices{1}{1});
+elseif ~isempty(regexp(tagGO,'{GO:s+\d,r+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:s(\d+),r(\d+)','tokens');
+  indexMat(1,1) = str2double(indices{1}{1});
+  indexMat(2,1) = str2double(indices{1}{2});
+elseif ~isempty(regexp(tagGO,'{GO:s+\d,c+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:s(\d+),c(\d+)}','tokens');
+  indexMat(1,1) = str2double(indices{1}{1});
+  indexMat(3,1) = str2double(indices{1}{2});
+elseif ~isempty(regexp(tagGO,'{GO:r+\d,c+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:r(\d+),c(\d+)}','tokens');
+  indexMat(2,1) = str2double(indices{1}{1});
+  indexMat(3,1) = str2double(indices{1}{2});
+elseif ~isempty(regexp(tagGO,'{GO:s+\d,r+\d,c+\d}', 'once'))
+  indices = regexp(tagGO,'{GO:s(\d+),r(\d+),c(\d+)}','tokens');
+  indexMat(1,1) = str2double(indices{1}{1});
+  indexMat(2,1) = str2double(indices{1}{2});
+  indexMat(3,1) = str2double(indices{1}{3});
+end
+
+if ~isempty(regexp(trialCat,'^stopTrial_', 'once'))
+  if ~isempty(regexp(tagSTOP,'{STOP}', 'once'))
+  elseif ~isempty(regexp(tagSTOP,'{STOP:s+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:s(\d+)}','tokens');
+    indexMat(1,2) = str2double(indices{1}{1});
+  elseif ~isempty(regexp(tagSTOP,'{STOP:r+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:r(\d+)}','tokens');
+    indexMat(2,2) = str2double(indices{1}{1});
+  elseif ~isempty(regexp(tagSTOP,'{STOP:c+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:c(\d+)}','tokens');
+    indexMat(3,2) = str2double(indices{1}{1});
+  elseif ~isempty(regexp(tagSTOP,'{STOP:s+\d,r+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:s(\d+),r(\d+)','tokens');
+    indexMat(1,2) = str2double(indices{1}{1});
+    indexMat(2,2) = str2double(indices{1}{2});
+  elseif ~isempty(regexp(tagSTOP,'{STOP:s+\d,c+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:s(\d+),c(\d+)}','tokens');
+    indexMat(1,2) = str2double(indices{1}{1});
+    indexMat(3,2) = str2double(indices{1}{2});
+  elseif ~isempty(regexp(tagSTOP,'{STOP:r+\d,c+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:r(\d+),c(\d+)}','tokens');
+    indexMat(2,2) = str2double(indices{1}{1});
+    indexMat(3,2) = str2double(indices{1}{2});
+  elseif ~isempty(regexp(tagSTOP,'{STOP:s+\d,r+\d,c+\d}', 'once'))
+    indices = regexp(tagSTOP,'{STOP:s(\d+),r(\d+),c(\d+)}','tokens');
+    indexMat(1,2) = str2double(indices{1}{1});
+    indexMat(2,2) = str2double(indices{1}{2});
+    indexMat(3,2) = str2double(indices{1}{3});
+  end
+end
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2. CONVERT X TO INDIVIDUAL PARAMETERS
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+z0  = get_value_per_xcat(SAM,X,indexMat,iZ0,iCatClass);
+zc  = get_value_per_xcat(SAM,X,indexMat,iZc,iCatClass);
+v   = get_value_per_xcat(SAM,X,indexMat,iV,iCatClass);
+ve  = get_value_per_xcat(SAM,X,indexMat,iVe,iCatClass);
+eta = get_value_per_xcat(SAM,X,indexMat,iEta,iCatClass);
+t0  = get_value_per_xcat(SAM,X,indexMat,iT0,iCatClass);
+se  = get_value_per_xcat(SAM,X,indexMat,iSe,iCatClass);
+si  = get_value_per_xcat(SAM,X,indexMat,iSi,iCatClass);
+k   = get_value_per_xcat(SAM,X,indexMat,iK,iCatClass);
+w   = get_value_per_xcat(SAM,X,indexMat,iW,iCatClass);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 3. ENCODE CONNECTIVITY MATRICES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-switch choiceMechType
-  case 'race'
-    
-    % Connectivity to self (leakage)
-    boolAS = logical(eye(sum(N)));
-    AS = boolAS*diag(blkdiag(trueN{:})*k(:));
-    
-    AOs = zeros(sum(N),sum(N));
-    
-    % No feed-forward inhibition
-    wFFI = repmat({0},nCnd,1);
-    
-  case 'ffi'
-    
-    % Connectivity to self (leakage)
-    boolAS = logical(eye(sum(N)));
-    AS = boolAS*diag(blkdiag(trueN{:})*k(:));
-    
-    AOs = zeros(sum(N),sum(N));
-        
-    % Feed-forward inhibition: normalized ffi of go-signals to all non-target GO units
-    wFFI = cellfun(@(a) -1./(numel(a)-1),SAM.des.iGO(:),'Uni',0);
-        
-  case 'li'
-    
-    % Connectivity to self (leakage)
-    boolAS = logical(eye(sum(N)));
-    AS = boolAS*diag(blkdiag(trueN{:})*k(:));
-    
-    % Connectivity to other units of same class
-    boolAOs = blkdiag(trueN{:})*blkdiag(trueN{:})' - boolAS;
-    AOs = boolAOs*diag(blkdiag(trueN{:})*w(:));
-    
-    % No feed-forward inhibition
-    wFFI = repmat({0},nCnd,1);
-    
-end
+% Consider adding an additional parameter class to distinguish lateral inhibition within and between accumulator classes
 
-switch lower(simScope)
-  case 'all'
-    switch lower(inhibMechType)
-      case 'li'
+% Endogenous connectivity
+endoConnSelf          = endoConn.self * diag(blkdiag(trueNRsp{:}) * k(:));
+endoConnNonSelfSame   = endoConn.nonSelfSame * diag(blkdiag(trueNRsp{:}) * w(:));
+endoConnNonSelfOther  = endoConn.nonSelfOther * diag(blkdiag(trueNRsp{:}) * w(:));
+endoConn              = endoConnSelf + endoConnNonSelfSame + endoConnNonSelfOther;
 
-        % Lateral inhibition to other units of other class
-        boolAOo = ~blkdiag(trueN{:})*blkdiag(trueN{:})';
-        AOo = boolAOo*diag(blkdiag(trueN{:})*w(:));
-
-      otherwise
-
-        % No lateral inhibition between GO and STOP
-        AOo = zeros(sum(N),sum(N));
-
-    end
-  otherwise
-    
-    % No lateral inhibition between GO and STOP
-    AOo = zeros(sum(N),sum(N));
-end
-
-% Ednogenous connectivity matrix
-A = AS + AOs + AOo;
-
-% Exogneous connectivity matrix
-% =========================================================================
-% The number of units differs across conditions. When the choice mechanism
-% is feed-forward inhibition, so does the feed-forward inhibition weight.
-
-C = cell(nCnd,1);
-for iCnd = 1:nCnd
-  trueIGO = zeros(1,N(1));
-  trueIGO(iGO{iCnd}) = true;
-  CGo = wFFI{iCnd}*(trueIGO(:)*trueIGO(:)'-diag(trueIGO)) + diag(trueIGO);
-  
-  switch lower(simScope)
-  case 'go'
-    C{iCnd} = blkdiag(CGo);
-  case 'all'
-    CStop = 1;
-    C{iCnd} = blkdiag(CGo,CStop);
-  end
-end
-
-% Extrinsic and intrinsic modulation
-B = zeros(sum(N),sum(N),sum(M));
-D = zeros(sum(N),sum(N),sum(N));
+% Extrinsic and intrinsic modulation 
+extrMod = zeros(sum(nRsp),sum(nRsp),sum(nStm));
+intrMod = zeros(sum(nRsp),sum(nRsp),sum(nRsp));
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 4. ENCODE STARTING POINT MATRIX
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-Z0 = blkdiag(trueN{:})*z0(:);
+Z0 = blkdiag(trueNRsp{:}) * z0(:);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 5. ENCODE THRESHOLD MATRIX
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-ZC = cell(nCnd,1);
-switch lower(condParam)
-  case 'zc'
-    
-    switch lower(simScope)
-      % #.#.#. Optimize go trials only
-      % -------------------------------------------------------------------
-      case 'go'
-        zcc1 = zc(1);
-        ZC{1,1} = blkdiag(trueN{:})*zcc1(:);
-        zcc2 = zc(2);
-        ZC{2,1} = blkdiag(trueN{:})*zcc2(:);
-        zcc3 = zc(3);
-        ZC{3,1} = blkdiag(trueN{:})*zcc3(:);
-        
-      % #.#.#. Optimize all trials
-      % -------------------------------------------------------------------
-      case 'all'
-        zcc1 = zc([1,4]);
-        ZC{1,1} = blkdiag(trueN{:})*zcc1(:);
-        zcc2 = zc([2,4]);
-        ZC{2,1} = blkdiag(trueN{:})*zcc2(:);
-        zcc3 = zc([3,4]);
-        ZC{3,1} = blkdiag(trueN{:})*zcc3(:);
-    end
-    
-  otherwise
-    ZC = cellfun(@(a) blkdiag(trueN{:})*zc(:),ZC,'Uni',0);
-end
+ZC = blkdiag(trueNRsp{:}) * zc(:);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 6. ACCUMULATION RATES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-switch condParam
-  
-  % #.#. Rate varies between conditions
-  % =======================================================================
-  case 'v' 
-    
-    switch lower(simScope)
-      
-      
-      % #.#.#. Optimize go trials only
-      % -------------------------------------------------------------------
-      case 'go'
-        vc1 = vcor(1); % rate target go-signal in condition 1
-        vc2 = vcor(2); % rate target go-signal in condition 2
-        vc3 = vcor(3); % rate target go-signal in condition 3
-      
-        vi1 = vincor(1); % rate non-target go-signal in condition 1
-        vi2 = vincor(2); % rate non-target go-signal in condition 2
-        vi3 = vincor(3); % rate non-target go-signal in condition 3
-        
-        
-      % #.#.#. Optimize all trials
-      % -------------------------------------------------------------------
-      case 'all'
-        vc1 = vcor([1,4]); % rate go-signal and stop-signal in condition 1
-        vc2 = vcor([2,4]); % rate go-signal and stop-signal in condition 2
-        vc3 = vcor([3,4]); % rate go-signal and stop-signal in condition 3
-        
-        vi1 = [vincor(1),0]; % rate non-target go-signal and stop-signal in condition 1
-        vi2 = [vincor(2),0]; % rate non-target go-signal and stop-signal in condition 2
-        vi3 = [vincor(3),0]; % rate non-target go-signal and stop-signal in condition 3
-        
-    end
-    
-    % Rates in condition 1
-    V(1,:) = cellfun(@(a,b) a*vc1(:) + b*vi1(:),VCor(1,:),VIncor(1,:),'Uni',0);
-    
-    % Rates in condition 2
-    V(2,:) = cellfun(@(a,b) a*vc2(:) + b*vi2(:),VCor(2,:),VIncor(2,:),'Uni',0);
-    
-    % Rates in condition 3
-    V(3,:) = cellfun(@(a,b) a*vc3(:) + b*vi3(:),VCor(3,:),VIncor(3,:),'Uni',0);
-  
-  % #.#. Rate does not vary between conditions
-  % =======================================================================
-  otherwise
-    
-    switch lower(simScope)
-      case 'go'
-      case 'all'
-        vincor = [vincor,0];
-    end
-    
-    V = cellfun(@(a,b) a*vcor(:) + b*vincor(:),VCor,VIncor,'Uni',0);
-    
-end
+V = blkdiag(iTarget{:}) * v + blkdiag(iNonTarget{:}) * ve;
+
+ETA = blkdiag(iTarget{:}) * eta + blkdiag(iNonTarget{:}) * eta;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 7. EXTRINSIC AND INTRINSIC NOISE
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-switch lower(simScope)
-  case 'go'
-    SE = cellfun(@(a) a*se,S,'Uni',0);
-    SI = cellfun(@(a) a*si,S,'Uni',0); 
-  case 'all'
-    SE = cellfun(@(a) a*[se se]',S,'Uni',0);
-    SI = cellfun(@(a) a*[si si]',S,'Uni',0); 
-end
+SE = diag(blkdiag(trueNStm{:}) * se(:));
+SI = diag(blkdiag(trueNRsp{:}) * si(:));
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 8. SPECIFY ONSETS AND DURATIONS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-% Accumulation
-% =========================================================================
-switch condParam
-  
-  case 't0' % Non-decision time varies between conditions
+T0 = blkdiag(trueNStm{:}) * t0(:);
+
+% THIS NEEDS TO BE IMPLEMENTED
+
+% thisAccumDur = stimDur{iCnd,iTrType}(:)';
+%     
+%     % 4.2.1. Adjust duration of the STOP process, if needed
+%     % ---------------------------------------------------------------------
+%     if iTrType > 1
+%       switch durationSTOP
+%         case 'trial'
+%           % STOP accumulation process lasts the entire trial
+%           thisAccumDur(iSTOP) = timeWindow(2) - thisAccumOns(iSTOP);
+%       end
+%     end
+
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #. NESTED FUNCTIONS
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass)
     
-    switch lower(simScope)
+    switch lower(SAM.sim.scope)
       case 'go'
-        t0c1 = t0(1);
-        t0c2 = t0(2);
-        t0c3 = t0(3);
+        xval = SAM.model.XCat.valExcluded(iCol)*ones(2,1);
       case 'all'
-        t0c1 = t0([1,4]);
-        t0c2 = t0([2,4]);
-        t0c3 = t0([3,4]);
+        xval = SAM.model.XCat.valExcluded(iCol)*ones(2,1);
     end
     
-    % Condition 1
-    accumOns(1,:) = cellfun(@(a) a + blkdiag(trueM{:})*t0c1(:),stimOns(1,:),'Uni',0);
+    % Vector of parameter category values in X
+    valuesGO = X(iCatClass{1,iCol});
     
-    % Condition 2
-    accumOns(2,:) = cellfun(@(a) a + blkdiag(trueM{:})*t0c2(:),stimOns(2,:),'Uni',0);
+    % Signature
+    signatureGO = SAM.model.variants.toFit.features(:,iCol,1);
     
-    % Condition 3
-    accumOns(3,:) = cellfun(@(a) a + blkdiag(trueM{:})*t0c3(:),stimOns(3,:),'Uni',0);
+    if ~isempty(valuesGO) % Excluded value is used when valuesGO is empty
+      if sum(signatureGO) > 1  
+      elseif sum(signatureGO) == 1
+        xval(1) = valuesGO(iMat(signatureGO,1));
+      elseif sum(signatureGO) == 0
+        xval(1) = valuesGO;
+      end
+    end
+    
+    switch lower(SAM.sim.scope)
+      case 'all'
         
-  otherwise % Non-decision time does not vary between conditions
-    
-    accumOns = cellfun(@(a) a + blkdiag(trueM{:})*t0(:),stimOns,'Uni',0);
-    
-end
+        % Vector of parameter category values in X
+        valuesSTOP = X(iCatClass{2,iCol});
+
+        % Signature
+        signatureSTOP = SAM.model.variants.toFit.features(:,iCol,2);
+        
+        if ~isempty(valuesSTOP) % Excluded value is used when valuesSTOP is empty
+          if sum(signatureSTOP) > 1  
+          elseif sum(signatureSTOP) == 1
+            xval(2) = valuesSTOP(iMat(signatureSTOP,1));
+          elseif sum(signatureSTOP) == 0
+            xval(2) = valuesSTOP;
+          end
+        end
+    end    
+  

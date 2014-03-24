@@ -44,7 +44,7 @@ end
 % RT quantiles
 % =========================================================================
 if isempty(rt)
-  rtQ         = quantile([1e4],q);
+  rtQ         = quantile(1e4,q);
 else
   rtQ         = quantile(rt,q);
 end
