@@ -51,6 +51,7 @@ Thumbs.db
 ######################
 *_mex.sh
 *_mex.mexmaci64
+*_mex.mexa64
 *_mex.mk
 *_mex.mki
 *_mex.map
