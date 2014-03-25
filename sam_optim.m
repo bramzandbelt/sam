@@ -170,15 +170,15 @@ switch lower(solverType)
     
     tElapse = toc(tS);
     
-      % Remove unused lines (containing only NaNs)
-      iFirstNanLine = find(all(isnan(history),2),1,'first');
-      history = history(1:iFirstNanLine-1,:);
-    
-      % Save the final log file
-      save(finalLogFile,'X','fVal','exitFlag','solverOutput','history','tElapse');
-      
-      % Remove iteration log file (history is also saved in final log file)
-      delete(iterLogFile);
+    % Remove unused lines (containing only NaNs)
+    iFirstNanLine = find(all(isnan(history),2),1,'first');
+    history = history(1:iFirstNanLine-1,:);
+
+    % Save the final log file
+    save(finalLogFile,'X','fVal','exitFlag','solverOutput','history','tElapse');
+
+    % Remove iteration log file (history is also saved in final log file)
+    delete(iterLogFile);
       
 %       varargout{1} = X;
 %       varargout{2} = fVal;
@@ -254,7 +254,7 @@ SAM.estim.X             = X;
 SAM.estim.fVal          = fVal;
 SAM.estim.exitFlag      = exitFlag;
 SAM.estim.solverOutput  = solverOutput;
-
+SAM.estim.tElapse       = tElapse;
 
 function stop = myoutput(x,optimvalues,state)
   stop = false;
