@@ -89,9 +89,9 @@ switch lower(solverType)
   % Simplex with bounds and linear and nonlinear constraints    
   case 'fminsearchcon'
 
-    solverOpts.MaxFunEvals      = 2000;
-    solverOpts.MaxIter          = 2000;
-    solverOpts.TolFun           = 1e-5;
+    solverOpts.MaxFunEvals      = '500*numberofvariables';
+    solverOpts.MaxIter          = '500*numberofvariables';
+    solverOpts.TolFun           = 1e-4;
     solverOpts.TolX             = 1e-5;
 
   % Genetic algorithm  
