@@ -55,14 +55,30 @@ addpath(genpath('/scratch/zandbeb/multichoice_stop_model/src/code'));
 % =========================================================================
 load(sprintf(pathStr,iSubj,simScope,iModel));
 
-% 2.2. Optimize the fit to the data, starting from parameters corresponding to iStartVal
+% 2.2. Add details for logging
 % =========================================================================
-SAM = sam_optim(SAM,iStartVal);
+fNameIterLog                  = sprintf('iterLog_%sTrials_model%.3d_startVal%.3d_started%s.mat',simScope,iModel,iStartVal,timeStr);
+fNameFinalLog                 = sprintf('finalLog_%sTrials_model%.3d_startVal%.3d_started%s.mat',simScope,iModel,iStartVal,timeStr);
+
+% Iteration log file
+fitLog.iterLogFile            = fullfile(SAM.io.workDir,fNameIterLog);
+
+% Iteration lof frequency
+fitLog.iterLogFreq            = 50;
+
+% Final log file
+fitLog.finalLogFile           = fullfile(SAM.io.workDir,fNameFinalLog);
+
+SAM.optim.log                 = fitLog;
 
 % 2.3. Optimize the fit to the data, starting from parameters corresponding to iStartVal
 % =========================================================================
-fNameSAM = sprintf('SAM_%sTrials_model%.3d_exit%d_started%s.mat',simScope,iModel,SAM.estim.exitFlag,timeStr);
-fNameX   = sprintf('bestX_%sTrials_model%.3d_exit%d_started%s.txt',simScope,iModel,SAM.estim.exitFlag,timeStr);
+SAM                           = sam_optim(SAM,iStartVal);
+
+% 2.4. Optimize the fit to the data, starting from parameters corresponding to iStartVal
+% =========================================================================
+fNameSAM                      = sprintf('SAM_%sTrials_model%.3d_exit%d_started%s.mat',simScope,iModel,SAM.estim.exitFlag,timeStr);
+fNameX                        = sprintf('bestX_%sTrials_model%.3d_exit%d_started%s.txt',simScope,iModel,SAM.estim.exitFlag,timeStr);
 
 save(fullfile(SAM.io.workDir,fNameSAM),'SAM');
 save(fullfile(SAM.io.workDir,fNameX),'X','-ascii','-double');
