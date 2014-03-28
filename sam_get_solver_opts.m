@@ -91,8 +91,8 @@ switch lower(solverType)
 
     solverOpts.MaxFunEvals      = '500*numberofvariables';
     solverOpts.MaxIter          = '500*numberofvariables';
-    solverOpts.TolFun           = 1e-4;
-    solverOpts.TolX             = 1e-5;
+    solverOpts.TolFun           = 1e-6;
+    solverOpts.TolX             = 1e-6;
 
   % Genetic algorithm  
   case 'ga'
