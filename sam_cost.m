@@ -1,4 +1,4 @@
-function cost = sam_cost(X,SAM)
+function [cost,prd] = sam_cost(X,SAM)
 % SAM_COST <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
