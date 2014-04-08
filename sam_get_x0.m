@@ -174,6 +174,7 @@ switch lower(simScope)
       
     elseif any(existUserSpecAllFile)
       X = importdata(userSpecAllFile);
+      X0 = X;
     elseif modelToFit.i == 1
       X0 = [];
       error('Not implemented yet');
