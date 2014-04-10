@@ -26,7 +26,7 @@ function [cost,altCost,prd] = sam_cost(X,SAM)
 nSim      = SAM.sim.n;
 simScope  = SAM.sim.scope;
 obs       = SAM.optim.obs;
-costStat  = SAM.optim.cost.stat;
+costStat  = SAM.optim.cost.stat.stat;
 
 switch lower(simScope)
   case 'go'
