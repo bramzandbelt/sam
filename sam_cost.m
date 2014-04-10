@@ -1,4 +1,4 @@
-function [cost,prd] = sam_cost(X,SAM)
+function [cost,altCost,prd] = sam_cost(X,SAM)
 % SAM_COST <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -23,10 +23,17 @@ function [cost,prd] = sam_cost(X,SAM)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. PROCESS INPUTS AND SPECIFY VARIABLES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+nSim      = SAM.sim.n;
+simScope  = SAM.sim.scope;
+obs       = SAM.optim.obs;
+costStat  = SAM.optim.cost.stat;
 
-nSim = SAM.sim.n;
-
-obs = SAM.optim.obs;
+switch lower(simScope)
+  case 'go'
+    nFree     =  sum([SAM.model.variants.toFit.XSpec.free.freeCatClass{1,:}]);
+  case 'all'
+    nFree     = sum(SAM.model.variants.toFit.XSpec.free.free);
+end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. SIMULATE EXPERIMENT
@@ -40,21 +47,26 @@ prd = sam_sim_expt('optimize',X,SAM);
 
 % 3.1. Compute cost for correct trials (go correct)
 % =========================================================================
-[costCorr,prd.pMassCorr] = compute_cost(prd.rtCorr,obs.rtQCorr,obs.fCorr,obs.pMassCorr);
+[bicCor,chiSquareCorr,prd.pMassCorr] = compute_cost(prd.rtCorr,obs.rtQCorr,obs.fCorr,obs.pMassCorr,nFree);
 
 % 3.2. Compute cost for error trials (go error, stop failure)
 % =========================================================================
-[costError,prd.pMassError] = compute_cost(prd.rtError,obs.rtQError,obs.fError,obs.pMassError);
+[bicError,chiSquareError,prd.pMassError] = compute_cost(prd.rtError,obs.rtQError,obs.fError,obs.pMassError,nFree);
 
-cost = costCorr + costError;
-
-% sam_plot_obs_prd(SAM,obsOptimData,prdOptimData);
+switch lower(costStat)
+  case 'bic'
+    cost    = bicCor + bicError;
+    altCost = chiSquareCorr + chiSquareError;
+  case 'chisquare'
+    cost    = chiSquareCorr + chiSquareError;
+    altCost = bicCor + bicError;
+end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 4. NESTED FUNCTIONS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-function [cost,pMPCell] = compute_cost(rtP,rtQO,fO,pMO)
+function [bic,chiSquare,pMPCell] = compute_cost(rtP,rtQO,fO,pMO,nFree)
   
   nSimCell      = num2cell(nSim*ones(numel(rtP),1));
   
@@ -84,7 +96,8 @@ function [cost,pMPCell] = compute_cost(rtP,rtQO,fO,pMO)
 
   % #.2.#. Compute the cost
   % -------------------------------------------------------------------------
-  cost          = sam_chi_square(pMO(iAnyO),pMP(iAnyO),fO(iAnyO));
-
+  chiSquare     = sam_chi_square(pMO(iAnyO),pMP(iAnyO),fO(iAnyO));
+  bic           = sam_bic(pMO(iAnyO),pMP(iAnyO),fO(iAnyO),nFree);
+  
 end
 end
