@@ -5,7 +5,7 @@ function chiSquare = sam_chi_square(pMObs,pMPrd,fObs)
 % <Describe more extensively what this function does> 
 %  
 % SYNTAX 
-% SAM_CHI_SQUARE; 
+% chiSquare = SAM_CHI_SQUARE(pMObs,pMPrd,fObs); 
 %  
 % pMObs       observed probability mass
 % pMPrd       predicted probability mass

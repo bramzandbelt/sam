@@ -5,7 +5,7 @@ function bic = sam_bic(pMObs,pMPrd,fObs,nFree)
 % <Describe more extensively what this function does> 
 %  
 % SYNTAX 
-% SAM_BIC; 
+% bic = SAM_BIC(pMObs,pMPrd,fObs,nFree); 
 %  
 % pMObs       observed probability mass
 % pMPrd       predicted probability mass
