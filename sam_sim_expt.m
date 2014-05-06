@@ -113,11 +113,27 @@ for iTrialCat = 1:nTrialCat
   stmOns      = SAM.optim.obs.onset{iTrialCat};
   stmDur      = SAM.optim.obs.duration{iTrialCat};
   
-  iTargetGO       = find(SAM.optim.modelMat.iTarget{iTrialCat}{1});
-  iNonTargetGO    = find(SAM.optim.modelMat.iNonTarget{iTrialCat}{1});
+  trueTarget  = SAM.optim.modelMat.iTarget{iTrialCat};
+  trueNonTarget = SAM.optim.modelMat.iNonTarget{iTrialCat};
+  
+  % Identify targets inside each cell
+  iTarget     = cellfun(@(in1) find(in1),trueTarget,'Uni',0);
+  
+  % Identify non-targets inside each cell
+  iNonTarget  = cellfun(@(in1) find(in1),trueNonTarget,'Uni',0);
+  
+  % Cumulative sum of elements
+  nCumsum     = num2cell(cumsum(cell2mat(cellfun(@(in1) numel(in1),trueTarget,'Uni',0))));
+  
+  % Number of elements to add to get to corresponding index
+  nOffset     = [{0},cellfun(@(in1) numel(in1),trueTarget(1:end-1),'Uni',0)];
+  
+  iTargetGO       = iTarget{1} + nOffset{1};
+  iNonTargetGO    = iNonTarget{1} + nOffset{1};
   iGO             = sort([iTargetGO(:);iNonTargetGO(:)]);
-  iTargetSTOP     = find(SAM.optim.modelMat.iTarget{iTrialCat}{2});
-  iNonTargetSTOP  = find(SAM.optim.modelMat.iNonTarget{iTrialCat}{2});
+  
+  iTargetSTOP     = iTarget{2} + nOffset{2};
+  iNonTargetSTOP  = iNonTarget{2} + nOffset{2};
   iSTOP           = sort([iTargetSTOP(:);iNonTargetSTOP(:)]);
   
   % Pre-allocate response time and response arrays
