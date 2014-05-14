@@ -135,8 +135,11 @@ switch lower(solverType)
       UB, ...
       solverOpts);
     
+      % Also get alternative cost value
+      [~,altCost] = sam_cost(X,SAM);
+  
       % Save the final log file
-      save(finalLogFile,'X','fVal','exitFlag','solverOutput','history');
+      save(finalLogFile,'X','fVal','altCost','exitFlag','solverOutput','history');
       
       % Remove iteration log file (history is also saved in final log file)
       delete(iterLogFile);
@@ -261,6 +264,7 @@ delete(myPool);
 
 SAM.estim.X             = X;
 SAM.estim.fVal          = fVal;
+SAM.estim.fValAlt       = altCost;
 SAM.estim.exitFlag      = exitFlag;
 SAM.estim.solverOutput  = solverOutput;
 SAM.estim.tElapse       = tElapse;
