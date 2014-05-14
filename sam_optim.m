@@ -101,7 +101,15 @@ end
 % #. START THE PARALLEL POOL
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-myPool = parpool();
+% In unique directory to prevent collision of parallel jobs
+% e.g. see: http://www.mathworks.com/matlabcentral/answers/97141-why-am-i-unable-to-start-a-local-matlabpool-from-multiple-matlab-sessions-that-use-a-shared-preferen
+c = parcluster();
+t = tempname('/home/zandbeb/.matlab/local_cluster_jobs/R2014a/');
+mkdir(t);
+c.JobStorageLocation=t;
+tWait = 1+60*rand();
+pause(tWait);
+myPool = parpool(c);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. OPTIMIZE MODEL
@@ -256,7 +264,11 @@ switch lower(solverType)
 end
 
 % Shut down the parallel pool
+% =========================================================================
 delete(myPool);
+
+% Remove temporary directory
+system(['rm -r ',t]);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 3. OUTPUT
