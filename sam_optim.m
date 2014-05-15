@@ -187,6 +187,12 @@ switch lower(solverType)
     
     tElapse = toc(tS);
     
+    % Also get alternative cost value
+    [~,altCost] = sam_cost(X,SAM);
+  
+    % Save the final log file
+    save(finalLogFile,'X','fVal','altCost','exitFlag','solverOutput','history');
+    
     % Remove unused lines (containing only NaNs)
     iFirstNanLine = find(all(isnan(history),2),1,'first');
     history = history(1:iFirstNanLine-1,:);
