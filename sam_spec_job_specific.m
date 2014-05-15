@@ -90,8 +90,8 @@ SAM.optim.prd.ssd             = SAM.optim.obs.ssd;
 
 % Maximum number of function evaluations and iterations
 % =========================================================================================================================
-SAM.optim.solver.opts.MaxFunEvals = 500 * sum(SAM.model.variants.toFit.XSpec.free.free);
-SAM.optim.solver.opts.MaxIter     = 500 * sum(SAM.model.variants.toFit.XSpec.free.free);
+SAM.optim.solver.opts.MaxFunEvals = 1000 * sum(SAM.model.variants.toFit.XSpec.free.free);
+SAM.optim.solver.opts.MaxIter     = 1000 * sum(SAM.model.variants.toFit.XSpec.free.free);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. HACKS (TO BE IMPLEMENTED ELSEWHERE SOON)
