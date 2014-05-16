@@ -93,7 +93,7 @@ switch lower(rngSeedStage)
     % Seeding of the random number generator should be accompanied by 
     % clearing MEX functions.
 
-    clear(char(trialSimFun));
+    clear(char(SAM.sim.fun.trial));
     rng(rngSeedId);
 end
 
