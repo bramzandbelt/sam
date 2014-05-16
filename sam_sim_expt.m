@@ -190,7 +190,12 @@ for iTrialCat = 1:nTrialCat
   end
 
   parfor iTr = 1:nSim
-    
+      
+      switch lower(rngSeedStage)
+        case 'sam_sim_expt'
+            rng(rngSeedId.Seed + iTr, 'twister');
+      end
+      
     % 3.2.1. Timing diagram of model inputs
     % -----------------------------------------------------------------------------------------------------------------
 
