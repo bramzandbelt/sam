@@ -92,6 +92,8 @@ SAM.optim.prd.ssd             = SAM.optim.obs.ssd;
 % =========================================================================================================================
 SAM.optim.solver.opts.MaxFunEvals = 1000 * sum(SAM.model.variants.toFit.XSpec.free.free);
 SAM.optim.solver.opts.MaxIter     = 1000 * sum(SAM.model.variants.toFit.XSpec.free.free);
+SAM.optim.solver.opts.TolFun      = 1e-5;
+SAM.optim.solver.opts.TolX        = 1e-5;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. HACKS (TO BE IMPLEMENTED ELSEWHERE SOON)
