@@ -1,11 +1,11 @@
-function [rtQ,cumProbDefective,probMass,probMassDefective] = sam_bin_data(rt,prop,cumProb,minSize)
+function [rtQ,cumProb,cumProbDefective,probMass,probMassDefective] = sam_bin_data(rt,prop,cumProb,minSize)
 % SAM_BIN_DATA Groups RT into bins
 %  
 % DESCRIPTION 
 % RT bin edges are defined based on cumulative probabilities
 % 
 % SYNTAX
-% rtQ,cumProbDefect,probMass,probMassDefective] = SAM_BIN_DATA(rt,prop,cumProb,minSize)
+% [rtQ,cumProbDefective,probMass,probMassDefective] = SAM_BIN_DATA(rt,prop,cumProb,minSize)
 % 
 % rt        - reaction times (Nx1 double)
 % prop      - proportion of trials in this category (1x1 double), with
@@ -43,27 +43,7 @@ function [rtQ,cumProbDefective,probMass,probMassDefective] = sam_bin_data(rt,pro
 % =========================================================================
 
 if ~isempty(find(isnan(rt), 1))
-    rt = rt(~isnan(rt));
-end
-
-% If there are too few trials, adjust the cumulative probabilities
-% =========================================================================
-
-if numel(minSize) == 1
-    if numel(rt) < minSize
-      % If fewer trials than minSize, group into one bin
-      cumProb = [0 1];
-    end
-elseif numel(minSize) == 2
-    if numel(rt) < minSize
-      % If fewer trials than minimum of minSize, group into one bin
-      cumProb = [0 1];
-    elseif numel(rt) < minSize
-      % If fewer trials than maximum of minSize, group into two bins
-      cumProb = [0 0.5 1];
-    end
-else
-    error('minSize should be a 1x1 or 1x2 double.');
+    rt              = rt(~isnan(rt));
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -73,29 +53,31 @@ end
 % RT quantiles
 % =========================================================================
 if isempty(rt)
-  rtQ         = quantile(1e4,cumProb);
+    rt              = NaN;
+    cumProb         = NaN;
+    rtQ             = [];
+elseif numel(rt) < min(minSize)
+    cumProb         = NaN;
+    rtQ             = [];
+elseif numel(rt) < max(minSize)
+    cumProb         = 0.5;
+    rtQ             = quantile(rt,cumProb);
 else
-  rtQ         = quantile(rt,cumProb);
-end
-
-% This ensures that the slowest RT falls within the bin, instead of falling
-% in a separate bin
-if numel(rt) < minSize
-  rtQ(2)    = rtQ(2) + 1;
+    rtQ             = quantile(rt,cumProb);
 end
 
 % Defective cumulative probabilities
 % =========================================================================
-cumProbDefective     = cumProb.*prop;
+cumProbDefective    = cumProb.*prop;
 
 % Probability masses and defective probability masses
 % =========================================================================
-if isempty(rt)
-  histCount   = histc(1e4,[-Inf,rtQ,Inf]);
+histCount           = histc(rt,[-Inf,rtQ,Inf]);
+histCount           = histCount(1:end-1);
+if max(histCount) == 0
+    probMass        = histCount;
 else
-  histCount   = histc(rt,[-Inf,rtQ,Inf]);
+    probMass        = histCount./sum(histCount);
 end
-histCount             = histCount(1:end-1);
-probMass              = histCount./sum(histCount);
-probMass              = probMass(:);
-probMassDefective     = prop.*probMass;
+probMass            = probMass(:);
+probMassDefective   = prop.*probMass;
