@@ -108,6 +108,10 @@ end
 % Loop over trial categories
 for iTrialCat = 1:nTrialCat
   
+%     if iTrialCat == nTrialCat
+%         disp('Here we are');
+%     end
+    
   trialCat    = SAM.optim.obs.trialCat{iTrialCat};
   stmOns      = SAM.optim.obs.onset{iTrialCat};
   stmDur      = SAM.optim.obs.duration{iTrialCat};
@@ -196,7 +200,7 @@ for iTrialCat = 1:nTrialCat
 
     t0Var = randomT0Factor.*rand(1,m);
     accumOns = stmOns + T0 - T0.*t0Var;
-    accumDur = stmDur - accumDurFactor.*(trialDur-stmDur-accumOns);
+    accumDur = stmDur + accumDurFactor.*(trialDur-stmDur-accumOns);
     
     [t, ...                                               % - Time
      u] ...                                               % - Strength of model input
@@ -314,11 +318,10 @@ for iTrialCat = 1:nTrialCat
       % - The fastest GO unit has a shorter RT than any STOP unit
       % - Target GO unit produced an RT
       % - Target GO unit is the only unit having produced an RT
-      iStopIErrorCCorr = rt(iTargetGO,:) < rt(iSTOP,:) & sum(rt < Inf) == 1;
-      
+      iStopIErrorCCorr = rt(iTargetGO,:) <= rt(iSTOP,:) & all(isinf(rt(iNonTargetGO,:)));
       % Stop failure trial, choice error
       % -------------------------------------------------------------------
-      iStopIErrorCError = min(rt(iNonTargetGO,:),[],1) < rt(iSTOP,:);
+      iStopIErrorCError = min(rt(iNonTargetGO,:),[],1) <= rt(iSTOP,:) & any(rt(iNonTargetGO,:) < Inf);
       
     else
       % Stop success trial
@@ -337,7 +340,7 @@ for iTrialCat = 1:nTrialCat
       % Criteria:
       % - Target GO unit produced an RT
       % -------------------------------------------------------------------
-      iStopIErrorCCorr = rt(iTargetGO,:) < Inf;
+      iStopIErrorCCorr = rt(iTargetGO,:) < Inf & all(isinf(rt(iNonTargetGO,:)));
       
       % Stop failure trial, choice error
       % -------------------------------------------------------------------
@@ -672,8 +675,8 @@ for iTrialCat = 1:nTrialCat
         if nStopICorr >= 1
 
           % Get event times of go-signals and stop-signals
-          etGo = repmat(stmOns(iTargetGO),nCorr,1);
-          etStop = repmat(stmOns(iTargetSTOP),nCorr,1);
+          etGo = repmat(stmOns(iTargetGO),nStopICorr,1);
+          etStop = repmat(stmOns(iTargetSTOP),nStopICorr,1);
 
           % Get quantile averaged dynamics of target GO aligned on go-signal
           [prd.dyn{iTrialCat}.stopICorr.goStim.targetGO.qX, ...
