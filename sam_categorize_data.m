@@ -33,7 +33,7 @@ modelToFit        = SAM.model.variants.toFit;
 
 simScope          = SAM.sim.scope;
 
-qntls             = SAM.optim.cost.stat.cumProb;
+cumProb           = SAM.optim.cost.stat.cumProb;
 minBinSize        = SAM.optim.cost.stat.minBinSize;
 
 % 1.2. Dynamic variables
@@ -53,11 +53,11 @@ taskFactors       = [nStm;nRsp;nCnd,nCnd];
 load(file,'data');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 4. CATEGORIZE DATA BASED ON MODEL FEATURES
+% 3. CATEGORIZE DATA BASED ON MODEL FEATURES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Go trials
-% =========================================================================================================================
+% =========================================================================
 signatureGo   = any(modelToFit.features(:,:,1),2);
 
 if ~isequal(signatureGo,[0 0 0]')
@@ -154,7 +154,7 @@ switch lower(simScope)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 5. CLASSIFY TRIALS, COMPUTE DESCRIPTIVES, AND SAVE DATA
+% 4. CLASSIFY TRIALS, COMPUTE DESCRIPTIVES, AND SAVE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % 4.1. Pre-allocate arrays for logging
@@ -166,29 +166,58 @@ obs           = dataset({cell(nTrialCat,1),'trialCat'}, ...
                         {cell(nTrialCat,1),'funSTOP'}, ...
                         {cell(nTrialCat,1),'onset'}, ...
                         {cell(nTrialCat,1),'duration'}, ...
-                        {zeros(nTrialCat,1),'ssd'}, ...
-                        {zeros(nTrialCat,1),'nTotal'}, ...
-                        {zeros(nTrialCat,1),'nCorr'}, ...
-                        {zeros(nTrialCat,1),'nError'}, ...
-                        {zeros(nTrialCat,1),'pTotal'}, ...
-                        {zeros(nTrialCat,1),'pCorr'}, ...
-                        {zeros(nTrialCat,1),'pError'}, ...
-                        {cell(nTrialCat,1),'rtCorr'}, ...
-                        {cell(nTrialCat,1),'rtError'}, ...
-                        {cell(nTrialCat,1),'rtQCorr'}, ...
-                        {cell(nTrialCat,1),'rtQError'}, ...
-                        {cell(nTrialCat,1),'fCorr'}, ...
-                        {cell(nTrialCat,1),'fError'}, ...
-                        {cell(nTrialCat,1),'pMassCorr'}, ...
-                        {cell(nTrialCat,1),'pMassError'}, ...
-                        {cell(nTrialCat,1),'pDefectiveCorr'}, ...
-                        {cell(nTrialCat,1),'pDefectiveError'});
-
+                        {nan(nTrialCat,1),'ssd'}, ...
+                        {nan(nTrialCat,1),'nTotal'}, ...
+                        {nan(nTrialCat,1),'nGoCCorr'}, ...
+                        {nan(nTrialCat,1),'nGoCError'}, ...
+                        {nan(nTrialCat,1),'nStopICorr'}, ...
+                        {nan(nTrialCat,1),'nStopIErrorCCorr'}, ...
+                        {nan(nTrialCat,1),'nStopIErrorCError'}, ...
+                        {nan(nTrialCat,1),'pTotal'}, ...
+                        {nan(nTrialCat,1),'pGoCCorr'}, ...
+                        {nan(nTrialCat,1),'pGoCError'}, ...
+                        {nan(nTrialCat,1),'pStopICorr'}, ...
+                        {nan(nTrialCat,1),'pStopIErrorCCorr'}, ...
+                        {nan(nTrialCat,1),'pStopIErrorCError'}, ...
+                        {cell(nTrialCat,1),'rtGoCCorr'}, ...
+                        {cell(nTrialCat,1),'rtGoCError'}, ...
+                        {cell(nTrialCat,1),'rtStopICorr'}, ...
+                        {cell(nTrialCat,1),'rtStopIErrorCCorr'}, ...
+                        {cell(nTrialCat,1),'rtStopIErrorCError'}, ...
+                        {cell(nTrialCat,1),'rtQGoCCorr'}, ...
+                        {cell(nTrialCat,1),'rtQGoCError'}, ...
+                        {cell(nTrialCat,1),'rtQStopICorr'}, ...
+                        {cell(nTrialCat,1),'rtQStopIErrorCCorr'}, ...
+                        {cell(nTrialCat,1),'rtQStopIErrorCError'}, ...
+                        {cell(nTrialCat,1),'cumProbGoCCorr'}, ...
+                        {cell(nTrialCat,1),'cumProbGoCError'}, ...
+                        {cell(nTrialCat,1),'cumProbStopICorr'}, ...
+                        {cell(nTrialCat,1),'cumProbStopIErrorCCorr'}, ...
+                        {cell(nTrialCat,1),'cumProbStopIErrorCError'}, ...
+                        {cell(nTrialCat,1),'cumProbDefectiveGoCCorr'}, ...
+                        {cell(nTrialCat,1),'cumProbDefectiveGoCError'}, ...
+                        {cell(nTrialCat,1),'cumProbDefectiveStopICorr'}, ...
+                        {cell(nTrialCat,1),'cumProbDefectiveStopIErrorCCorr'}, ...
+                        {cell(nTrialCat,1),'cumProbDefectiveStopIErrorCError'}, ...
+                        {cell(nTrialCat,1),'probMassGoCCorr'}, ...
+                        {cell(nTrialCat,1),'probMassGoCError'}, ...
+                        {cell(nTrialCat,1),'probMassStopICorr'}, ...
+                        {cell(nTrialCat,1),'probMassStopIErrorCCorr'}, ...
+                        {cell(nTrialCat,1),'probMassStopIErrorCError'}, ...
+                        {cell(nTrialCat,1),'probMassDefectiveGoCCorr'}, ...
+                        {cell(nTrialCat,1),'probMassDefectiveGoCError'}, ...
+                        {cell(nTrialCat,1),'probMassDefectiveStopICorr'}, ...
+                        {cell(nTrialCat,1),'probMassDefectiveStopIErrorCCorr'}, ...
+                        {cell(nTrialCat,1),'probMassDefectiveStopIErrorCError'});                    
 
 for iTrialCat = 1:nTrialCat
 
   obs.trialCat{iTrialCat} = tagAll{iTrialCat};
 
+  % 4.2. Classify on the basis of trial (go/stop) and experimental factors
+  % (stimulus, response, condition)
+  % =======================================================================
+  
   % If this is a Go trial
   if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
 
@@ -221,7 +250,6 @@ for iTrialCat = 1:nTrialCat
                      data.rsp1    == combiGo(2,iTrialCat) & ...
                      data.cnd     == combiGo(3,iTrialCat));
     end
-
 
   % If this is a Stop trial 
   elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
@@ -291,22 +319,140 @@ for iTrialCat = 1:nTrialCat
 
   end
 
-  iSelectCorr   = intersect(iSelect, find(data.acc == 2));
-  iSelectError  = intersect(iSelect,find(data.acc ~= 2));
-
+  
+  % 4.3. Narrow down the classification based on trial type (correct
+  % choice, choice error)
+  % =======================================================================
+  
+  if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
+      
+      iGoCCorr              = intersect(iSelect,find(data.rsp1 == data.resp));
+      iGoCError             = intersect(iSelect,find(data.rsp1 ~= data.resp));
+      
+  elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
+      
+      iStopICorr            = intersect(iSelect,find(data.rt == 0));
+      iStopIErrorCCorr      = intersect(iSelect,find(data.rt ~= 0 & data.rsp1 == data.resp));
+      iStopIErrorCError     = intersect(iSelect,find(data.rt ~= 0 & data.rsp1 ~= data.resp));
+  end
+  
   % Number of trials
-  obs.nTotal(iTrialCat)   = numel(iSelect);
-  obs.nCorr(iTrialCat)    = numel(iSelectCorr);
-  obs.nError(iTrialCat)   = numel(iSelectError);
-
-  % Probability
-  obs.pCorr(iTrialCat)    = numel(iSelectCorr)./numel(iSelect);
-  obs.pError(iTrialCat)   = numel(iSelectError)./numel(iSelect);
-
+  % -----------------------------------------------------------------------
+  if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
+      % Compute
+      nGoCCorr                          = numel(find(iGoCCorr));
+      nGoCError                         = numel(find(iGoCError));
+      nGoTotal                          = nGoCCorr + nGoCError;
+      
+      % Log
+      obs.nTotal(iTrialCat)             = nGoTotal;
+      obs.nGoCCorr(iTrialCat)           = nGoCCorr;
+      obs.nGoCError(iTrialCat)          = nGoCError;
+      
+  elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
+      % Compute
+      nStopICorr                        = numel(find(iStopICorr));
+      nStopIErrorCCorr                  = numel(find(iStopIErrorCCorr));
+      nStopIErrorCError                 = numel(find(iStopIErrorCError));
+      nStopTotal                        = nStopICorr + nStopIErrorCCorr + nStopIErrorCError;
+      
+      % Log
+      obs.nTotal(iTrialCat)             = nStopTotal;
+      obs.nStopICorr(iTrialCat)         = nStopICorr;
+      obs.nStopIErrorCCorr(iTrialCat)   = nStopIErrorCCorr;
+      obs.nStopIErrorCError(iTrialCat)  = nStopIErrorCError;
+  end
+  
+  % Trial probabilities
+  % -----------------------------------------------------------------------
+  if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
+      % Compute
+      if nGoTotal > 0
+          pGoCCorr                          = nGoCCorr/nGoTotal;
+          pGoCError                         = nGoCError/nGoTotal;
+      else
+          pGoCCorr                          = 0;
+          pGoCError                         = 0;
+      end
+      
+      % Log
+      obs.pTotal(iTrialCat)             = pGoCCorr + pGoCError;
+      obs.pGoCCorr(iTrialCat)           = pGoCCorr;
+      obs.pGoCError(iTrialCat)          = pGoCError;
+      
+  elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
+      % Compute
+      if nStopTotal > 0
+          pStopICorr                        = nStopICorr/nStopTotal;
+          pStopIErrorCCorr                  = nStopIErrorCCorr/nStopTotal;
+          pStopIErrorCError                 = nStopIErrorCError/nStopTotal;
+      else
+          pStopICorr                        = 0;
+          pStopIErrorCCorr                  = 0;
+          pStopIErrorCError                 = 0;
+      end
+      
+      % Log
+      obs.pTotal(iTrialCat)             = pStopICorr + pStopIErrorCCorr + pStopIErrorCError;
+      obs.pStopICorr(iTrialCat)         = pStopICorr;
+      obs.pStopIErrorCCorr(iTrialCat)   = pStopIErrorCCorr;
+      obs.pStopIErrorCError(iTrialCat)  = pStopIErrorCError;
+      
+  end
+  
   % Response time
-  obs.rtCorr{iTrialCat}   = sort(data.rt(iSelectCorr));
-  obs.rtError{iTrialCat}  = sort(data.rt(iSelectError));
-
+  % -----------------------------------------------------------------------
+  
+  if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
+    if nGoCCorr > 0
+        % Compute
+        rtGoCCorr = sort(data.rt(iGoCCorr));
+        
+        % Log
+        obs.rtGoCCorr{iTrialCat} = rtGoCCorr;
+    end
+    
+    if nGoCError > 0
+        % Compute
+        rtGoCError = sort(data.rt(iGoCError));
+        
+        % Note: stimOns for iTargetGO and iNonTargetGO are the same; I use 
+        % iTargetGO instead of iNonTargetGO because iTargetGO is always a 
+        % scalar, iNonTargetGO not.
+      
+        % Log
+        obs.rtGoCError{iTrialCat} = rtGoCError;
+    end
+    
+  elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
+    if nStopICorr > 0
+        % Compute
+        rtStopICorr = sort(data.rt(iStopICorr));
+        
+        % Log
+        obs.rtStopICorr{iTrialCat} = rtStopICorr;
+    end
+    
+    if nStopIErrorCCorr > 0
+        % Compute
+        rtStopIErrorCCorr = sort(data.rt(iStopIErrorCCorr));
+        
+        % Log
+        obs.rtStopIErrorCCorr{iTrialCat} = rtStopIErrorCCorr;
+    end
+    
+    if nStopIErrorCError > 0
+        % Compute
+        rtStopIErrorCError = sort(data.rt(iStopIErrorCError));
+      
+        % Log
+        obs.rtStopIErrorCError{iTrialCat} = rtStopIErrorCError;
+    end
+    
+  end
+  
+  % Stop-signal delay
+  % -----------------------------------------------------------------------
   if ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
     if numel(unique(nonnans(data.ssd(iSelect)))) > 1
       error('More than one SSD detected');
@@ -314,42 +460,65 @@ for iTrialCat = 1:nTrialCat
     obs.ssd(iTrialCat)      = max([0,unique(nonnans(data.ssd(iSelect)))]);
   end
 
-
-  if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once')) && obs.nCorr(iTrialCat) > 0
-    [obs.rtQCorr{iTrialCat}, ...
-     obs.pDefectiveCorr{iTrialCat}, ...
-     obs.fCorr{iTrialCat}, ...
-     obs.pMassCorr{iTrialCat}]  = sam_bin_data(obs.rtCorr{iTrialCat},obs.pCorr(iTrialCat),obs.nCorr(iTrialCat),qntls,minBinSize);
+  % RT bin data
+  % -----------------------------------------------------------------------
+  if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
+      
+      if nGoCCorr > 0
+          [obs.rtQGoCCorr{iTrialCat}, ...
+           obs.cumProbGoCCorr{iTrialCat}, ...   
+           obs.cumProbDefectiveGoCCorr{iTrialCat}, ...
+           obs.probMassGoCCorr{iTrialCat}, ...
+           obs.probMassDefectiveGoCCorr{iTrialCat}] = ...
+           sam_bin_data(rtGoCCorr,pGoCCorr,cumProb,minBinSize);
+      end
+      
+      if nGoCError > 0
+          [obs.rtQGoCError{iTrialCat}, ...
+           obs.cumProbGoCError{iTrialCat}, ...
+           obs.cumProbDefectiveGoCError{iTrialCat}, ...
+           obs.probMassGoCError{iTrialCat}, ...
+           obs.probMassDefectiveGoCError{iTrialCat}] = ...
+           sam_bin_data(rtGoCError,pGoCError,cumProb,minBinSize); 
+      end
+      
+  elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
+      
+      if nStopICorr > 0
+          
+          obs.probMassStopICorr{iTrialCat} = 1;
+          obs.probMassDefectiveStopICorr{iTrialCat} = pStopICorr;
+          
+      end
+      
+      if nStopIErrorCCorr > 0
+          [obs.rtQStopIErrorCCorr{iTrialCat}, ...
+           obs.cumProbStopIErrorCCorr{iTrialCat}, ...
+           obs.cumProbDefectiveStopIErrorCCorr{iTrialCat}, ...
+           obs.probMassStopIErrorCCorr{iTrialCat}, ...
+           obs.probMassDefectiveStopIErrorCCorr{iTrialCat}] = ...
+           sam_bin_data(rtStopIErrorCCorr,pStopIErrorCCorr,cumProb,minBinSize);
+      end
+      
+      if nStopIErrorCError > 0
+          [obs.rtQStopIErrorCError{iTrialCat}, ...
+           obs.cumProbStopIErrorCError{iTrialCat}, ...
+           obs.cumProbDefectiveStopIErrorCError{iTrialCat}, ...
+           obs.probMassStopIErrorCError{iTrialCat}, ...
+           obs.probMassDefectiveStopIErrorCError{iTrialCat}] = ...
+           sam_bin_data(rtStopIErrorCError,pStopIErrorCError,cumProb,minBinSize);
+      end
+      
   end
 
-  if obs.nError(iTrialCat) > 0
-    [obs.rtQError{iTrialCat}, ...
-     obs.pDefectiveError{iTrialCat}, ...
-     obs.fError{iTrialCat}, ...
-     obs.pMassError{iTrialCat}]  = sam_bin_data(obs.rtError{iTrialCat},obs.pError(iTrialCat),obs.nError(iTrialCat),qntls,minBinSize);
-  end
-
-
+  % Stimulus onsets and durations
+  % -----------------------------------------------------------------------
   if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
     obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) 0]';
     obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur(1) 0]';
   elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
     obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) stmOns(1) + obs.ssd(iTrialCat)]';
-    obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur]';
+    obs.duration{iTrialCat} = blkdiag(trueM{:})*(stmDur)';
   end
-
-%     % 4.1.1. Compute timing diagram
-%         % -----------------------------------------------------------------
-%                                           % OUTPUT
-%         [tStm, ...                        % - Time
-%          uStm] ...                        % - Strength of stimulus (t)
-%         = sam_spec_timing_diagram ...     % FUNCTION
-%          ...                              % INPUT
-%         (stimOns(:)', ...                 % - Stimulus onset time
-%          stimDur(:)', ...                 % - Stimulus duration
-%          [], ...                          % - Strength (default = 1);
-%          0, ...                           % - Magnitude of extrinsic noise
-%          dt, ...                          % - Time step
-%          timeWindow);                     % - Time window
-
+  
 end
