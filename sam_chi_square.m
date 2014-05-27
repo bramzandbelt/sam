@@ -1,4 +1,4 @@
-function chiSquare = sam_chi_square(pMObs,pMPrd,fObs)
+function chiSquare = sam_chi_square(pMObs,pMPrd,nObs)
 % SAM_CHI_SQUARE <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -9,7 +9,7 @@ function chiSquare = sam_chi_square(pMObs,pMPrd,fObs)
 %  
 % pMObs       observed probability mass
 % pMPrd       predicted probability mass
-% fObs        observed frequency
+% nObs        observed frequency
 %
 % EXAMPLES 
 %    
@@ -18,4 +18,5 @@ function chiSquare = sam_chi_square(pMObs,pMPrd,fObs)
 % $Created : Wed 18 Sep 2013 17:03:57 CDT by bram 
 % $Modified: Wed 18 Sep 2013 17:06:56 CDT by bram
 
-chiSquare = sum((((pMObs.*fObs) - (pMPrd.*fObs)).^2) ./ (pMPrd.*fObs));
+% chiSquare = sum((((pMObs.*fObs) - (pMPrd.*fObs)).^2) ./ (pMPrd.*fObs));
+chiSquare = nObs.*sum(((pMObs - pMPrd).^2)./pMPrd);
