@@ -332,8 +332,8 @@ for iTrialCat = 1:nTrialCat
   elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
       
       iStopICorr            = intersect(iSelect,find(data.rt == 0));
-      iStopIErrorCCorr      = intersect(iSelect,find(data.rt ~= 0 & data.rsp1 == data.resp));
-      iStopIErrorCError     = intersect(iSelect,find(data.rt ~= 0 & data.rsp1 ~= data.resp));
+      iStopIErrorCCorr      = intersect(iSelect,find(data.rt > 0 & data.rsp1 == data.resp));
+      iStopIErrorCError     = intersect(iSelect,find(data.rt > 0 & data.rsp1 ~= data.resp));
   end
   
   % Number of trials
