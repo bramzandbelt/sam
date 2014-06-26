@@ -29,6 +29,7 @@ nSsd              = SAM.expt.nSsd;
 stmOns            = SAM.expt.stmOns;                                        
 stmDur            = SAM.expt.stmDur;                                       
 
+dt                = SAM.model.accum.dt;
 modelToFit        = SAM.model.variants.toFit;
 
 simScope          = SAM.sim.scope;
@@ -470,7 +471,7 @@ for iTrialCat = 1:nTrialCat
            obs.cumProbDefectiveGoCCorr{iTrialCat}, ...
            obs.probMassGoCCorr{iTrialCat}, ...
            obs.probMassDefectiveGoCCorr{iTrialCat}] = ...
-           sam_bin_data(rtGoCCorr,pGoCCorr,cumProb,minBinSize);
+           sam_bin_data(rtGoCCorr,pGoCCorr,cumProb,minBinSize,dt);
       end
       
       if nGoCError > 0
@@ -479,7 +480,7 @@ for iTrialCat = 1:nTrialCat
            obs.cumProbDefectiveGoCError{iTrialCat}, ...
            obs.probMassGoCError{iTrialCat}, ...
            obs.probMassDefectiveGoCError{iTrialCat}] = ...
-           sam_bin_data(rtGoCError,pGoCError,cumProb,minBinSize); 
+           sam_bin_data(rtGoCError,pGoCError,cumProb,minBinSize,dt); 
       end
       
   elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*', 'once'))
@@ -497,7 +498,7 @@ for iTrialCat = 1:nTrialCat
            obs.cumProbDefectiveStopIErrorCCorr{iTrialCat}, ...
            obs.probMassStopIErrorCCorr{iTrialCat}, ...
            obs.probMassDefectiveStopIErrorCCorr{iTrialCat}] = ...
-           sam_bin_data(rtStopIErrorCCorr,pStopIErrorCCorr,cumProb,minBinSize);
+           sam_bin_data(rtStopIErrorCCorr,pStopIErrorCCorr,cumProb,minBinSize,dt);
       end
       
       if nStopIErrorCError > 0
@@ -506,7 +507,7 @@ for iTrialCat = 1:nTrialCat
            obs.cumProbDefectiveStopIErrorCError{iTrialCat}, ...
            obs.probMassStopIErrorCError{iTrialCat}, ...
            obs.probMassDefectiveStopIErrorCError{iTrialCat}] = ...
-           sam_bin_data(rtStopIErrorCError,pStopIErrorCError,cumProb,minBinSize);
+           sam_bin_data(rtStopIErrorCError,pStopIErrorCError,cumProb,minBinSize,dt);
       end
       
   end

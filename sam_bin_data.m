@@ -1,4 +1,4 @@
-function [rtQ,cumProb,cumProbDefective,probMass,probMassDefective] = sam_bin_data(rt,prop,cumProb,minSize)
+function [rtQ,cumProb,cumProbDefective,probMass,probMassDefective] = sam_bin_data(rt,prop,cumProb,minSize,dt)
 % SAM_BIN_DATA Groups RT into bins
 %  
 % DESCRIPTION 
@@ -19,14 +19,16 @@ function [rtQ,cumProb,cumProbDefective,probMass,probMassDefective] = sam_bin_dat
 %             * if 1x2 double, RT data with fewer trials than 
 %               + min(minSize) are grouped into one bin
 %               + max(minSize) are grouped into two bins (median-split)
+% dt        - time step of the model (1x1 double)
 %
 % EXAMPLES
 % rt        = 400 + 100 * randn(500,1) + exprnd(150,500,1);
 % prop      = 0.95;
 % cumProb   = .1:.2:.9;
 % minSize   = 40;
+% dt        = 1;
 % [rtQ,cumProbDefect,probMass,probMassDefective] = ...
-% SAM_BIN_DATA(rt,prop,cumProb,minSize);
+% SAM_BIN_DATA(rt,prop,cumProb,minSize,1);
 %
 % ......................................................................... 
 % Bram Zandbelt, bramzandbelt@gmail.com 
@@ -45,6 +47,9 @@ function [rtQ,cumProb,cumProbDefective,probMass,probMassDefective] = sam_bin_dat
 if ~isempty(find(isnan(rt), 1))
     rt              = rt(~isnan(rt));
 end
+
+% Downscale to the temporal resolution of the model
+rt                  = round(rt./dt).*dt;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. COMPUTE QUANTILES, PROBABILITIES, AND PROBABILITY MASSES
