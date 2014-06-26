@@ -5,6 +5,8 @@ obs = SAM.optim.obs;
 trialCat    = SAM.optim.obs.trialCat;
 nTrialCat   = size(trialCat,1);
 
+minBinSize  = SAM.optim.cost.stat.minBinSize;
+
 nHorPanel = 4;
 
 % Set up panel
@@ -90,9 +92,13 @@ for iTrialCat = 1:nTrialCat
         
         % Numbers
         nTotalPrd                       = prd.nTotal(iTrialCat);
-        nStopICorr                      = prd.nStopICorr(iTrialCat);
-        nStopIErrorCCorr                = prd.nStopIErrorCCorr(iTrialCat);
-        nStopIErrorCError               = prd.nStopIErrorCError(iTrialCat);
+        nStopICorrPrd                   = prd.nStopICorr(iTrialCat);
+        nStopIErrorCCorrPrd             = prd.nStopIErrorCCorr(iTrialCat);
+        nStopIErrorCErrorPrd            = prd.nStopIErrorCError(iTrialCat);
+        
+        nStopICorrObs                   = obs.nStopICorr(iTrialCat);
+        nStopIErrorCCorrObs             = obs.nStopIErrorCCorr(iTrialCat);
+        nStopIErrorCErrorObs            = obs.nStopIErrorCError(iTrialCat);
         
         % Trial probabilities
         pStopICorrPrd                   = prd.pStopICorr(iTrialCat);
@@ -107,20 +113,20 @@ for iTrialCat = 1:nTrialCat
         % Reaction times
         switch lower(plotType)
             case 'normal'
-                rtStopICorr                                 = prd.rtStopICorr{iTrialCat};
-                rtStopIErrorCCorr                           = prd.rtStopIErrorCCorr{iTrialCat};
-                rtStopIErrorCError                          = prd.rtStopIErrorCError{iTrialCat};
+                rtStopICorrPrd                              = prd.rtStopICorr{iTrialCat};
+                rtStopIErrorCCorrPrd                        = prd.rtStopIErrorCCorr{iTrialCat};
+                rtStopIErrorCErrorPrd                       = prd.rtStopIErrorCError{iTrialCat};
             case 'defective'
-                rtStopICorr                                 = nan(nTotalPrd,1);
-                rtStopICorr(1:nStopICorr)                   = prd.rtStopICorr{iTrialCat};
-                rtStopIErrorCCorr                           = nan(nTotalPrd,1);
-                rtStopIErrorCCorr(1:nStopIErrorCCorr)       = prd.rtStopIErrorCCorr{iTrialCat};
-                rtStopIErrorCError                          = nan(nTotalPrd,1);
-                rtStopIErrorCError(1:rtStopIErrorCError)    = prd.rtStopIErrorCError{iTrialCat};
+                rtStopICorrPrd                                 = nan(nTotalPrd,1);
+                rtStopICorrPrd(1:nStopICorrPrd)                = prd.rtStopICorr{iTrialCat};
+                rtStopIErrorCCorrPrd                           = nan(nTotalPrd,1);
+                rtStopIErrorCCorrPrd(1:nStopIErrorCCorrPrd)    = prd.rtStopIErrorCCorr{iTrialCat};
+                rtStopIErrorCErrorPrd                          = nan(nTotalPrd,1);
+                rtStopIErrorCErrorPrd(1:rtStopIErrorCErrorPrd) = prd.rtStopIErrorCError{iTrialCat};
         end
         
-        rtQStopIErrorCCorr                   = obs.rtQStopIErrorCCorr{iTrialCat};
-        rtQStopIErrorCError                  = obs.rtQStopIErrorCError{iTrialCat};
+        rtQStopIErrorCCorrObs                = obs.rtQStopIErrorCCorr{iTrialCat};
+        rtQStopIErrorCErrorObs               = obs.rtQStopIErrorCError{iTrialCat};
         
         % Probabilities
         switch lower(plotType)
@@ -139,32 +145,30 @@ for iTrialCat = 1:nTrialCat
         p(iRow,iColumn).hold('on');
         
         % Predictions as lines
-        if nStopICorr > 0
-            plot(rtStopICorr,cmtb_edf(rtStopICorr(:),rtStopICorr(:)),'Color','k','LineStyle','-.');
+        plot(rtStopICorrPrd,cmtb_edf(rtStopICorrPrd(:),rtStopICorrPrd(:)),'Color','k','LineStyle','-.');
+        
+        if ~isempty(rtQStopIErrorCCorrObs)
+            plot(rtStopIErrorCCorrPrd,cmtb_edf(rtStopIErrorCCorrPrd(:),rtStopIErrorCCorrPrd(:)),'Color','k','LineStyle','-');
         end
         
-        if nStopIErrorCCorr > 0
-            plot(rtStopIErrorCCorr,cmtb_edf(rtStopIErrorCCorr(:),rtStopIErrorCCorr(:)),'Color','k','LineStyle','-');
-        end
-        
-        if nStopIErrorCError > 0
-            plot(rtStopIErrorCError,cmtb_edf(rtStopIErrorCError(:),rtStopIErrorCError(:)),'Color','k','LineStyle','--');
+        if ~isempty(rtQStopIErrorCErrorObs)
+            plot(rtStopIErrorCErrorPrd,cmtb_edf(rtStopIErrorCErrorPrd(:),rtStopIErrorCErrorPrd(:)),'Color','k','LineStyle','--');
         end
         
         % Observations as circles
-        if nStopIErrorCCorr > 0
-            plot(rtQStopIErrorCCorr,cumProbStopIErrorCCorr,'ko');
+        if ~isempty(rtQStopIErrorCCorrObs)
+            plot(rtQStopIErrorCCorrObs,cumProbStopIErrorCCorr,'ko');
         end
         
-        if nStopIErrorCError > 0
-            plot(rtQStopIErrorCError,cumProbStopIErrorCError,'kd');
+        if ~isempty(rtQStopIErrorCErrorObs)
+            plot(rtQStopIErrorCErrorObs,cumProbStopIErrorCError,'kd');
         end
         
         
         % Print trial probabilities
-        fprintf(1,'StopICorrObs = %.2f, StopICorrPrd = %.2f \n',pStopICorrPrd,pStopICorrObs);
-        fprintf(1,'StopIErrorCCorr = %.2f, StopIErrorCCorr = %.2f \n',pStopIErrorCCorrObs,pStopIErrorCCorrPrd);
-        fprintf(1,'StopIErrorCError = %.2f, StopIErrorCError = %.2f \n',pStopIErrorCErrorObs,pStopIErrorCErrorPrd);
+        fprintf(1,'StopICorrObs = %.2f, StopICorrPrd = %.2f \n',pStopICorrObs,pStopICorrPrd);
+        fprintf(1,'StopIErrorCCorrObs = %.2f, StopIErrorCCorrPrd = %.2f \n',pStopIErrorCCorrObs,pStopIErrorCCorrPrd);
+        fprintf(1,'StopIErrorCErrorObs = %.2f, StopIErrorCErrorPrd = %.2f \n',pStopIErrorCErrorObs,pStopIErrorCErrorPrd);
         
     end
             
