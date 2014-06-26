@@ -318,17 +318,17 @@ for iTrialCat = 1:nTrialCat
       % - The fastest GO unit has a shorter RT than any STOP unit
       % - Target GO unit produced an RT
       % - Target GO unit is the only unit having produced an RT
-      iStopIErrorCCorr = rt(iTargetGO,:) <= rt(iSTOP,:) & all(isinf(rt(iNonTargetGO,:)));
+      iStopIErrorCCorr = rt(iTargetGO,:) <= rt(iSTOP,:) & all(isinf(rt(iNonTargetGO,:)),1);
       % Stop failure trial, choice error
       % -------------------------------------------------------------------
-      iStopIErrorCError = min(rt(iNonTargetGO,:),[],1) <= rt(iSTOP,:) & any(rt(iNonTargetGO,:) < Inf);
+      iStopIErrorCError = min(rt(iNonTargetGO,:),[],1) <= rt(iSTOP,:) & any(rt(iNonTargetGO,:) < Inf,1);
       
     else
       % Stop success trial
       % -------------------------------------------------------------------
       % Criteria (all should be met):
       % - None of the GO units produced an RT
-      iStopICorr = all(rt(iGO,:) == Inf);
+      iStopICorr = all(rt(iGO,:) == Inf,1);
       
       % Note: no distinction made between trials in which the STOP unit
       % did and did not produce and RT. We may be more stringent,
@@ -340,13 +340,13 @@ for iTrialCat = 1:nTrialCat
       % Criteria:
       % - Target GO unit produced an RT
       % -------------------------------------------------------------------
-      iStopIErrorCCorr = rt(iTargetGO,:) < Inf & all(isinf(rt(iNonTargetGO,:)));
+      iStopIErrorCCorr = rt(iTargetGO,:) < Inf & all(isinf(rt(iNonTargetGO,:)),1);
       
       % Stop failure trial, choice error
       % -------------------------------------------------------------------
       % Criteria:
       % - At least one non-target GO unit has produced an RT
-      iStopIErrorCError = any(rt(iNonTargetGO,:) < Inf);
+      iStopIErrorCError = any(rt(iNonTargetGO,:) < Inf,1);
 
       % Note: no distinction made between trials in which the STOP unit
       % did and did not produce an RT (i.e. STOP units cannot terminate
