@@ -106,6 +106,8 @@ end
 c = parcluster();
 if isfield(SAM,'compCluster')
 	c.NumWorkers = SAM.compCluster.nProcessors;
+else
+    c.NumWorkers = 1;
 end
 [~,homeDir] = system('echo $HOME');
 homeDir = strtrim(homeDir);
