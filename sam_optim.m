@@ -104,7 +104,17 @@ end
 % In unique directory to prevent collision of parallel jobs
 % e.g. see: http://www.mathworks.com/matlabcentral/answers/97141-why-am-i-unable-to-start-a-local-matlabpool-from-multiple-matlab-sessions-that-use-a-shared-preferen
 c = parcluster();
-t = tempname('/home/zandbeb/.matlab/local_cluster_jobs/R2014a/');
+if isfield(SAM,'compCluster')
+	c.NumWorkers = SAM.compCluster.nProcessors;
+end
+[~,homeDir] = system('echo $HOME');
+homeDir = strtrim(homeDir);
+release = version('-release')
+tempDir = fullfile(homeDir,'.matlab','local_cluster_jobs',release);
+if exist(tempDir) ~= 7
+    mkdir(tempDir)
+end
+t = tempname(tempDir);
 mkdir(t);
 c.JobStorageLocation=t;
 tWait = 1+60*rand();
