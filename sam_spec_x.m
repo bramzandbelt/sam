@@ -66,7 +66,7 @@ iVe           = SAM.model.XCat.i.iVe;
 
 iScale        = SAM.model.XCat.scale.iX;
 
-optimScope    = SAM.sim.optimScope;
+optimScope    = SAM.sim.scope;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. DETERMINE ALL FACTORIAL COMBINATIONS OF TASK FACTORS
