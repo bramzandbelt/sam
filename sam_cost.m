@@ -35,7 +35,7 @@ switch lower(optimScope)
   case 'go'
     nFree     = sum([SAM.model.variants.toFit.XSpec.free.freeCatClass{1,:}]);
   case 'stop'
-    nFree     = sum(SAM.model.variants.toFit.XSpec.free.free);
+    nFree     = sum(SAM.model.variants.toFit.XSpec.free.freeCatClass{2,:});
   case 'all'
     nFree     = sum(SAM.model.variants.toFit.XSpec.free.free);
 end
