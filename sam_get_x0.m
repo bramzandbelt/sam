@@ -27,7 +27,7 @@ function X0 = sam_get_x0(SAM)
 workDir         = SAM.io.workDir;
 modelToFit      = SAM.model.variants.toFit;
 modelCatTag     = SAM.model.general.modelCatTag;
-simScope        = SAM.sim.scope;
+optimScope        = SAM.sim.scope;
 
 nStm            = SAM.expt.nStm;
 nRsp            = SAM.expt.nRsp;
@@ -52,7 +52,7 @@ existBestFitGoFile     = exist(bestFitGoFile) == 2;
 % -------------------------------------------------------------------------
 bestFitparentFile      = arrayfun(@(a) fullfile(workDir, ...
                          sprintf('bestFValX_%sTrials_model%.3d.txt', ...
-                         simScope,a)),modelToFit.parents,'Uni',0);
+                         optimScope,a)),modelToFit.parents,'Uni',0);
 existBestFitParentFile = any(cellfun(@exist,bestFitparentFile(:)) == 2);
 
 % Check if a file with user-specified starting GO parameters for present model exists
@@ -60,6 +60,12 @@ existBestFitParentFile = any(cellfun(@exist,bestFitparentFile(:)) == 2);
 userSpecGoFile          = sprintf('userSpecX_%sTrials_model%.3d.txt', ...
                           'go',modelToFit.i);
 existUserSpecGoFile     = exist(userSpecGoFile) == 2;
+
+% Check if a file with user-specified starting STOP parameters for present model exists
+% -------------------------------------------------------------------------
+userSpecStopFile          = sprintf('userSpecX_%sTrials_model%.3d.txt', ...
+                           'all',modelToFit.i);
+existUserSpecStopFile     = exist(userSpecStopFile) == 2;
 
 % Check if a file with user-specified starting GO and STOP parameters for present model exists
 % -------------------------------------------------------------------------
@@ -71,32 +77,34 @@ existUserSpecAllFile     = exist(userSpecAllFile) == 2;
 % 2. SPECIFY X0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     if any(existBestFitParentFile)
+        
+        error('This option needs to be implemented anew');
             
-      % Load the best-fitting parameters from the parent model (with higest index) and convert into a cell array
-      X = importdata(bestFitparentFile{end});
-      iParent     = max(modelToFit.parents(:));
-      parentModel = SAM.model.variants.tree(iParent);
-      XGoParent   = mat2cell(X,1,parentModel.XSpec.n.nCatClass(1,:));
-      
-      % Set starting values for GO parameters in accordance with best-fitting parameters from parent model.
-      X0Go = cell(1,nXCat);
-      iClass = 1;
-      levels = taskFactors(:,iClass);
-      for iXCat = 1:nXCat
-        signatureParent = parentModel.features(:,iXCat,iClass);
-        signatureModelToFit = modelToFit.features(:,iXCat,iClass);
-        XIn = XGoParent{iXCat};
-        XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels);
-        X0Go{iXCat} = XOut;
-      end
-      
-      X0 = cell2mat(X0Go);
-      
-      % Set value of the scaling parameter
-      X0([modelToFit.XSpec.i.go.iCatClass{1,iScale}])  = scaleVal;
+%       % Load the best-fitting parameters from the parent model (with higest index) and convert into a cell array
+%       X = importdata(bestFitparentFile{end});
+%       iParent     = max(modelToFit.parents(:));
+%       parentModel = SAM.model.variants.tree(iParent);
+%       XGoParent   = mat2cell(X,1,parentModel.XSpec.n.nCatClass(1,:));
+%       
+%       % Set starting values for GO parameters in accordance with best-fitting parameters from parent model.
+%       X0Go = cell(1,nXCat);
+%       iClass = 1;
+%       levels = taskFactors(:,iClass);
+%       for iXCat = 1:nXCat
+%         signatureParent = parentModel.features(:,iXCat,iClass);
+%         signatureModelToFit = modelToFit.features(:,iXCat,iClass);
+%         XIn = XGoParent{iXCat};
+%         XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels);
+%         X0Go{iXCat} = XOut;
+%       end
+%       
+%       X0 = cell2mat(X0Go);
+%       
+%       % Set value of the scaling parameter
+%       X0([modelToFit.XSpec.i.go.iCatClass{1,iScale}])  = scaleVal;
             
     elseif any(existUserSpecGoFile)
       X = importdata(userSpecGoFile);
@@ -110,68 +118,88 @@ switch lower(simScope)
       X0 = [];
     end
     
-  case 'all'
+  case 'stop'
     if any(existBestFitGoFile) & any(existBestFitParentFile)
       
-      % GO parameters: use best-fitting parameters from current model as initial parameters
-      X = importdata(bestFitGoFile);
-      X0Go = X;
-      clear X
+      error('This option needs to be implemented anew');  
       
-      % STOP parameters: use best-fitting parameters from parent model (with highest index) as initial parameters
-      X = importdata(bestFitparentFile{end});
-      iParent       = max(modelToFit.parents(:));
-      parentModel   = SAM.model.variants.tree(iParent);
-      XStopParent   = X([parentModel.XSpec.i.iCatClass{2,:}]);
-      XStopParent   = mat2cell(XStopParent,1,parentModel.XSpec.n.nCatClass(2,:));
-      clear X
+%       % GO parameters: use best-fitting parameters from current model as initial parameters
+%       X = importdata(bestFitGoFile);
+%       X0Go = X;
+%       clear X
+%       
+%       % STOP parameters: use best-fitting parameters from parent model (with highest index) as initial parameters
+%       X = importdata(bestFitparentFile{end});
+%       iParent       = max(modelToFit.parents(:));
+%       parentModel   = SAM.model.variants.tree(iParent);
+%       XStopParent   = X([parentModel.XSpec.i.iCatClass{2,:}]);
+%       XStopParent   = mat2cell(XStopParent,1,parentModel.XSpec.n.nCatClass(2,:));
+%       clear X
+%       
+%       % Set starting values for STOP parameters in accordance with best-fitting parameters from parent model.
+%       X0Stop = cell(1,nXCat);
+%       iClass = 2;
+%       levels = taskFactors(:,iClass);
+%       for iXCat = 1:nXCat
+%         if ~isempty(XStopParent{iXCat})
+%           signatureParent = parentModel.features(:,iXCat,iClass);
+%           signatureModelToFit = modelToFit.features(:,iXCat,iClass);
+%           XIn = XStopParent{iXCat};
+%           XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels);
+%           X0Stop{iXCat} = XOut;
+%         end
+%       end
+%       X0Stop = cell2mat(X0Stop);
+%       
+%       % Fill in X
+%       X0 = nan(1,modelToFit.XSpec.n.n);
+%       X0([modelToFit.XSpec.i.iCatClass{1,:}]) = X0Go;
+%       X0([modelToFit.XSpec.i.iCatClass{2,:}]) = X0Stop;
+%       
+%       % Set value of the scaling parameter
+%       X0([modelToFit.XSpec.i.all.iCatClass{1,iScale}])  = scaleVal;
+%       X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
       
-      % Set starting values for STOP parameters in accordance with best-fitting parameters from parent model.
-      X0Stop = cell(1,nXCat);
-      iClass = 2;
-      levels = taskFactors(:,iClass);
-      for iXCat = 1:nXCat
-        if ~isempty(XStopParent{iXCat})
-          signatureParent = parentModel.features(:,iXCat,iClass);
-          signatureModelToFit = modelToFit.features(:,iXCat,iClass);
-          XIn = XStopParent{iXCat};
-          XOut = transform_X(XIn,signatureParent,signatureModelToFit,levels);
-          X0Stop{iXCat} = XOut;
-        end
-      end
-      X0Stop = cell2mat(X0Stop);
+    elseif any(existBestFitGoFile) & any(existUserSpecStopFile)
       
-      % Fill in X
-      X0 = nan(1,modelToFit.XSpec.n.n);
-      X0([modelToFit.XSpec.i.iCatClass{1,:}]) = X0Go;
-      X0([modelToFit.XSpec.i.iCatClass{2,:}]) = X0Stop;
+      error('This option needs to be implemented anew');
       
-      % Set value of the scaling parameter
-      X0([modelToFit.XSpec.i.all.iCatClass{1,iScale}])  = scaleVal;
-      X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
+%       % GO parameters: use best-fitting parameters from current model as initial parameters
+%       X = importdata(bestFitGoFile);
+%       X0Go = X;
+%       clear X
+%       
+%       % STOP parameters: use user-specified parameters as initial parameters
+%       load(userSpecAllFile,'X');
+%       iModelToFit = SAM.model.variants.toFit.i;
+%       modelToFit  = SAM.model.variants.toFit;
+%       X0Stop      = X([modelToFit.XSpec.i.all.iCatClass{2,:}]);
+%       
+%       X0          = nan(1,modelToFit.XSpec.n.n);
+%             
+%       X0([modelToFit.XSpec.i.all.iCatClass{1,:}]) = X0Go;
+%       X0([modelToFit.XSpec.i.all.iCatClass{2,:}]) = X0Stop;
+%       
+%       % Set value of the scaling parameter
+%       X0([modelToFit.XSpec.i.all.iCatClass{1,iScale}])  = scaleVal;
+%       X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
       
+    elseif any(existUserSpecStopFile)
+      X = importdata(userSpecStopFile);
+      X0 = X;
+    elseif modelToFit.i == 1
+      X0 = [];
+      error('Not implemented yet');
+    else
+      X0 = [];
+      error('No go file or parent file detected for model %d. Initial parameters have not been set.',modelToFit.i);
+    end
+    
+    case 'all'
+    if any(existBestFitGoFile) & any(existBestFitParentFile)
+      error('This option needs to be implemented anew');  
     elseif any(existBestFitGoFile) & any(existUserSpecAllFile)
-      
-      % GO parameters: use best-fitting parameters from current model as initial parameters
-      X = importdata(bestFitGoFile);
-      X0Go = X;
-      clear X
-      
-      % STOP parameters: use user-specified parameters as initial parameters
-      load(userSpecAllFile,'X');
-      iModelToFit = SAM.model.variants.toFit.i;
-      modelToFit  = SAM.model.variants.toFit;
-      X0Stop      = X([modelToFit.XSpec.i.all.iCatClass{2,:}]);
-      
-      X0          = nan(1,modelToFit.XSpec.n.n);
-            
-      X0([modelToFit.XSpec.i.all.iCatClass{1,:}]) = X0Go;
-      X0([modelToFit.XSpec.i.all.iCatClass{2,:}]) = X0Stop;
-      
-      % Set value of the scaling parameter
-      X0([modelToFit.XSpec.i.all.iCatClass{1,iScale}])  = scaleVal;
-      X0([modelToFit.XSpec.i.all.iCatClass{2,iScale}])  = scaleVal;
-      
+      error('This option needs to be implemented anew');
     elseif any(existUserSpecAllFile)
       X = importdata(userSpecAllFile);
       X0 = X;

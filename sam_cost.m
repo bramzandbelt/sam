@@ -23,7 +23,7 @@ function [cost,altCost,prd] = sam_cost(X,SAM)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 1. PROCESS INPUTS AND SPECIFY VARIABLES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-simScope  = SAM.sim.scope;
+optimScope  = SAM.sim.scope;
 nSim      = SAM.sim.n;
 obs       = SAM.optim.obs;
 costStat  = SAM.optim.cost.stat.stat;
@@ -31,9 +31,11 @@ nTrialCat = size(obs,1);
 bic       = cell(nTrialCat,1);
 chiSquare = cell(nTrialCat,1);
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     nFree     = sum([SAM.model.variants.toFit.XSpec.free.freeCatClass{1,:}]);
+  case 'stop'
+    nFree     = sum(SAM.model.variants.toFit.XSpec.free.free);
   case 'all'
     nFree     = sum(SAM.model.variants.toFit.XSpec.free.free);
 end

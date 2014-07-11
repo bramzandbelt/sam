@@ -1,4 +1,4 @@
-function sam_scale_x(subj,dt,trialVar,simScope,architecture,model,fileStr);
+function sam_scale_x(subj,dt,trialVar,optimScope,architecture,model,fileStr);
 % SAM_SCALE_X <Synopsis of what this function does> 
 %  
 % DESCRIPTION 
@@ -96,25 +96,25 @@ XScaled = nan(size(X));
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iZ0;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Threshold
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iZc;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Rate
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iV;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Error rate
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iVe;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Between-trial standard deviation of rate
 % -------------------------------------------------------------------------
@@ -122,13 +122,13 @@ XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun)
 % be checked.
 iXCat       = SAM.model.XCat.i.iEta
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Non-decision time
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iT0;
 scaleFun    = @(in1,in2,in3) in1(in2)./in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Extrinsic noise
 % -------------------------------------------------------------------------
@@ -136,7 +136,7 @@ XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun)
 % be checked.
 iXCat       = SAM.model.XCat.i.iSe;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Intrinsic noise
 % -------------------------------------------------------------------------
@@ -146,19 +146,19 @@ XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun)
 % the fixed parameter and I want to keep it the same across all subjects
 iXCat       = SAM.model.XCat.i.iSi;
 scaleFun    = @(in1,in2,in3) in1(in2).*sqrt(in3);
-XScaled     = scale_x(SAM,X,XScaled,1,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,1,model,iXCat,optimScope,scaleFun);
 
 % Leakage
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iK;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Lateral inhibition
 % -------------------------------------------------------------------------
 iXCat       = SAM.model.XCat.i.iW;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
-XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun);
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 
 % Compute (and compare?) the cost
@@ -168,21 +168,21 @@ XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun)
 % NESTED FUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function XScaled = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,simScope,scaleFun)
+function XScaled = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun)
 % INPUTS
 % iXCat
-% simScope
+% optimScope
 % X
 % XScaled
 % scaleFun
 
 if SAM.model.XCat.classSpecific(iXCat)
-    switch lower(simScope)
+    switch lower(optimScope)
         case 'go'
             % Scale the GO parameter
             iX = SAM.model.variants.tree(model).XSpec.i.go.iCatClass{iXCat};
             XScaled(iX) = scaleFun(X,iX,scalingFactor);
-        case 'all'
+        case {'stop','all'}
             % Scale the GO parameter
             iX = SAM.model.variants.tree(model).XSpec.i.all.iCatClass{1,iXCat};
             XScaled(iX) = scaleFun(X,iX,scalingFactor);
@@ -192,12 +192,12 @@ if SAM.model.XCat.classSpecific(iXCat)
             XScaled(iX) = scaleFun(X,iX,scalingFactor);
     end
 else
-    switch lower(simScope)
+    switch lower(optimScope)
         case 'go'
             % Scale the parameter
             iX = SAM.model.variants.tree(model).XSpec.i.go.iCatClass{iXCat};
             XScaled(iX) = scaleFun(X,iX,scalingFactor);
-        case 'all'
+        case {'stop','all'}
             % Scale the parameter
             iX = SAM.model.variants.tree(model).XSpec.i.all.iCatClass{1,iXCat};
             XScaled(iX) = scaleFun(X,iX,scalingFactor);

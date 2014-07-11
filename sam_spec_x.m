@@ -148,9 +148,7 @@ XSpec.free.freeCatClass = freeCatClass;
 % 5. DETERMINE THE INDICES OF PARAMETERS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-% This is a quick hack to get indices specific to fitting go trials and indices for fitting all trials
-
-% Go trials
+% GO parameters
 % ====================
 
 % First and last index per parameter category
@@ -169,7 +167,34 @@ XSpec.i.go.iCatClass = iCatClass;
 
 clear i1 iend iCat iCatClass
 
-% All trials
+% STOP parameters
+% ====================
+
+% First and last index per parameter category
+i1    = [1,cumsum(nCat(1:end-1))+1];
+iend  = cumsum(nCat);
+
+% Indices per parameter category
+iCat = arrayfun(@(a,b) a:b,i1,iend,'Uni',0);
+
+iCatClass = cell(nClass,nXCat);
+
+for iXCat = 1:nXCat
+  if sum(nCatClass(:,iXCat)) == nCat(iXCat)
+    iCatClass(:,iXCat) = mat2cell(iCat{iXCat},1,nCatClass(:,iXCat))';
+  elseif XSpec.n.nCat(iXCat) == 1
+    iCatClass(:,iXCat) = repmat(iCat(iXCat),nClass,1);
+  end
+end
+
+% Ensure row vectors
+iCatClass = cellfun(@(in1) in1(:)',iCatClass,'Uni',0);
+
+% Put variables in output structure
+XSpec.i.stop.iCat = iCat;
+XSpec.i.stop.iCatClass = iCatClass;
+
+% GO and STOP parameters
 % ====================
 
 % First and last index per parameter category

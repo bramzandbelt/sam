@@ -47,7 +47,7 @@ nCnd      = SAM.des.expt.nCnd;
 nSsd      = SAM.des.expt.nSsd;
 
 % Scope of simulations
-simScope  = SAM.sim.scope;
+optimScope  = SAM.sim.scope;
 
 % Type of inhibition mechanism
 inhibMechType = SAM.des.inhibMech.type;
@@ -64,7 +64,7 @@ iGONT     = SAM.des.iGONT;
 % 1.2. Specify dynamic variables
 % =========================================================================
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     % Number of units
     N = nGo;
@@ -72,7 +72,7 @@ switch lower(simScope)
     % Number of model inputs (go and stop stimuli)
     M = nGo;
     
-  case 'all'
+  case {'stop','all'}
     
     % Number of units
     N = [nGo nStop];
@@ -99,10 +99,10 @@ falseM    = arrayfun(@(x) false(x,1),M,'Uni',0);
 % 2.1. Precursor matrix for accumulation rates to target units
 % =========================================================================
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     VCor    = cell(nCnd,1);
-  case 'all'
+  case {'stop','all'}
     VCor    = cell(nCnd,1 + nSsd);
     
     for iCnd = 1:nCnd
@@ -135,10 +135,10 @@ end
 % 2.2. Precursor matrix for accumulation rates to nontarget units
 % =========================================================================
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     VIncor  = cell(nCnd,1);
-  case 'all'
+  case {'stop','all'}
     VIncor  = cell(nCnd,1 + nSsd);
 end
 
@@ -156,11 +156,11 @@ end
 % 2.3. Precursor matrix for extrinsic and intrinsic noise levels
 % =========================================================================
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     S = cell(nCnd,1);
 
-  case 'all'
+  case {'stop','all'}
     S = cell(nCnd,1 + nSsd);
 
     for iCnd = 1:nCnd
@@ -196,11 +196,11 @@ end
 % 3.1. Termination matrix
 % =========================================================================
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     % GO units can terminate the accumulation process
     terminate = blkdiag(trueN{:})*true';
-  case 'all'
+  case {'stop','all'}
     switch inhibMechType
       case 'race'
         % GO and STOP units can terminate the accumulation process
@@ -220,12 +220,12 @@ terminate     = logical(terminate);
 % 3.2. Blocked-input matrix
 % =========================================================================  
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     % GO units can terminate the accumulation process
      blockInput = (blkdiag(trueM{:})*false') * ...
                   (blkdiag(trueN{:})*false')';
-  case 'all'
+  case {'stop','all'}
     switch inhibMechType
       case 'race'
          % Input is never blocked
@@ -248,12 +248,12 @@ blockInput    = logical(blockInput);
 % 3.3. Lateral inhibition matrix
 % =========================================================================    
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     % No STOP units, so there are no connections that changes when eithe accumulator reaches threshold
     latInhib = (blkdiag(trueN{:})*false') *  ...
                (blkdiag(trueN{:})*false')'; ...
-  case 'all'
+  case {'stop','all'}
     switch inhibMechType
       case 'race'
         % STOP=>GO and GO=>STOP connections do not change once GO and STOP

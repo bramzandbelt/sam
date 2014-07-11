@@ -32,7 +32,7 @@ stmDur            = SAM.expt.stmDur;
 dt                = SAM.model.accum.dt;
 modelToFit        = SAM.model.variants.toFit;
 
-simScope          = SAM.sim.scope;
+optimScope        = SAM.sim.scope;
 
 cumProb           = SAM.optim.cost.stat.cumProb;
 minBinSize        = SAM.optim.cost.stat.minBinSize;
@@ -56,8 +56,12 @@ load(file,'data');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. CATEGORIZE DATA BASED ON MODEL FEATURES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Categorization depends on the scope of the optimization
+% 'go'      - optimizing GO parameters involves no-signal trials only 
+% 'stop'    - optimizing STOP parameters involves stop-signal trials only 
+% 'all'     - optimizing GO and STOP parameters involves no-signal and stop-signal trials
 
-% Go trials
+% GO parameters
 % =========================================================================
 signatureGo   = any(modelToFit.features(:,:,1),2);
 
@@ -93,20 +97,21 @@ else
   combiCellGo = mat2cell(combiGo,size(combiGo,1),ones(size(combiGo,2),1));
 end
 
-tagGo = cellfun(@(in1) ['goTrial_',funGO(in1)],combiCellGo,'Uni',0);
+% tagGo = cellfun(@(in1) ['goTrial_',funGO(in1)],combiCellGo,'Uni',0);
+% 
+% % All tags
+% tagAll = tagGo';
+% 
+% % Number of trial categories
+% nTrialCat = numel(tagGo);
+% nTrialCatGo = numel(tagGo);
 
-% All tags
-tagAll = tagGo';
+% STOP parameters
+% =========================================================================
 
-% Number of trial categories
-nTrialCat = numel(tagGo);
-nTrialCatGo = numel(tagGo);
-
-switch lower(simScope)
-  case 'go'
-  case 'all'
-    % Stop trials
-    % =========================================================================================================================
+switch lower(optimScope)
+  case {'all','stop'}
+    
     signatureStop         = any(modelToFit.features(:,:,2),2);
 
     if ~isequal(signatureGo,[0 0 0]') && ~isequal(signatureStop,[0 0 0]')
@@ -144,16 +149,47 @@ switch lower(simScope)
     else
       combiCellStop = mat2cell(combiStop,[1;nFactGo;nFactStop],ones(size(combiStop,2),1));
     end
+    
+%     tagStop = cellfun(@(in1,in2,in3) ['stopTrial_{ssd',sprintf('%d',in1),'}_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
+%     
+%     % All tags
+%     tagAll = [tagGo,tagStop]';
+% 
+%     % Number of trial categories
+%     nTrialCat = numel([tagGo,tagStop]);
 
-    tagStop = cellfun(@(in1,in2,in3) ['stopTrial_{ssd',sprintf('%d',in1),'}_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
-    
-    % All tags
-    tagAll = [tagGo,tagStop]';
-    
-    % Number of trial categories
-    nTrialCat = numel([tagGo,tagStop]);
 end
 
+% Define the trials tags (tagAll) and determine number of trial categories
+% (nTrialCat)
+% =========================================================================
+
+switch lower(optimScope)
+  case 'go'
+      
+    tagGo       = cellfun(@(in1) ['goTrial_',funGO(in1)],combiCellGo,'Uni',0);
+    tagAll      = tagGo';
+      
+    nTrialCatGo = numel(tagGo);
+    nTrialCat   = numel(tagGo);
+      
+  case 'stop'
+      
+    tagStop     = cellfun(@(in1,in2,in3) ['stopTrial_{ssd',sprintf('%d',in1),'}_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
+    tagAll      = tagStop';
+      
+    nTrialCatGo = 0;
+    nTrialCat   = numel(tagStop);
+      
+  case 'all'
+    tagGo       = cellfun(@(in1) ['goTrial_',funGO(in1)],combiCellGo,'Uni',0);
+    tagStop     = cellfun(@(in1,in2,in3) ['stopTrial_{ssd',sprintf('%d',in1),'}_',funGO(in2),'_',funSTOP(in3)],combiCellStop(1,:),combiCellStop(2,:),combiCellStop(3,:),'Uni',0);
+    tagAll      = [tagGo,tagStop]';
+      
+    nTrialCatGo = numel(tagGo);
+    nTrialCat   = numel([tagGo,tagStop]);
+end
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 4. CLASSIFY TRIALS, COMPUTE DESCRIPTIVES, AND SAVE DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -320,10 +356,15 @@ for iTrialCat = 1:nTrialCat
 
   end
 
-  
-  % 4.3. Narrow down the classification based on trial type (correct
-  % choice, choice error)
+  % 4.3. Narrow down the classification based on trial type
   % =======================================================================
+  % For go trials, distinguish:
+  % - correct choice
+  % - error choice
+  % For stop trials, distinguish:
+  % - signal-inhibit
+  % - signal-respond, correct choice
+  % - signal-respond, error choice
   
   if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*', 'once'))
       

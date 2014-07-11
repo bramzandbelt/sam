@@ -42,14 +42,16 @@ iSi       = SAM.model.XCat.i.iSi;
 iK        = SAM.model.XCat.i.iK;
 iW        = SAM.model.XCat.i.iW;
 
-simScope  = SAM.sim.scope;
+optimScope  = SAM.sim.scope;
 
 nRsp      = SAM.expt.nRsp;
 nStm      = SAM.expt.nStm;
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     iCatClass = SAM.model.variants.toFit.XSpec.i.go.iCatClass;
+  case 'stop'
+    iCatClass = SAM.model.variants.toFit.XSpec.i.stop.iCatClass;
   case 'all'
     iCatClass = SAM.model.variants.toFit.XSpec.i.all.iCatClass;
 end

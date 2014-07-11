@@ -23,8 +23,8 @@
 % Get path string
 pathStr   = getenv('pathStr');
 
-% Get simScope
-simScope  = getenv('simScope');
+% Get optimScope
+optimScope  = getenv('optimScope');
 
 % Get model index
 iModel    = str2double(getenv('iModel'));
@@ -53,12 +53,12 @@ addpath(genpath('/scratch/zandbeb/multichoice_stop_model/src/code'));
 
 % 2.1. Load the SAM file
 % =========================================================================
-load(sprintf(pathStr,iSubj,simScope,iModel));
+load(sprintf(pathStr,iSubj,optimScope,iModel));
 
 % 2.2. Add details for logging
 % =========================================================================
-fNameIterLog                  = sprintf('iterLog_%sTrials_model%.3d_startVal%.3d_started%s.mat',simScope,iModel,iStartVal,timeStr);
-fNameFinalLog                 = sprintf('finalLog_%sTrials_model%.3d_startVal%.3d_started%s.mat',simScope,iModel,iStartVal,timeStr);
+fNameIterLog                  = sprintf('iterLog_%sTrials_model%.3d_startVal%.3d_started%s.mat',optimScope,iModel,iStartVal,timeStr);
+fNameFinalLog                 = sprintf('finalLog_%sTrials_model%.3d_startVal%.3d_started%s.mat',optimScope,iModel,iStartVal,timeStr);
 
 % Iteration log file
 fitLog.iterLogFile            = fullfile(SAM.io.workDir,fNameIterLog);
@@ -77,8 +77,8 @@ SAM                           = sam_optim(SAM,iStartVal);
 
 % 2.4. Optimize the fit to the data, starting from parameters corresponding to iStartVal
 % =========================================================================
-fNameSAM                      = sprintf('SAM_%sTrials_model%.3d_exit%d_started%s.mat',simScope,iModel,SAM.estim.exitFlag,timeStr);
-fNameX                        = sprintf('bestX_%sTrials_model%.3d_exit%d_started%s.txt',simScope,iModel,SAM.estim.exitFlag,timeStr);
+fNameSAM                      = sprintf('SAM_%sTrials_model%.3d_exit%d_started%s.mat',optimScope,iModel,SAM.estim.exitFlag,timeStr);
+fNameX                        = sprintf('bestX_%sTrials_model%.3d_exit%d_started%s.txt',optimScope,iModel,SAM.estim.exitFlag,timeStr);
 
 save(fullfile(SAM.io.workDir,fNameSAM),'SAM');
 save(fullfile(SAM.io.workDir,fNameX),'X','-ascii','-double');

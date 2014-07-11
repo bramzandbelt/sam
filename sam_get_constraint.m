@@ -33,14 +33,14 @@ XCat        = SAM.model.XCat;
 % Parameter specifics
 XSpec       = SAM.model.variants.toFit.XSpec;
 
-simScope    = SAM.sim.scope;
+optimScope    = SAM.sim.scope;
 
 
 nStm            = SAM.expt.nStm;
 nRsp            = SAM.expt.nRsp;
 nCnd            = SAM.expt.nCnd;
 
-switch lower(simScope)
+switch lower(optimScope)
   case 'go'
     nClass  = 1;
     nCat    = XSpec.n.nCatClass(1,:);
@@ -48,6 +48,17 @@ switch lower(simScope)
     iCatClass = XSpec.i.go.iCatClass;
     
     free    = cell2mat(XSpec.free.freeCatClass(1,:));
+  case 'stop'
+    nClass  = 2;
+    nCat    = XSpec.n.nCat;
+    
+    iCatClass = XSpec.i.stop.iCatClass;
+    
+    free    = XSpec.free.free;
+    
+    % Fix GO parameters
+    free([iCatClass{1,:}]) = false;
+    
   case 'all'
     nClass  = 2;
     nCat    = XSpec.n.nCat;
@@ -55,8 +66,7 @@ switch lower(simScope)
     iCatClass = XSpec.i.all.iCatClass;
     
     free    = XSpec.free.free;
-    % Set GO parameters to fixed parameters
-    free([iCatClass{1,:}]) = false;
+    
 end
 
 solverType  = SAM.optim.solver.type;
