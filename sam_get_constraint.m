@@ -24,9 +24,6 @@ function constraint = sam_get_constraint(SAM)
 % 1.1. Process inputs
 % =========================================================================
 
-
-
-
 % Parameter category specifics
 XCat        = SAM.model.XCat;
 
@@ -42,30 +39,28 @@ nCnd            = SAM.expt.nCnd;
 
 switch lower(optimScope)
   case 'go'
-    nClass  = 1;
-    nCat    = XSpec.n.nCatClass(1,:);
+    nClass    = 1;
+    nCat      = XSpec.n.nCatClass(1,:);
     
     iCatClass = XSpec.i.go.iCatClass;
     
-    free    = cell2mat(XSpec.free.freeCatClass(1,:));
+    free      = XSpec.free.go.free;
+    
   case 'stop'
-    nClass  = 2;
-    nCat    = XSpec.n.nCat;
+    nClass    = 2;
+    nCat      = XSpec.n.nCat;
     
     iCatClass = XSpec.i.stop.iCatClass;
     
-    free    = XSpec.free.free;
-    
-    % Fix GO parameters
-    free([iCatClass{1,:}]) = false;
+    free      = XSpec.free.stop.free;
     
   case 'all'
-    nClass  = 2;
-    nCat    = XSpec.n.nCat;
+    nClass    = 2;
+    nCat      = XSpec.n.nCat;
     
     iCatClass = XSpec.i.all.iCatClass;
     
-    free    = XSpec.free.free;
+    free      = XSpec.free.all.free;
     
 end
 

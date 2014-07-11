@@ -66,6 +66,8 @@ iVe           = SAM.model.XCat.i.iVe;
 
 iScale        = SAM.model.XCat.scale.iX;
 
+optimScope    = SAM.sim.optimScope;
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. DETERMINE ALL FACTORIAL COMBINATIONS OF TASK FACTORS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -140,6 +142,39 @@ end
 freeCatClass = cellfun(@(in1) in1(:)',freeCatClass,'Uni',0);
 
 % Put variables in output structure
+% =========================================================================
+
+% GO parameters
+% -------------------------------------------------------------------------
+XSpec.free.go.free            = cell2mat(freeCatClass(1,:));
+XSpec.free.go.freeCat         = freeCatClass(1,:);
+XSpec.free.go.freeCatClass    = freeCatClass(1,:);
+
+% STOP parameters
+% -------------------------------------------------------------------------
+stopFreeCatClass              = freeCatClass;
+stopFreeCatClass(1,:)         = cellfun(@(in1) assignit(in1,1:numel(in1),false),stopFreeCatClass(1,:),'Uni',0);
+
+stopFreeCat                   = cell(1,nXCat);
+for iXCat = 1:nXCat
+  if sum(nCatClass(:,iXCat)) == nCat(iXCat)
+    stopFreeCat{iXCat}        = [stopFreeCatClass{:,iXCat}];
+  elseif XSpec.n.nCat(iXCat) == 1
+    stopFreeCat{iXCat}        = stopFreeCatClass{2,iXCat};
+  end
+end
+
+XSpec.free.stop.free          = [stopFreeCat{:}];
+XSpec.free.stop.freeCat       = stopFreeCat;
+XSpec.free.stop.freeCatClass  = stopFreeCatClass;
+
+% ALL parameters
+% -------------------------------------------------------------------------
+
+XSpec.free.all.free           = [freeCat{:}];
+XSpec.free.all.freeCat        = freeCat;
+XSpec.free.all.freeCatClass   = freeCatClass;
+
 XSpec.free.free         = [freeCat{:}];
 XSpec.free.freeCat      = freeCat;
 XSpec.free.freeCatClass = freeCatClass;
@@ -320,3 +355,7 @@ function [c, sz] = getit(c)
      c = {c};
      sz = [];
  end
+ 
+function C = assignit(C,i,val)
+% Assigns values to indices within a cell
+C(i) = val;

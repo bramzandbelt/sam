@@ -93,8 +93,18 @@ SAM.optim.prd.ssd             = SAM.optim.obs.ssd;
 
 % Maximum number of function evaluations and iterations
 % =========================================================================================================================
-SAM.optim.solver.opts.MaxFunEvals = 1000 * sum(SAM.model.variants.toFit.XSpec.free.free);
-SAM.optim.solver.opts.MaxIter     = 1000 * sum(SAM.model.variants.toFit.XSpec.free.free);
+optimScope                    = SAM.sim.scope;
+
+switch lower(optimScope)
+  case 'go'
+    nFree = sum(SAM.model.variants.toFit.XSpec.free.go.free);
+  case 'stop'
+    nFree = sum(SAM.model.variants.toFit.XSpec.free.stop.free);
+  case 'all'
+    nFree = sum(SAM.model.variants.toFit.XSpec.free.all.free);
+end
+SAM.optim.solver.opts.MaxFunEvals = 1000 * nFree;
+SAM.optim.solver.opts.MaxIter     = 1000 * nFree;
 SAM.optim.solver.opts.TolFun      = 1e-5;
 SAM.optim.solver.opts.TolX        = 1e-5;
 

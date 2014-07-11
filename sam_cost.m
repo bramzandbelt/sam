@@ -33,11 +33,11 @@ chiSquare = cell(nTrialCat,1);
 
 switch lower(optimScope)
   case 'go'
-    nFree     = sum([SAM.model.variants.toFit.XSpec.free.freeCatClass{1,:}]);
+    nFree     = sum(SAM.model.variants.toFit.XSpec.free.go.free);
   case 'stop'
-    nFree     = sum(SAM.model.variants.toFit.XSpec.free.freeCatClass{2,:});
+    nFree     = sum(SAM.model.variants.toFit.XSpec.free.stop.free);
   case 'all'
-    nFree     = sum(SAM.model.variants.toFit.XSpec.free.free);
+    nFree     = sum(SAM.model.variants.toFit.XSpec.free.all.free);
 end
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
