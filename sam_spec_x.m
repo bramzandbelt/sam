@@ -35,10 +35,15 @@ iStruct     = struct('iCat',[], ...
 nameStruct  = struct('name',[], ...
                      'nameCat',[], ...
                      'nameCatClass',[]);               
+
+classStruct = struct('go',[],...
+                     'stop',[],...
+                     'all',[]);
+                   
 XSpec       = struct('nCombi',[], ...
                      'n',nStruct, ...
-                     'free',freeStruct, ...
-                     'i',iStruct, ...
+                     'free',classStruct, ...
+                     'i',classStruct, ...
                      'name',nameStruct);
 
 % % Dynamic variables
@@ -146,6 +151,7 @@ freeCatClass = cellfun(@(in1) in1(:)',freeCatClass,'Uni',0);
 
 % GO parameters
 % -------------------------------------------------------------------------
+XSpec.free.go                 = freeStruct;
 XSpec.free.go.free            = cell2mat(freeCatClass(1,:));
 XSpec.free.go.freeCat         = freeCatClass(1,:);
 XSpec.free.go.freeCatClass    = freeCatClass(1,:);
@@ -164,27 +170,24 @@ for iXCat = 1:nXCat
   end
 end
 
+XSpec.free.stop               = freeStruct;
 XSpec.free.stop.free          = [stopFreeCat{:}];
 XSpec.free.stop.freeCat       = stopFreeCat;
 XSpec.free.stop.freeCatClass  = stopFreeCatClass;
 
 % ALL parameters
 % -------------------------------------------------------------------------
-
+XSpec.free.all                = freeStruct;
 XSpec.free.all.free           = [freeCat{:}];
 XSpec.free.all.freeCat        = freeCat;
 XSpec.free.all.freeCatClass   = freeCatClass;
-
-XSpec.free.free         = [freeCat{:}];
-XSpec.free.freeCat      = freeCat;
-XSpec.free.freeCatClass = freeCatClass;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 5. DETERMINE THE INDICES OF PARAMETERS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % GO parameters
-% ====================
+% -------------------------------------------------------------------------
 
 % First and last index per parameter category
 i1    = [1,cumsum(nCatClass(1,1:end-1))+1];
@@ -197,13 +200,14 @@ iCat = arrayfun(@(a,b) a:b,i1,iend,'Uni',0);
 iCatClass = cellfun(@(in1) in1(:)',iCat,'Uni',0);
 
 % Put variables in output structure
-XSpec.i.go.iCat = iCat;
-XSpec.i.go.iCatClass = iCatClass;
+XSpec.i.go                = iStruct;
+XSpec.i.go.iCat           = iCat;
+XSpec.i.go.iCatClass      = iCatClass;
 
 clear i1 iend iCat iCatClass
 
 % STOP parameters
-% ====================
+% -------------------------------------------------------------------------
 
 % First and last index per parameter category
 i1    = [1,cumsum(nCat(1:end-1))+1];
@@ -226,11 +230,12 @@ end
 iCatClass = cellfun(@(in1) in1(:)',iCatClass,'Uni',0);
 
 % Put variables in output structure
-XSpec.i.stop.iCat = iCat;
-XSpec.i.stop.iCatClass = iCatClass;
+XSpec.i.stop              = iStruct;
+XSpec.i.stop.iCat         = iCat;
+XSpec.i.stop.iCatClass    = iCatClass;
 
-% GO and STOP parameters
-% ====================
+% ALL parameters
+% -------------------------------------------------------------------------
 
 % First and last index per parameter category
 i1    = [1,cumsum(nCat(1:end-1))+1];
@@ -253,8 +258,9 @@ end
 iCatClass = cellfun(@(in1) in1(:)',iCatClass,'Uni',0);
 
 % Put variables in output structure
-XSpec.i.all.iCat = iCat;
-XSpec.i.all.iCatClass = iCatClass;
+XSpec.i.all             = iStruct;
+XSpec.i.all.iCat        = iCat;
+XSpec.i.all.iCatClass   = iCatClass;
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 6. DETERMINE THE NAMES OF PARAMETERS
@@ -334,10 +340,28 @@ for iXCat = 1:nXCat
 end
 
 % Put variables in output structure
-XSpec.name.name         = [nameCat{:}];
-XSpec.name.nameCat      = nameCat;
-XSpec.name.nameCatClass = nameCatClass;
+% =========================================================================
 
+% GO parameters
+% -------------------------------------------------------------------------
+XSpec.name.go                 = nameStruct;
+XSpec.name.go.name            = getit(nameCatClass(1,:));
+XSpec.name.go.nameCat         = getit(nameCatClass(1,:));
+XSpec.name.go.nameCatClass    = getit(nameCatClass(1,:));
+
+% STOP parameters
+% -------------------------------------------------------------------------
+XSpec.name.stop               = nameStruct;
+XSpec.name.stop.name          = getit(nameCat);
+XSpec.name.stop.nameCat       = nameCat;
+XSpec.name.stop.nameCatClass  = nameCatClass;
+
+% ALL parameters
+% -------------------------------------------------------------------------
+XSpec.name.all                = nameStruct;
+XSpec.name.all.name           = getit(nameCat);
+XSpec.name.all.nameCat        = nameCat;
+XSpec.name.all.nameCatClass   = nameCatClass;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 7. SUBFUNCTIONS
