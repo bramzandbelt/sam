@@ -74,6 +74,7 @@ function codegen_sam_sim_trial
   resp        = coder.typeof(true,[5e1,1],[1,0]);
   z           = coder.typeof(0,[5e1,1e6],[1,1]);
 
+  codegen sam_sim_trial -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_crace_irace_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_crace_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_crace_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
@@ -84,6 +85,7 @@ function codegen_sam_sim_trial
   codegen sam_sim_trial_cli_ibi_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_cli_ili_nomodbd -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
 
+  codegen sam_sim_trial_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_crace_irace_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_crace_ibi_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
   codegen sam_sim_trial_crace_ili_nomodbd_inpdepnoise -config cfg -args {u,A,B,C,D,Sin,Z0,ZC,ZLB,dt,tau,T,terminate,blockInput,latInhib,n,m,p,t,rt,resp,z}
