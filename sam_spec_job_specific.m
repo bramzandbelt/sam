@@ -20,6 +20,8 @@ function SAM = sam_spec_job_specific(SAM,iModel);
 % Go to work directory
 cd(SAM.io.workDir);
 
+optimScope                    = SAM.sim.scope;
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. MODEL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,18 +45,27 @@ SAM.optim.x0Base              = sam_get_x0(SAM);
 % =========================================================================================================================
 SAM.optim.constraint          = sam_get_constraint(SAM);
 
-% Sample 20 uniformly distributed starting points, given constraints
-% =========================================================================================================================
-nStartPoint                   = SAM.optim.nStartPoint;
+switch lower(optimScope)
+  case {'go','stop'}
+    
+    % Sample 20 uniformly distributed starting points, given constraints
+    % =========================================================================================================================
+    nStartPoint                   = SAM.optim.nStartPoint;
 
-LB                            = SAM.optim.constraint.bound.LB;
-UB                            = SAM.optim.constraint.bound.UB;
-A                             = SAM.optim.constraint.linear.A;
-b                             = SAM.optim.constraint.linear.b;
-nonLinCon                     = SAM.optim.constraint.nonlinear.nonLinCon;
+    LB                            = SAM.optim.constraint.bound.LB;
+    UB                            = SAM.optim.constraint.bound.UB;
+    A                             = SAM.optim.constraint.linear.A;
+    b                             = SAM.optim.constraint.linear.b;
+    nonLinCon                     = SAM.optim.constraint.nonlinear.nonLinCon;
 
-SAM.optim.x0                  = [SAM.optim.x0Base; ...
-                                sam_sample_uniform_constrained_x0(nStartPoint,LB,UB,A,b,nonLinCon,SAM.optim.solver.type)];
+    SAM.optim.x0                  = [SAM.optim.x0Base; ...
+                                    sam_sample_uniform_constrained_x0(nStartPoint,LB,UB,A,b,nonLinCon,SAM.optim.solver.type)];
+
+  case 'all'
+        
+    SAM.optim.x0                  = SAM.optim.x0Base;
+    
+end
 
 % Model predictions
 % =========================================================================================================================
@@ -93,8 +104,6 @@ SAM.optim.prd.ssd             = SAM.optim.obs.ssd;
 
 % Maximum number of function evaluations and iterations
 % =========================================================================================================================
-optimScope                    = SAM.sim.scope;
-
 switch lower(optimScope)
   case 'go'
     nFree = sum(SAM.model.variants.toFit.XSpec.free.go.free);
