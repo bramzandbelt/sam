@@ -239,7 +239,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass)
     switch lower(SAM.sim.scope)
       case 'go'
         xval = SAM.model.XCat.valExcluded(iCol)*ones(2,1);
-      case 'all'
+      case {'stop','all'}
         xval = SAM.model.XCat.valExcluded(iCol)*ones(2,1);
     end
     
@@ -259,7 +259,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass)
     end
     
     switch lower(SAM.sim.scope)
-      case 'all'
+      case {'stop','all'}
         
         % Vector of parameter category values in X
         valuesSTOP = X(iCatClass{2,iCol});
