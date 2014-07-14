@@ -116,12 +116,12 @@ end
 % 2.3.1. Units that can terminate the trial when crossing threshold
 % -------------------------------------------------------------------------
 
-switch lower(choiceMech)
+switch lower(stopMech)
   case 'race'
     % Both GO and STOP units reaching threshold can terminate the trial
     mat.terminate               = logical(blkdiag(trueNRsp{:})*[true true]');
-  case {'ffi','li'}
-    % Only GO units reaching threshold can terminate the trial
+  case {'bi','li'}
+    % GO units reaching threshold can terminate the trial
     mat.terminate               = logical(blkdiag(trueNRsp{:})*[true false]');
 end
 
