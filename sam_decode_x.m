@@ -40,7 +40,9 @@ iT0       = SAM.model.XCat.i.iT0;
 iSe       = SAM.model.XCat.i.iSe;
 iSi       = SAM.model.XCat.i.iSi;
 iK        = SAM.model.XCat.i.iK;
-iW        = SAM.model.XCat.i.iW;
+iWliw     = SAM.model.XCat.i.iWliw;
+iWlib     = SAM.model.XCat.i.iWlib;
+iWffiw    = SAM.model.XCat.i.iWffiw;
 
 optimScope  = SAM.sim.scope;
 
@@ -62,11 +64,11 @@ stmDur      = SAM.optim.obs.duration{iTrial};
 
 iTarget     = SAM.optim.modelMat.iTarget{iTrial};
 iNonTarget  = SAM.optim.modelMat.iNonTarget{iTrial};
-exoConn     = SAM.optim.modelMat.exoConn{iTrial};
 
 % #.#.#. Model matrices
 % -------------------------------------------------------------------------------------------------------------------------
 endoConn  = SAM.model.mat.endoConn;
+exoConn   = SAM.model.mat.exoConn;
 
 % 1.2. Specify dynamic variables
 % ========================================================================= 
@@ -155,16 +157,18 @@ end
 % 2. CONVERT X TO INDIVIDUAL PARAMETERS
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-z0  = get_value_per_xcat(SAM,X,indexMat,iZ0,iCatClass);
-zc  = get_value_per_xcat(SAM,X,indexMat,iZc,iCatClass);
-v   = get_value_per_xcat(SAM,X,indexMat,iV,iCatClass);
-ve  = get_value_per_xcat(SAM,X,indexMat,iVe,iCatClass);
-eta = get_value_per_xcat(SAM,X,indexMat,iEta,iCatClass);
-t0  = get_value_per_xcat(SAM,X,indexMat,iT0,iCatClass);
-se  = get_value_per_xcat(SAM,X,indexMat,iSe,iCatClass);
-si  = get_value_per_xcat(SAM,X,indexMat,iSi,iCatClass);
-k   = get_value_per_xcat(SAM,X,indexMat,iK,iCatClass);
-w   = get_value_per_xcat(SAM,X,indexMat,iW,iCatClass);
+z0    = get_value_per_xcat(SAM,X,indexMat,iZ0,iCatClass);
+zc    = get_value_per_xcat(SAM,X,indexMat,iZc,iCatClass);
+v     = get_value_per_xcat(SAM,X,indexMat,iV,iCatClass);
+ve    = get_value_per_xcat(SAM,X,indexMat,iVe,iCatClass);
+eta   = get_value_per_xcat(SAM,X,indexMat,iEta,iCatClass);
+t0    = get_value_per_xcat(SAM,X,indexMat,iT0,iCatClass);
+se    = get_value_per_xcat(SAM,X,indexMat,iSe,iCatClass);
+si    = get_value_per_xcat(SAM,X,indexMat,iSi,iCatClass);
+k     = get_value_per_xcat(SAM,X,indexMat,iK,iCatClass);
+wliw  = get_value_per_xcat(SAM,X,indexMat,iWliw,iCatClass);
+wlib  = get_value_per_xcat(SAM,X,indexMat,iWlib,iCatClass);
+wffiw = get_value_per_xcat(SAM,X,indexMat,iWffiw,iCatClass);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 3. ENCODE CONNECTIVITY MATRICES
@@ -173,12 +177,17 @@ w   = get_value_per_xcat(SAM,X,indexMat,iW,iCatClass);
 % Consider adding an additional parameter class to distinguish lateral inhibition within and between accumulator classes
 
 % Endogenous connectivity
-endoConnSelf          = endoConn.self * diag(blkdiag(trueNRsp{:}) * k(:));
-endoConnNonSelfSame   = endoConn.nonSelfSame * diag(blkdiag(trueNRsp{:}) * w(:));
-endoConnNonSelfOther  = endoConn.nonSelfOther * diag(blkdiag(trueNRsp{:}) * w(:));
-endoConn              = endoConnSelf + endoConnNonSelfSame + endoConnNonSelfOther;
+endoConnSelf              = endoConn.self * diag(blkdiag(trueNRsp{:}) * k(:));
+endoConnNonSelfSame       = endoConn.nonSelfSame * diag(blkdiag(trueNRsp{:}) * wliw(:));
+endoConnNonSelfOther      = endoConn.nonSelfOther * diag(blkdiag(trueNRsp{:}) * wlib(:));
+endoConn                  = endoConnSelf + endoConnNonSelfSame + endoConnNonSelfOther;
 
-% Extrinsic and intrinsic modulation 
+% Exogenous connectivity
+exoConnStimTarget         = exoConn.stimTarget * diag(blkdiag(trueNRsp{:}) * ones(numel(nRsp),1));
+exoConnStimNonTargetSame  = exoConn.stimNonTargetSame * diag(blkdiag(trueNRsp{:}) * wffiw(:));
+exoConn                   = exoConnStimTarget + exoConnStimNonTargetSame;
+
+% Extrinsic and intrinsic modulation: none
 extrMod = zeros(sum(nRsp),sum(nRsp),sum(nStm));
 intrMod = zeros(sum(nRsp),sum(nRsp),sum(nRsp));
 

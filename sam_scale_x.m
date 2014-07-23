@@ -154,12 +154,23 @@ iXCat       = SAM.model.XCat.i.iK;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
 XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
-% Lateral inhibition
+% Lateral inhibition, within class
 % -------------------------------------------------------------------------
-iXCat       = SAM.model.XCat.i.iW;
+iXCat       = SAM.model.XCat.i.iWliw;
 scaleFun    = @(in1,in2,in3) in1(in2).*in3;
 XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
+% Lateral inhibition, between classes
+% -------------------------------------------------------------------------
+iXCat       = SAM.model.XCat.i.iWlib;
+scaleFun    = @(in1,in2,in3) in1(in2).*in3;
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
+
+% Feed-forward inhibition, within class
+% -------------------------------------------------------------------------
+iXCat       = SAM.model.XCat.i.iWffiw;
+scaleFun    = @(in1,in2,in3) in1(in2).*in3;
+XScaled     = scale_x(SAM,X,XScaled,scalingFactor,model,iXCat,optimScope,scaleFun);
 
 % Compute (and compare?) the cost
 [costDt1XScaled,altCostDt1XScaled,prdDt1XScaled]    = sam_cost(XScaled,SAM);

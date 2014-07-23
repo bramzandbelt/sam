@@ -124,8 +124,7 @@ SAM.optim.solver.opts.TolX        = 1e-5;
 % Dataset array
 modelMat                            = dataset({cell(nTrialCat,1),'trialCat'}, ...
                                               {cell(nTrialCat,1),'iTarget'}, ...
-                                              {cell(nTrialCat,1),'iNonTarget'}, ...
-                                              {cell(nTrialCat,1),'exoConn'});
+                                              {cell(nTrialCat,1),'iNonTarget'});
 modelMat.trialCat                   = SAM.optim.obs.trialCat;
 
 
@@ -145,23 +144,26 @@ modelMat.iNonTarget(iC1)            = cellfun(@(inp1) iNonTargetC1,modelMat.iTar
 modelMat.iNonTarget(iC2)            = cellfun(@(inp1) iNonTargetC2,modelMat.iTarget(iC2),'Uni',0);
 modelMat.iNonTarget(iC3)            = cellfun(@(inp1) iNonTargetC3,modelMat.iTarget(iC3),'Uni',0);
 
-% Feed-forward inhibition weight
-exoConn                             = cell(nTrialCat,1);
-
-for i = 1:nTrialCat
-  iTargetNonTarget = cellfun(@(inp1,inp2) inp1 + inp2,modelMat.iTarget{i},modelMat.iNonTarget{i},'Uni',0);
-  switch lower(SAM.model.mat.exoConn.w)
-    case 'normalized'
-      wFFI = cellfun(@(inp1) -1./(sum(inp1)-1),iTargetNonTarget,'Uni',0);
-      wFFI(cellfun(@isinf,wFFI)) = {1};
-    otherwise
-      wFFI = {0 0};
-  end
-  thisExoConn = cellfun(@(inp1,inp2) inp1 * (inp2(:) * inp2(:)' - diag(inp2(:))) + diag(inp2(:)),wFFI,iTargetNonTarget,'Uni',0);
-  exoConn{i}  = blkdiag(thisExoConn{:});  
-end
-
-modelMat.exoConn                    = exoConn;
+% N.B. Feed-forward inhibition is now implemented in a way similar to lateral
+% inhibition
+% 
+% % Feed-forward inhibition weight
+% exoConn                             = cell(nTrialCat,1);
+% 
+% for i = 1:nTrialCat
+%   iTargetNonTarget = cellfun(@(inp1,inp2) inp1 + inp2,modelMat.iTarget{i},modelMat.iNonTarget{i},'Uni',0);
+%   switch lower(SAM.model.mat.exoConn.w)
+%     case 'normalized'
+%       wFFI = cellfun(@(inp1) -1./(sum(inp1)-1),iTargetNonTarget,'Uni',0);
+%       wFFI(cellfun(@isinf,wFFI)) = {1};
+%     otherwise
+%       wFFI = {0 0};
+%   end
+%   thisExoConn = cellfun(@(inp1,inp2) inp1 * (inp2(:) * inp2(:)' - diag(inp2(:))) + diag(inp2(:)),wFFI,iTargetNonTarget,'Uni',0);
+%   exoConn{i}  = blkdiag(thisExoConn{:});  
+% end
+% 
+% modelMat.exoConn                    = exoConn;
 
 SAM.optim.modelMat                  = modelMat;
 
