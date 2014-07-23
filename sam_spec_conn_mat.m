@@ -34,6 +34,9 @@ nStm                            = SAM.expt.nStm;
 trueNRsp                        = arrayfun(@(x) true(x,1),nRsp,'Uni',0);
 trueNStm                        = arrayfun(@(x) true(x,1),nStm,'Uni',0);
 iK                              = SAM.model.XCat.i.iK;
+iWliw                           = SAM.model.XCat.i.iWliw;
+iWlib                           = SAM.model.XCat.i.iWlib;
+iWffiw                          = SAM.model.XCat.i.iWffiw;
 XCatIncluded                    = SAM.model.XCat.included;
 
 % 1.3. Define static variables
@@ -41,8 +44,9 @@ XCatIncluded                    = SAM.model.XCat.included;
 endoConn                        = struct('self',[], ...
                                          'nonSelfSame',[], ...
                                          'nonSelfOther',[]);
-exoConn                         = struct('mat',[], ...
-                                         'w',[]);
+exoConn                         = struct('stimTarget',[], ...
+                                         'stimNonTargetSame',[], ...
+                                         'stimNonTargetOther',[]);
 mat                             = struct('endoConn',endoConn, ...
                                          'exoConn',exoConn, ...
                                          'terminate',[], ...
@@ -66,48 +70,43 @@ else
   mat.endoConn.self             = logical(false(sum(nRsp)));
 end
 
-
-
 % 2.1.2. Connectivity to other units from the same class
 % -------------------------------------------------------------------------
 
 % Units of same class have lateral connections only in 'li' choice mechanism
-switch lower(choiceMech)
-  case {'race','ffi'}
-    mat.endoConn.nonSelfSame    = logical(false(sum(nRsp)));
-  case 'li'
-    mat.endoConn.nonSelfSame    = blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})' - ...
-                                  mat.endoConn.self;
+if XCatIncluded(iWliw)
+  mat.endoConn.nonSelfSame    = blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})' - ...
+                                mat.endoConn.self;
+else
+  mat.endoConn.nonSelfSame    = logical(false(sum(nRsp)));
 end
 
 % 2.1.3. Connectivity to other units from the other class
 % -------------------------------------------------------------------------
 
-switch lower(stopMech)
-  case {'race','bi'}
-    mat.endoConn.nonSelfOther   = logical(false(sum(nRsp)));
-  case 'li'
-    mat.endoConn.nonSelfOther   = ~blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})';
-  otherwise
-    % e.g. when only go trials are simulated
-    mat.endoConn.nonSelfOther   = logical(false(sum(nRsp)));
+if XCatIncluded(iWlib)
+  mat.endoConn.nonSelfOther   = ~blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})';
+else
+  mat.endoConn.nonSelfOther   = logical(false(sum(nRsp)));
 end
 
 % 2.2. Exogenous connectivity
 % =========================================================================
 
-% 2.2.1. Input
+% 2.2.1. Stimulus-target response mapping
 % -------------------------------------------------------------------------
 % Each stimulus drives the unit with the corresponding index
-mat.exoConn.mat                 = logical(eye(sum(nRsp)));
+mat.exoConn.stimTarget        = logical(eye(sum(nRsp)));
 
-% 2.2.2. Weighting of input
+% 2.2.2. Stimulus-non-target response mapping, same class
 % -------------------------------------------------------------------------
-switch lower(choiceMech)
-  case {'race','li'}
-    mat.exoConn.w               = 'none';
-  case 'ffi'
-    mat.exoConn.w               = 'normalized';
+
+% Feed-forward inhibition within the same class
+if XCatIncluded(iWffiw)
+  mat.exoConn.stimNonTargetSame    = blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})' - ...
+                                     mat.endoConn.self;
+else
+  mat.exoConn.stimNonTargetSame    = logical(false(sum(nRsp)));
 end
 
 % 2.3. Threshold crossing rules
@@ -121,6 +120,9 @@ switch lower(stopMech)
     % Both GO and STOP units reaching threshold can terminate the trial
     mat.terminate               = logical(blkdiag(trueNRsp{:})*[true true]');
   case {'bi','li'}
+    % GO units reaching threshold can terminate the trial
+    mat.terminate               = logical(blkdiag(trueNRsp{:})*[true false]');
+  otherwise  
     % GO units reaching threshold can terminate the trial
     mat.terminate               = logical(blkdiag(trueNRsp{:})*[true false]');
 end

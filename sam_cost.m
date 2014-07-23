@@ -169,7 +169,7 @@ function [bic,chiSquare] = compute_cost(rtPrd,rtQObs,probMassDefectiveObs,nSim,n
     
     % Add a small value to bins with a probablity mass of 0 (to prevent
     % division by 0 and hampering optimization)
-    probMassDefectivePrd(probMassDefectivePrd == 0) = 1e-5;
+    probMassDefectivePrd(probMassDefectivePrd == 0) = 1e-4;
     
     % Compute the costs
     chiSquare     = sam_chi_square(probMassDefectiveObs(:),probMassDefectivePrd(:),nTrialObs);
