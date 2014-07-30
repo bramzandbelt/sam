@@ -26,11 +26,9 @@ nTrialCat     = size(SAM.optim.obs,1);
 % 1.1.1. Experiment variables
 % -------------------------------------------------------------------------
 
-N             = SAM.expt.nRsp;
 trialDur      = SAM.expt.trialDur;
 
 nRsp          = SAM.expt.nRsp;
-% nStm          = SAM.expt.nStm;
 
 % 1.1.2. Model variables
 % -------------------------------------------------------------------------
@@ -86,6 +84,12 @@ switch simGoal
     CUM_PROB = 0:0.01:1;
 end
 
+% 1.3. Specify dynamic variables
+% =========================================================================
+
+% Maximum number of stimuli and response, across conditions
+maxNRsp           = max(cell2mat(nRsp(:)),[],1);
+
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. SEED THE RANDOM NUMBER GENERATOR (OPTIONAL)
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -137,11 +141,11 @@ for iTrialCat = 1:nTrialCat
   iSTOP           = sort([iTargetSTOP(:);iNonTargetSTOP(:)]);
   
   % Pre-allocate response time and response arrays
-  rt  = inf(sum(N),nSim);
+  rt  = inf(sum(maxNRsp),nSim);
   
   switch simGoal
     case 'explore'
-      z = nan(sum(nRsp),nSim,p);
+      z = nan(sum(maxNRsp),nSim,p);
   end
   
   % 3.1. Decode parameter vector

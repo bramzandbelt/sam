@@ -63,13 +63,18 @@ minBinSize        = SAM.optim.cost.stat.minBinSize;
 
 % 1.2. Dynamic variables
 % =========================================================================
-    
+
+% Maximum number of stimuli and response, across conditions
+maxNStm           = max(cell2mat(nStm(:)),[],1);
+maxNRsp           = max(cell2mat(nRsp(:)),[],1);
+
+taskFactors       = [maxNStm;maxNRsp;nCnd,nCnd];
+
 % Miscellaneous
 % -------------------------------------------------------------------------
-trueM             = arrayfun(@(x) true(x,1),nStm,'Uni',0);
+trueNStm          = arrayfun(@(x) true(x,1),maxNStm,'Uni',0);
 
 nClass            = numel(SAM.model.general.classNames);
-taskFactors       = [nStm;nRsp;nCnd,nCnd];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 4. CATEGORIZE DATA BASED ON MODEL FEATURES
@@ -368,11 +373,11 @@ for iSubj = 1:nSubj
     
     
     if ~isempty(regexp(tagAll{iTrialCat},'goTrial.*'))
-      obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) 0]';
-      obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur(1) 0]';
+      obs.onset{iTrialCat}    = blkdiag(trueNStm{:})*[stmOns(1) 0]';
+      obs.duration{iTrialCat} = blkdiag(trueNStm{:})*[stmDur(1) 0]';
     elseif ~isempty(regexp(tagAll{iTrialCat},'stopTrial.*'))
-      obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) stmOns(1) + obs.ssd(iTrialCat)]';
-      obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur]';
+      obs.onset{iTrialCat}    = blkdiag(trueNStm{:})*[stmOns(1) stmOns(1) + obs.ssd(iTrialCat)]';
+      obs.duration{iTrialCat} = blkdiag(trueNStm{:})*[stmDur]';
     end
     
 %     % 4.1.1. Compute timing diagram

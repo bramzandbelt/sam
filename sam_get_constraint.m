@@ -82,8 +82,11 @@ iK  = SAM.model.XCat.i.iK;
 
 % 1.2. Define dynamic variables
 % =========================================================================
-taskFactors   = [nStm;nRsp;nCnd,nCnd];
+% Maximum number of stimuli and response, across conditions
+maxNStm           = max(cell2mat(nStm(:)),[],1);
+maxNRsp           = max(cell2mat(nRsp(:)),[],1);
 
+taskFactors       = [maxNStm;maxNRsp;nCnd,nCnd];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 2. BOUNDS

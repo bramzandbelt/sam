@@ -22,6 +22,10 @@ cd(SAM.io.workDir);
 
 optimScope                    = SAM.sim.scope;
 
+nRsp                          = SAM.expt.nRsp;
+nCnd                          = SAM.expt.nCnd;
+maxNRsp                       = max(cell2mat(nRsp(:)),[],1);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. MODEL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,47 +131,31 @@ modelMat                            = dataset({cell(nTrialCat,1),'trialCat'}, ..
                                               {cell(nTrialCat,1),'iNonTarget'});
 modelMat.trialCat                   = SAM.optim.obs.trialCat;
 
-
-iGoTrial                            = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'^goTrial')),modelMat.trialCat,'Uni',0));
-iStopTrial                          = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'^stopTrial')),modelMat.trialCat,'Uni',0));
-iTargetGoTrial                      = cellfun(@(inp1) logical(inp1(:)),{[0 0 1 0 0 0] [0]},'Uni',0);
-iTargetStopTrial                    = cellfun(@(inp1) logical(inp1(:)),{[0 0 1 0 0 0] [1]},'Uni',0);
-modelMat.iTarget(iGoTrial)          = cellfun(@(inp1) iTargetGoTrial,modelMat.iTarget(iGoTrial),'Uni',0);
-modelMat.iTarget(iStopTrial)        = cellfun(@(inp1) iTargetStopTrial,modelMat.iTarget(iStopTrial),'Uni',0);
-iNonTargetC1                        = cellfun(@(inp1) logical(inp1(:)),{[0 0 0 1 0 0] [0]},'Uni',0);
-iNonTargetC2                        = cellfun(@(inp1) logical(inp1(:)),{[0 1 0 1 1 0] [0]},'Uni',0);
-iNonTargetC3                        = cellfun(@(inp1) logical(inp1(:)),{[1 1 0 1 1 1] [0]},'Uni',0);
-iC1                                 = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'GO:c1')),modelMat.trialCat,'Uni',0));
-iC2                                 = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'GO:c2')),modelMat.trialCat,'Uni',0));
-iC3                                 = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'GO:c3')),modelMat.trialCat,'Uni',0));
-modelMat.iNonTarget(iC1)            = cellfun(@(inp1) iNonTargetC1,modelMat.iTarget(iC1),'Uni',0);
-modelMat.iNonTarget(iC2)            = cellfun(@(inp1) iNonTargetC2,modelMat.iTarget(iC2),'Uni',0);
-modelMat.iNonTarget(iC3)            = cellfun(@(inp1) iNonTargetC3,modelMat.iTarget(iC3),'Uni',0);
-
-% N.B. Feed-forward inhibition is now implemented in a way similar to lateral
-% inhibition
-% 
-% % Feed-forward inhibition weight
-% exoConn                             = cell(nTrialCat,1);
-% 
-% for i = 1:nTrialCat
-%   iTargetNonTarget = cellfun(@(inp1,inp2) inp1 + inp2,modelMat.iTarget{i},modelMat.iNonTarget{i},'Uni',0);
-%   switch lower(SAM.model.mat.exoConn.w)
-%     case 'normalized'
-%       wFFI = cellfun(@(inp1) -1./(sum(inp1)-1),iTargetNonTarget,'Uni',0);
-%       wFFI(cellfun(@isinf,wFFI)) = {1};
-%     otherwise
-%       wFFI = {0 0};
-%   end
-%   thisExoConn = cellfun(@(inp1,inp2) inp1 * (inp2(:) * inp2(:)' - diag(inp2(:))) + diag(inp2(:)),wFFI,iTargetNonTarget,'Uni',0);
-%   exoConn{i}  = blkdiag(thisExoConn{:});  
-% end
-% 
-% modelMat.exoConn                    = exoConn;
+for iCnd = 1:nCnd
+  
+  % Identify trials
+  iGoTrial                          = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,sprintf('^goTrial.*c%d',iCnd))),modelMat.trialCat,'Uni',0));
+  iStopTrial                        = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'^stopTrial.*c%d')),modelMat.trialCat,'Uni',0));
+  
+  % Identify target accumulators
+  iTargetGoTrial                    = cellfun(@(inp1) logical(inp1(:)),{[1,zeros(1,maxNRsp(1)-1)] zeros(1,maxNRsp(2))},'Uni',0);
+  iTargetStopTrial                  = cellfun(@(inp1) logical(inp1(:)),{[1,zeros(1,maxNRsp(1)-1)] [1,zeros(1,maxNRsp(2)-1)]},'Uni',0);
+  
+  modelMat.iTarget(iGoTrial)        = cellfun(@(inp1) iTargetGoTrial,modelMat.iTarget(iGoTrial),'Uni',0);
+  modelMat.iTarget(iStopTrial)      = cellfun(@(inp1) iTargetStopTrial,modelMat.iTarget(iStopTrial),'Uni',0);
+  
+  % Identify non-target accumulators
+  nNonTargetGo                      = nRsp{iCnd}(1)-1;
+  nNonTargetStop                    = nRsp{iCnd}(2)-1;
+  nEmptyGo                          = maxNRsp(1) - nNonTargetGo - 1;
+  nEmptyStop                        = maxNRsp(2) - nNonTargetStop - 1;
+  
+  iNonTargetGoTrial                 = cellfun(@(inp1) logical(inp1(:)),{[0,ones(1,nNonTargetGo),zeros(1,nEmptyGo)] zeros(1,maxNRsp(2))},'Uni',0);
+  iNonTargetStopTrial               = cellfun(@(inp1) logical(inp1(:)),{[0,ones(1,nNonTargetGo),zeros(1,nEmptyGo)] [0,ones(1,nNonTargetStop),zeros(1,nEmptyStop)]},'Uni',0);
+  
+  modelMat.iNonTarget(iGoTrial)     = cellfun(@(inp1) iNonTargetGoTrial,modelMat.iNonTarget(iGoTrial),'Uni',0);
+  modelMat.iNonTarget(iStopTrial)   = cellfun(@(inp1) iNonTargetStopTrial,modelMat.iNonTarget(iStopTrial),'Uni',0);
+  
+end
 
 SAM.optim.modelMat                  = modelMat;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 6. SAVE THE MODEL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
