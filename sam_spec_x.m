@@ -53,7 +53,10 @@ nStm          = SAM.expt.nStm;
 nRsp          = SAM.expt.nRsp;
 nCnd          = SAM.expt.nCnd;
 
-taskFactors   = [nStm;nRsp;nCnd,nCnd];
+maxNStm       = max(cell2mat(nStm(:)),[],1);
+maxNRsp       = max(cell2mat(nRsp(:)),[],1);
+
+taskFactors   = [maxNStm;maxNRsp;nCnd,nCnd];
 
 included      = SAM.model.XCat.included;
 
@@ -117,17 +120,17 @@ nCatClass(:,~classSpecific) = 1;
 
 % Correct Ve, Wliw, and Wffiw for classes that have only one accumulator
 if included(iVe)
-  nCatClass(:,iVe,nRsp(1:nClass) <= 1) = 0;
+  nCatClass(:,iVe,maxNRsp(1:nClass) <= 1) = 0;
   nCat(iVe) = sum(nCatClass(:,iVe,:),3);
 end
 
 if included(iWliw)
-  nCatClass(:,iWliw,nRsp(1:nClass) <= 1) = 0;
+  nCatClass(:,iWliw,maxNRsp(1:nClass) <= 1) = 0;
   nCat(iWliw) = sum(nCatClass(:,iWliw,:),3);
 end
 
 if included(iWffiw)
-  nCatClass(:,iWffiw,nRsp(1:nClass) <= 1) = 0;
+  nCatClass(:,iWffiw,maxNRsp(1:nClass) <= 1) = 0;
   nCat(iWffiw) = sum(nCatClass(:,iWffiw,:),3);
 end
 

@@ -26,13 +26,15 @@ function mat = sam_spec_conn_mat(SAM,choiceMech,stopMech)
 
 % 1.1. Process inputs
 % =========================================================================
-nRsp                            = SAM.expt.nRsp;
 nStm                            = SAM.expt.nStm;
+nRsp                            = SAM.expt.nRsp;
 
 % 1.2. Define dynamic variables
 % =========================================================================
-trueNRsp                        = arrayfun(@(x) true(x,1),nRsp,'Uni',0);
-trueNStm                        = arrayfun(@(x) true(x,1),nStm,'Uni',0);
+maxNStm                         = max(cell2mat(nStm(:)),[],1);
+maxNRsp                         = max(cell2mat(nRsp(:)),[],1);
+trueNStm                        = arrayfun(@(x) true(x,1),maxNStm,'Uni',0);
+trueNRsp                        = arrayfun(@(x) true(x,1),maxNRsp,'Uni',0);
 iK                              = SAM.model.XCat.i.iK;
 iWliw                           = SAM.model.XCat.i.iWliw;
 iWlib                           = SAM.model.XCat.i.iWlib;
@@ -45,8 +47,7 @@ endoConn                        = struct('self',[], ...
                                          'nonSelfSame',[], ...
                                          'nonSelfOther',[]);
 exoConn                         = struct('stimTarget',[], ...
-                                         'stimNonTargetSame',[], ...
-                                         'stimNonTargetOther',[]);
+                                         'stimNonTargetSame',[]);
 mat                             = struct('endoConn',endoConn, ...
                                          'exoConn',exoConn, ...
                                          'terminate',[], ...
@@ -65,9 +66,9 @@ mat                             = struct('endoConn',endoConn, ...
 
 % If leakage constant included, then there is self-connectivity
 if XCatIncluded(iK)
-  mat.endoConn.self             = logical(eye(sum(nRsp)));
+  mat.endoConn.self             = logical(eye(sum(maxNRsp)));
 else
-  mat.endoConn.self             = logical(false(sum(nRsp)));
+  mat.endoConn.self             = logical(false(sum(maxNRsp)));
 end
 
 % 2.1.2. Connectivity to other units from the same class
@@ -78,7 +79,7 @@ if XCatIncluded(iWliw)
   mat.endoConn.nonSelfSame    = blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})' - ...
                                 mat.endoConn.self;
 else
-  mat.endoConn.nonSelfSame    = logical(false(sum(nRsp)));
+  mat.endoConn.nonSelfSame    = logical(false(sum(maxNRsp)));
 end
 
 % 2.1.3. Connectivity to other units from the other class
@@ -87,7 +88,7 @@ end
 if XCatIncluded(iWlib)
   mat.endoConn.nonSelfOther   = ~blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})';
 else
-  mat.endoConn.nonSelfOther   = logical(false(sum(nRsp)));
+  mat.endoConn.nonSelfOther   = logical(false(sum(maxNRsp)));
 end
 
 % 2.2. Exogenous connectivity
@@ -96,7 +97,7 @@ end
 % 2.2.1. Stimulus-target response mapping
 % -------------------------------------------------------------------------
 % Each stimulus drives the unit with the corresponding index
-mat.exoConn.stimTarget        = logical(eye(sum(nRsp)));
+mat.exoConn.stimTarget        = logical(eye(sum(maxNRsp)));
 
 % 2.2.2. Stimulus-non-target response mapping, same class
 % -------------------------------------------------------------------------
@@ -106,7 +107,7 @@ if XCatIncluded(iWffiw)
   mat.exoConn.stimNonTargetSame    = blkdiag(trueNRsp{:})*blkdiag(trueNRsp{:})' - ...
                                      mat.endoConn.self;
 else
-  mat.exoConn.stimNonTargetSame    = logical(false(sum(nRsp)));
+  mat.exoConn.stimNonTargetSame    = logical(false(sum(maxNRsp)));
 end
 
 % 2.3. Threshold crossing rules
@@ -154,7 +155,7 @@ end
 
 switch lower(stopMech)
   case {'race','bi'}
-    mat.interClassLatInhib      = logical(false(sum(nRsp)));
+    mat.interClassLatInhib      = logical(false(sum(maxNRsp)));
   case 'li'
     % STOP inhibits GO when STOP reaches threshold, 
     % GO inhibits STOP when GO reaches threshold.
@@ -165,5 +166,5 @@ switch lower(stopMech)
                                             (blkdiag(trueNRsp{:})*[true false]')');
   otherwise
     % e.g. when only go trials are simulated
-    mat.interClassLatInhib      = logical(false(sum(nRsp)));
+    mat.interClassLatInhib      = logical(false(sum(maxNRsp)));
 end

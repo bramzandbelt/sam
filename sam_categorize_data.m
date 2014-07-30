@@ -49,9 +49,14 @@ minBinSize        = SAM.optim.cost.stat.minBinSize;
     
 % Miscellaneous
 % -------------------------------------------------------------------------
-trueM             = arrayfun(@(x) true(x,1),nStm,'Uni',0);
 
-taskFactors       = [nStm;nRsp;nCnd,nCnd];
+% Maximum number of stimuli and response, across conditions
+maxNStm           = max(cell2mat(nStm(:)),[],1);
+maxNRsp           = max(cell2mat(nRsp(:)),[],1);
+
+taskFactors       = [maxNStm;maxNRsp;nCnd,nCnd];
+
+trueNStm          = arrayfun(@(x) true(x,1),maxNStm,'Uni',0);
 
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % 2. LOAD BEHAVIORAL DATA
@@ -865,11 +870,11 @@ for iTrialCat = 1:nTrialCat
   % Stimulus onsets and durations
   % -----------------------------------------------------------------------
   if ~isempty(regexp(tag{iTrialCat},'goTrial.*', 'once'))
-    obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) 0]';
-    obs.duration{iTrialCat} = blkdiag(trueM{:})*[stmDur(1) 0]';
+    obs.onset{iTrialCat}    = blkdiag(trueNStm{:})*[stmOns(1) 0]';
+    obs.duration{iTrialCat} = blkdiag(trueNStm{:})*[stmDur(1) 0]';
   elseif ~isempty(regexp(tag{iTrialCat},'stopTrial.*', 'once'))
-    obs.onset{iTrialCat}    = blkdiag(trueM{:})*[stmOns(1) stmOns(1) + obs.ssd(iTrialCat)]';
-    obs.duration{iTrialCat} = blkdiag(trueM{:})*(stmDur)';
+    obs.onset{iTrialCat}    = blkdiag(trueNStm{:})*[stmOns(1) stmOns(1) + obs.ssd(iTrialCat)]';
+    obs.duration{iTrialCat} = blkdiag(trueNStm{:})*(stmDur)';
   end
   
 end
