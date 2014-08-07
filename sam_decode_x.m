@@ -85,13 +85,13 @@ trueNRsp          = arrayfun(@(x) true(x,1),maxNRsp,'Uni',0);
 
 % Parse trial type 
 if ~isempty(regexp(trialCat,'^goTrial_', 'once'))
-  token = regexp(trialCat,'goTrial_(\S*)','tokens');
-  tagGO   = token{1}{1};
-elseif ~isempty(regexp(trialCat,'^stopTrial_', 'once'))
-  token = regexp(trialCat,'stopTrial_{ssd(\w*)}_(\S*)_(\S*)','tokens');
-%   tagSsd  = str2double(token{1}{1});
+  token = regexp(trialCat,'goTrial_c(\w*)_(\S*)','tokens');
   tagGO   = token{1}{2};
-  tagSTOP = token{1}{3};
+elseif ~isempty(regexp(trialCat,'^stopTrial_', 'once'))
+  token = regexp(trialCat,'stopTrial_ssd(\w*)_c(\w*)_(\S*)_(\S*)','tokens')
+%   tagSsd  = str2double(token{1}{1});
+  tagGO   = token{1}{3};
+  tagSTOP = token{1}{4};
 end
 
 % 1.2.1. Parameter indices per task factor
