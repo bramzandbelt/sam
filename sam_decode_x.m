@@ -353,8 +353,12 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass,taskFactors)
         signatureSTOP = SAM.model.variants.toFit.features(:,iCol,2);
 
         % Factorial levels
-        levels        = fullfact(taskFactors(signatureSTOP,2));
-
+        if all(signatureSTOP == [0 0 0]')
+          levels        = 1;
+        else
+          levels        = fullfact(taskFactors(signatureSTOP,1));
+        end
+        
         % Number of levels
         nLevel        = size(levels,1);
 
