@@ -69,7 +69,7 @@ existUserSpecGoFile     = exist(userSpecGoFile) == 2;
 % Check if a file with user-specified starting STOP parameters for present model exists
 % -------------------------------------------------------------------------
 userSpecStopFile          = sprintf('userSpecX_%sTrials_model%.3d.txt', ...
-                           'all',modelToFit.i);
+                           'stop',modelToFit.i);
 existUserSpecStopFile     = exist(userSpecStopFile) == 2;
 
 % Check if a file with user-specified starting GO and STOP parameters for present model exists
