@@ -88,7 +88,7 @@ if ~isempty(regexp(trialCat,'^goTrial_', 'once'))
   token = regexp(trialCat,'goTrial_c(\w*)_(\S*)','tokens');
   tagGO   = token{1}{2};
 elseif ~isempty(regexp(trialCat,'^stopTrial_', 'once'))
-  token = regexp(trialCat,'stopTrial_ssd(\w*)_c(\w*)_(\S*)_(\S*)','tokens')
+  token = regexp(trialCat,'stopTrial_ssd(\w*)_c(\w*)_(\S*)_(\S*)','tokens');
 %   tagSsd  = str2double(token{1}{1});
   tagGO   = token{1}{3};
   tagSTOP = token{1}{4};
