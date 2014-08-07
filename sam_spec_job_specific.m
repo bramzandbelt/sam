@@ -135,7 +135,7 @@ for iCnd = 1:nCnd
   
   % Identify trials
   iGoTrial                          = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,sprintf('^goTrial.*c%d',iCnd))),modelMat.trialCat,'Uni',0));
-  iStopTrial                        = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,'^stopTrial.*c%d')),modelMat.trialCat,'Uni',0));
+  iStopTrial                        = cell2mat(cellfun(@(inp1) ~isempty(regexp(inp1,sprintf('^stopTrial.*c%d',iCnd))),modelMat.trialCat,'Uni',0));
   
   % Identify target accumulators
   iTargetGoTrial                    = cellfun(@(inp1) logical(inp1(:)),{[1,zeros(1,maxNRsp(1)-1)] zeros(1,maxNRsp(2))},'Uni',0);
