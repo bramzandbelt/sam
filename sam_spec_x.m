@@ -136,7 +136,7 @@ end
 
 % Constrain lateral inhibition between classes to effects of STOP onto GO
 % only, not vice versa
-if included(iWffiw)
+if included(iWlib)
   nCatClass(:,iWlib,1) = 0;
   nCat(iWlib) = sum(nCatClass(:,iWlib,:),3);
 end
@@ -178,7 +178,7 @@ for iXCat = 1:nXCat
   elseif included(iXCat) && classSpecific(iXCat)
     % If:
     % - parameter category included, 
-    % - not class-specific
+    % - class-specific
     
     freeCatClass(:,iXCat) = mat2cell(freeCat{iXCat}(:),nCatClass(:,iXCat),1);
   end
