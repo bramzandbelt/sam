@@ -100,8 +100,8 @@ for iXCat = 1:12
     XAdditive{iXCat}        = ones(1,nCat(iXCat)) .* additive(iXCat);
     
     % Hard lower and upper bounds, , for each parameter
-    XHardLB{iXCat}          = ones(1,nCat(iXCat)) .* hardLB(iXCat);
-    XHardUB{iXCat}          = ones(1,nCat(iXCat)) .* hardUB(iXCat);
+    XHardLB{iXCat}          = ones(1,nCat(iXCat)) .* XCat.hardLB(iXCat);
+    XHardUB{iXCat}          = ones(1,nCat(iXCat)) .* XCat.hardUB(iXCat);
     
     % Set bounds
     LB{iXCat}               = X0(iCatClass{iXCat}) - ...
@@ -116,7 +116,7 @@ for iXCat = 1:12
         LB{iXCat} = XHardLB{iXCat};
     end
     
-    if UB{iXCat} > XHardLB{iXCat}
+    if UB{iXCat} > XHardUB{iXCat}
         UB{iXCat} = XHardUB{iXCat};
     end
     
