@@ -134,12 +134,12 @@ if included(iWffiw)
   nCat(iWffiw) = sum(nCatClass(:,iWffiw,:),3);
 end
 
-% Constrain lateral inhibition between classes to effects of STOP onto GO
-% only, not vice versa
-if ~included(iWlib)
-  nCatClass(:,iWlib,1) = 0;
-  nCat(iWlib) = sum(nCatClass(:,iWlib,:),3);
-end
+% % Constrain lateral inhibition between classes to effects of STOP onto GO
+% % only, not vice versa
+% if ~included(iWlib)
+%   nCatClass(:,iWlib,1) = 0;
+%   nCat(iWlib) = sum(nCatClass(:,iWlib,:),3);
+% end
 
 % Squeeze out redundant dimensions, if any
 nCatClass = reshape(nCatClass,nXCat,nClass)';
@@ -186,6 +186,9 @@ end
 
 % Ensure row vectors
 freeCatClass = cellfun(@(in1) in1(:)',freeCatClass,'Uni',0);
+
+% Set lateral inhibition from GO to STOP to 0
+freeCatClass{1,iWlib} = false(size(freeCatClass{1,iWlib}));
 
 % Put variables in output structure
 % =========================================================================
