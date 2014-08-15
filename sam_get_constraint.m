@@ -92,25 +92,41 @@ taskFactors       = [maxNStm;maxNRsp;nCnd,nCnd];
 % 2. BOUNDS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Multiplicative and additive factors, for each parameter
-XMultiplicative = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,multiplicative,'Uni',0));
-XAdditive       = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,additive,'Uni',0));
 
-% Hard lower and upper bounds, , for each parameter
-XHardLB         = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,XCat.hardLB,'Uni',0));
-XHardUB         = cell2mat(arrayfun(@(in1,in2) ones(1,in1)*in2,nCat,XCat.hardUB,'Uni',0));
-
-% Set bounds
-LB              = X0 - X0*diag(XMultiplicative) - XAdditive;
-UB              = X0 + X0*diag(XMultiplicative) + XAdditive;
-
-% Correct for crossing hard limits
-LB(LB<XHardLB)  = XHardLB(LB<XHardLB);
-UB(UB>XHardUB)  = XHardUB(UB>XHardUB);
-
-% Correct for fixed parameters
-LB(~free)       = X0(~free);
-UB(~free)       = X0(~free);
+for iXCat = 1:12
+    
+    % Multiplicative and additive factors
+    XMultiplicative{iXCat}  = ones(1,nCat(iXCat)) .* multiplicative(iXCat);
+    XAdditive{iXCat}        = ones(1,nCat(iXCat)) .* additive(iXCat);
+    
+    % Hard lower and upper bounds, , for each parameter
+    XHardLB{iXCat}          = ones(1,nCat(iXCat)) .* hardLB(iXCat);
+    XHardUB{iXCat}          = ones(1,nCat(iXCat)) .* hardUB(iXCat);
+    
+    % Set bounds
+    LB{iXCat}               = X0(iCatClass{iXCat}) - ...
+                              X0(iCatClass{iXCat}) * diag(XMultiplicative{iXCat}) - ...
+                              XAdditive{iXCat};
+    UB{iXCat}               = X0(iCatClass{iXCat}) + ...
+                              X0(iCatClass{iXCat}) * diag(XMultiplicative{iXCat}) + ...
+                              XAdditive{iXCat};
+    
+    % Correct for crossing hard limits
+    if LB{iXCat} < XHardLB{iXCat}
+        LB{iXCat} = XHardLB{iXCat};
+    end
+    
+    if UB{iXCat} > XHardLB{iXCat}
+        UB{iXCat} = XHardUB{iXCat};
+    end
+    
+    % Correct for fixed parameters
+    if ~free(iXCat)
+        LB{iXCat} = X0(iCatClass{iXCat});
+        UB{iXCat} = X0(iCatClass{iXCat});
+    end
+    
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 3. LINEAR CONSTRAINTS
