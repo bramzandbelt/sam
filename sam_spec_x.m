@@ -136,7 +136,7 @@ end
 
 % Constrain lateral inhibition between classes to effects of STOP onto GO
 % only, not vice versa
-if included(iWlib)
+if ~included(iWlib)
   nCatClass(:,iWlib,1) = 0;
   nCat(iWlib) = sum(nCatClass(:,iWlib,:),3);
 end
