@@ -44,7 +44,7 @@ switch lower(optimScope)
     
     iCatClass = XSpec.i.go.iCatClass;
     
-    free      = XSpec.free.go.free;
+    freeCat      = XSpec.free.go.freeCat;
     
   case 'stop'
     nClass    = 2;
@@ -52,7 +52,7 @@ switch lower(optimScope)
     
     iCatClass = XSpec.i.stop.iCatClass;
     
-    free      = XSpec.free.stop.free;
+    freeCat      = XSpec.free.stop.freeCat;
     
   case 'all'
     nClass    = 2;
@@ -60,7 +60,7 @@ switch lower(optimScope)
     
     iCatClass = XSpec.i.all.iCatClass;
     
-    free      = XSpec.free.all.free;
+    freeCat      = XSpec.free.all.freeCat;
     
 end
 
@@ -121,14 +121,14 @@ for iXCat = 1:12
     end
     
     % Correct for fixed parameters
-    if ~free(iXCat)
-        LB{iXCat} = X0(iCatClass{iXCat});
-        UB{iXCat} = X0(iCatClass{iXCat});
+    if any(~freeCat{iXCat})
+        LB{iXCat}(~freeCat{iXCat}) = X0(iCatClass{iXCat}(~freeCat{iXCat}));
+        UB{iXCat}(~freeCat{iXCat}) = X0(iCatClass{iXCat}(~freeCat{iXCat}));
     end
     
 end
 
-% Convert from cell to double
+% Convert from cell to double[
 LB = cell2mat(LB);
 UB = cell2mat(UB);
 
