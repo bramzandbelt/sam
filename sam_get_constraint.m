@@ -42,6 +42,7 @@ switch lower(optimScope)
     nClass    = 1;
     nCat      = XSpec.n.nCatClass(1,:);
     
+    iCat      = XSpec.i.go.iCat;
     iCatClass = XSpec.i.go.iCatClass;
     
     freeCat      = XSpec.free.go.freeCat;
@@ -50,6 +51,7 @@ switch lower(optimScope)
     nClass    = 2;
     nCat      = XSpec.n.nCat;
     
+    iCat      = XSpec.i.stop.iCat;
     iCatClass = XSpec.i.stop.iCatClass;
     
     freeCat      = XSpec.free.stop.freeCat;
@@ -58,6 +60,7 @@ switch lower(optimScope)
     nClass    = 2;
     nCat      = XSpec.n.nCat;
     
+    iCat      = XSpec.i.all.iCat;
     iCatClass = XSpec.i.all.iCatClass;
     
     freeCat      = XSpec.free.all.freeCat;
@@ -104,11 +107,11 @@ for iXCat = 1:12
     XHardUB{iXCat}          = ones(1,nCat(iXCat)) .* XCat.hardUB(iXCat);
     
     % Set bounds
-    LB{iXCat}               = X0(iCatClass{iXCat}) - ...
-                              X0(iCatClass{iXCat}) * diag(XMultiplicative{iXCat}) - ...
+    LB{iXCat}               = X0(iCat{iXCat}) - ...
+                              X0(iCat{iXCat}) * diag(XMultiplicative{iXCat}) - ...
                               XAdditive{iXCat};
-    UB{iXCat}               = X0(iCatClass{iXCat}) + ...
-                              X0(iCatClass{iXCat}) * diag(XMultiplicative{iXCat}) + ...
+    UB{iXCat}               = X0(iCat{iXCat}) + ...
+                              X0(iCat{iXCat}) * diag(XMultiplicative{iXCat}) + ...
                               XAdditive{iXCat};
     
     % Correct for crossing hard limits
@@ -122,8 +125,8 @@ for iXCat = 1:12
     
     % Correct for fixed parameters
     if any(~freeCat{iXCat})
-        LB{iXCat}(~freeCat{iXCat}) = X0(iCatClass{iXCat}(~freeCat{iXCat}));
-        UB{iXCat}(~freeCat{iXCat}) = X0(iCatClass{iXCat}(~freeCat{iXCat}));
+        LB{iXCat}(~freeCat{iXCat}) = X0(iCat{iXCat}(~freeCat{iXCat}));
+        UB{iXCat}(~freeCat{iXCat}) = X0(iCat{iXCat}(~freeCat{iXCat}));
     end
     
 end
