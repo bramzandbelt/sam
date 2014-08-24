@@ -189,8 +189,7 @@ freeCatClass = cellfun(@(in1) in1(:)',freeCatClass,'Uni',0);
 
 % Set lateral inhibition from GO to STOP to 0
 freeCatClass{1,iWlib} = false(size(freeCatClass{1,iWlib}));
-iWlibGO = SAM.model.variants.toFit.XSpec.i.all.iCat{iWlib} ==  ...
-          SAM.model.variants.toFit.XSpec.i.all.iCatClass{1,iWlib};
+iWlibGo = find(~freeCatClass{1,iWlib});
 freeCat{iWlib}(iWlibGO) = false;
 
 % Put variables in output structure
