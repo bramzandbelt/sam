@@ -46,13 +46,13 @@ function [T,u] = sam_spec_timing_diagram(ons,dur,v,eta,se,dt,tWindow) %#codegen
 % Example 1:
 % ons           = [0 0 0];
 % dur           = [2000 2000 0];
-% v             = [3,3,5];
-% eta           = [0,0,0];
+% v             = [3,3,5]';
+% eta           = [0,0,0]';
 % se            = diag([0.5 0.5 0.5]);
 % dt            = 10;
 % tWindow       = [-500 2500];
 %
-% [t,u] = SAM_SPEC_TIMING_DIAGRAM(ons,dur,v,se,dt,tWindow);
+% [t,u] = SAM_SPEC_TIMING_DIAGRAM(ons,dur,v,eta,se,dt,tWindow);
 % figure;stairs(t,u');
 % xlabel('time (ms)')
 % ylabel('signal strength (a.u.)');
