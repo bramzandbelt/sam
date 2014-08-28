@@ -52,6 +52,9 @@ solverType    = SAM.optim.solver.type;
 % Solver options
 solverOpts    = SAM.optim.solver.opts;
 
+% Job ID
+jobIDDigits   = SAM.compCluster.jobID;
+
 % Starting values
 % ---------------------------------------------------------------------
 X0            = SAM.optim.x0(iStartVal,:);
@@ -116,7 +119,7 @@ tempDir = fullfile(homeDir,'.matlab','local_cluster_jobs',release);
 if exist(tempDir) ~= 7
     mkdir(tempDir)
 end
-t = tempname(tempDir);
+t = fullfile([tempname(tempDir),'_JobID_',jobIDDigits]);
 mkdir(t);
 c.JobStorageLocation=t;
 tWait = 1+60*rand();
