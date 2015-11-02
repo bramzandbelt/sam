@@ -356,7 +356,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass,taskFactors)
         if all(signatureSTOP == [0 0 0]')
           levels        = 1;
         else
-          levels        = fullfact(taskFactors(signatureSTOP,1));
+          levels        = fullfact(taskFactors(signatureSTOP,2));
         end
         
         % Number of levels
