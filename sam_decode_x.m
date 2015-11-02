@@ -363,25 +363,25 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass,taskFactors)
         nLevel        = size(levels,1);
 
         % Matrix of current indices
-        thisIMat      = iMat(signatureSTOP,1)';
+        thisIMat      = iMat(signatureSTOP,2)';
         
         % Identify the values to extract
         if ~isempty(valuesSTOP)
-          if all(signatureGO == [0 0 0]')
+          if all(signatureSTOP == [0 0 0]')
             iVal      = 1:numel(valuesSTOP);
-          elseif all(signatureGO == [1 0 0]')
+          elseif all(signatureSTOP == [1 0 0]')
             iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
-          elseif all(signatureGO == [0 1 0]')
+          elseif all(signatureSTOP == [0 1 0]')
             iVal      = 1:numel(valuesSTOP);
-          elseif all(signatureGO == [0 0 1]')
+          elseif all(signatureSTOP == [0 0 1]')
             iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
-          elseif all(signatureGO == [1 1 0]')
+          elseif all(signatureSTOP == [1 1 0]')
             iVal      = all(levels(:,1) == repmat(thisIMat(:,1),nLevel,1),2);
-          elseif all(signatureGO == [1 0 1]')
+          elseif all(signatureSTOP == [1 0 1]')
             iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
-          elseif all(signatureGO == [0 1 1]')
+          elseif all(signatureSTOP == [0 1 1]')
             iVal      = all(levels(:,2) == repmat(thisIMat(:,2),nLevel,1),2);
-          elseif all(signatureGO == [1 1 1]')
+          elseif all(signatureSTOP == [1 1 1]')
             iVal      = all(levels(:,[1,3]) == repmat(thisIMat(:,[1,3]),nLevel,1),2);
           end
           xval{2}   = valuesSTOP(iVal);
