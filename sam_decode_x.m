@@ -197,7 +197,7 @@ else
   endoConnNonSelfSame     = endoConn.nonSelfSame * diag(blkdiag(trueNRsp{:}) * cell2mat(wliw(:)));
 end
 
-if any(features(2,iWliw,:))
+if any(features(2,iWlib,:))
   endoConnNonSelfOther    = endoConn.nonSelfOther * (diag(cell2mat(trueNRsp(:))) * diag(cell2mat(wlib(:))));
 else
   endoConnNonSelfOther    = endoConn.nonSelfOther * diag(blkdiag(trueNRsp{:}) * cell2mat(wlib(:)));
