@@ -192,7 +192,8 @@ for iTrialCat = 1:nTrialCat
     accumDurFactor = zeros(1,m);
   end
 
-  parfor iTr = 1:nSim
+%   parfor iTr = 1:nSim
+  for iTr = 1:nSim
       
       switch lower(rngSeedStage)
         case 'sam_sim_expt'

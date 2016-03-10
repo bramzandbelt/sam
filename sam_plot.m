@@ -202,7 +202,7 @@ for iTrialCat = 1:nTrialCat
 %   
   % Set title
   title(obs.trialCat{iTrialCat});
-  set(gca,'PlotBoxAspectRatio',[1.61,1,1],'XLim',[0 2000],'YLim',[0 1]);
+  set(gca,'PlotBoxAspectRatio',[1.61,1,1],'XLim',[0 1200],'YLim',[0 1]);
     % Legend
 %   legend(sprintf('Corr(N_O=%d,N_P=%d)',nObsCorr,nPrdCorr),sprintf('Error(N_O=%d,N_P=%d)',nObsError,nPrdError));
   
