@@ -325,7 +325,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass,taskFactors)
       elseif all(signatureGO == [1 0 0]')
         iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
       elseif all(signatureGO == [0 1 0]')
-        iVal      = 1:numel(valuesGO);
+        iVal      = [thisIMat, setxor(thisIMat, 1:numel(valuesGO))]';
       elseif all(signatureGO == [0 0 1]')
         iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
       elseif all(signatureGO == [1 1 0]')

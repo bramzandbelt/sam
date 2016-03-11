@@ -601,21 +601,21 @@ for iTrialCat = 1:nTrialCat
     elseif isequal(signatureGO,[1 0 0]')
       iSelectGo = find(data.stm1    == GOCatStopTrial(1,iCol));
     elseif isequal(signatureGO,[0 1 0]')
-      iSelectGo = find(data.resp    == GOCatStopTrial(1,iCol));
+      iSelectGo = find(data.rsp1    == GOCatStopTrial(1,iCol));
     elseif isequal(signatureGO,[0 0 1]')
       iSelectGo = find(data.cnd     == GOCatStopTrial(1,iCol));
     elseif isequal(signatureGO,[1 1 0]')
       iSelectGo = find(data.stm1    == GOCatStopTrial(1,iCol) & ...
-                       data.resp    == GOCatStopTrial(2,iCol));
+                       data.rsp1    == GOCatStopTrial(2,iCol));
     elseif isequal(signatureGO,[1 0 1]')
       iSelectGo = find(data.stm1    == GOCatStopTrial(1,iCol) & ...
                        data.cnd     == GOCatStopTrial(2,iCol));
     elseif isequal(signatureGO,[0 1 1]')
-      iSelectGo = find(data.resp    == GOCatStopTrial(1,iCol) & ...
+      iSelectGo = find(data.rsp1    == GOCatStopTrial(1,iCol) & ...
                        data.cnd     == GOCatStopTrial(2,iCol));
     elseif isequal(signatureGO,[1 1 1]')
       iSelectGo = find(data.stm1    == GOCatStopTrial(1,iCol) & ...
-                       data.resp    == GOCatStopTrial(2,iCol) & ...
+                       data.rsp1    == GOCatStopTrial(2,iCol) & ...
                        data.cnd     == GOCatStopTrial(3,iCol));
     end
 
