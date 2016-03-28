@@ -245,13 +245,13 @@ end
 % 6. ACCUMULATION RATES
 % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
-if any(features(2,iV,:)) | any(features(2,iVe,:))
-  V   = diag(cell2mat(v(:))) * cell2mat(iTarget(:)) + ...
-        diag(cell2mat(ve(:))) * cell2mat(iNonTarget(:));
-else
+% if any(features(2,iV,:)) | any(features(2,iVe,:))
+%   V   = diag(cell2mat(v(:))) * cell2mat(iTarget(:)) + ...
+%         diag(cell2mat(ve(:))) * cell2mat(iNonTarget(:));
+% else
   V   = blkdiag(iTarget{:}) * cell2mat(v(:)) + ...
         blkdiag(iNonTarget{:}) * cell2mat(ve);
-end
+% end
 
 if any(features(2,iEta,:))
   ETA = diag(cell2mat(eta(:))) * cell2mat(iTarget(:)) + ...
@@ -333,7 +333,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass,taskFactors)
       elseif all(signatureGO == [1 0 1]')
         iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
       elseif all(signatureGO == [0 1 1]')
-        iVal      = all(levels(:,2) == repmat(thisIMat(:,2),nLevel,1),2);
+        iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
       elseif all(signatureGO == [1 1 1]')
         iVal      = all(levels(:,[1,3]) == repmat(thisIMat(:,[1,3]),nLevel,1),2);
       end
@@ -380,7 +380,7 @@ function xval = get_value_per_xcat(SAM,X,iMat,iCol,iCatClass,taskFactors)
           elseif all(signatureSTOP == [1 0 1]')
             iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
           elseif all(signatureSTOP == [0 1 1]')
-            iVal      = all(levels(:,2) == repmat(thisIMat(:,2),nLevel,1),2);
+            iVal      = all(levels == repmat(thisIMat,nLevel,1),2);
           elseif all(signatureSTOP == [1 1 1]')
             iVal      = all(levels(:,[1,3]) == repmat(thisIMat(:,[1,3]),nLevel,1),2);
           end
