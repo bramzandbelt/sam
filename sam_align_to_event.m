@@ -1,8 +1,8 @@
 function [tO,zO] = sam_align_to_event(zI,et,dt,t1,tWinO)
-% SAM_ALIGN_TO_EVENT <Synopsis of what this function does> 
+% SAM_ALIGN_TO_EVENT Align time series to a certain event
 %  
 % DESCRIPTION 
-% <Describe more extensively what this function does> 
+% Time series are shifted, so that they are aligned with respect to a certain event in time (e.g. trial onset, response time, etc.)
 %  
 %
 % Each row in the matrix is aligned to the value in the corresponding row
@@ -32,7 +32,7 @@ function [tO,zO] = sam_align_to_event(zI,et,dt,t1,tWinO)
 % zI = [myfun(-0.004,0,1000,500,0,tI);myfun(-0.006,0,1000,400,0,tI)];
 % et = [500;400]; 
 % dt = 1;
-% t1 = x(1);
+% t1 = tI(1);
 % tWin = [-100,100];
 % [tO,zO] = sam_align_to_event(zI,et,dt,t1,tWin);
 % figure;
